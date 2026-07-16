@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
@@ -81,9 +82,9 @@ export default function Patients() {
                   <td className="px-6 py-4 text-sm text-gray-600">{p.gender || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{p.bloodType || 'N/A'}</td>
                   <td className="px-6 py-4 text-right">
-                    <a href={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-800 text-sm mr-3">
+                    <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-800 text-sm mr-3">
                       <Eye size={14} /> View
-                    </a>
+                    </Link>
                     <button onClick={() => handleDelete(p.id)} className="inline-flex items-center gap-1 text-red-500 hover:text-red-700 text-sm">
                       <Trash2 size={14} /> Delete
                     </button>

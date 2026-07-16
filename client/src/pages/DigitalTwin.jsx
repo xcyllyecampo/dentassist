@@ -33,7 +33,7 @@ export default function DigitalTwin() {
       setQueue(q.data);
     });
 
-    const socket = io('http://localhost:5000');
+    const socket = io(window.location.origin, { path: '/socket.io' });
     socketRef.current = socket;
     socket.emit('join-twin');
     socket.emit('join-queue');

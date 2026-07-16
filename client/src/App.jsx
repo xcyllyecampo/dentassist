@@ -14,10 +14,11 @@ import DigitalTwin from './pages/DigitalTwin';
 import AIAssistant from './pages/AIAssistant';
 import TreatmentSupport from './pages/TreatmentSupport';
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-sky-600 font-medium">Loading...</div></div>;
   if (!user) return <Navigate to="/login" />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" />;
   return children;
 }
 
@@ -35,17 +36,17 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-          <Route path="/patients/:id" element={<ProtectedRoute><PatientDetail /></ProtectedRoute>} />
-          <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-          <Route path="/queue" element={<ProtectedRoute><Queue /></ProtectedRoute>} />
-          <Route path="/records" element={<ProtectedRoute><Records /></ProtectedRoute>} />
-          <Route path="/xray" element={<ProtectedRoute><XrayAnalysis /></ProtectedRoute>} />
+          <Route path="/patients" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Patients /></ProtectedRoute>} />
+          <Route path="/patients/:id" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><PatientDetail /></ProtectedRoute>} />
+          <Route path="/appointments" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Appointments /></ProtectedRoute>} />
+          <Route path="/queue" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Queue /></ProtectedRoute>} />
+          <Route path="/records" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Records /></ProtectedRoute>} />
+          <Route path="/xray" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><XrayAnalysis /></ProtectedRoute>} />
           <Route path="/oral-screening" element={<ProtectedRoute><OralScreening /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-          <Route path="/digital-twin" element={<ProtectedRoute><DigitalTwin /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><Analytics /></ProtectedRoute>} />
+          <Route path="/digital-twin" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><DigitalTwin /></ProtectedRoute>} />
           <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
-          <Route path="/treatment-support" element={<ProtectedRoute><TreatmentSupport /></ProtectedRoute>} />
+          <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </BrowserRouter>
