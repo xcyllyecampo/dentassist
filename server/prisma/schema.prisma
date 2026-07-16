@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  DENTIST
+  ASSISTANT
+  PATIENT
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  CLEANING
+  MAINTENANCE
+}
+
+enum QueueStatus {
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ToothStatus {
+  HEALTHY
+  TREATED
+  DECAYED
+  MISSING
+  CROWN
+  IMPLANT
+  BRIDGE
+  FILLING
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(PATIENT)
+  phone     String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  patient          Patient?
+  dentistSchedules DentistSchedule[]
+  treatments       Treatment[]
+  xrayUploads      XrayImage[]
+}
+
+model Patient {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dob           DateTime
+  gender        String?
+  bloodType     String?
+  address       String?
+  allergies     String?
+  medicalHistory String?
+  emergencyContact String?
+  insuranceInfo String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  teeth         Tooth[]
+  appointments  Appointment[]
+  treatments    Treatment[]
+  prescriptions Prescription[]
+  xrayImages    XrayImage[]
+  queueEntries  QueueEntry[]
+}
+
+model Tooth {
+  id         String     @id @default(cuid())
+  patientId  String
+  patient    Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  toothNumber Int
+  status     ToothStatus @default(HEALTHY)
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  treatments Treatment[]
+
+  @@unique([patientId, toothNumber])
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  patientId   String
+  patient     Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  dentistId   String
+  dentist     User              @relation("DentistSchedules", fields: [dentistId], references: [id])
+  roomId      String?
+  room        Room?             @relation(fields: [roomId], references: [id])
+  date        DateTime
+  time        String
+  duration    Int               @default(30)
+  status      AppointmentStatus @default(SCHEDULED)
+  reason      String?
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  treatments Treatment[]
+}
+
+model Room {
+  id        String     @id @default(cuid())
+  number    Int        @unique
+  name      String
+  status    RoomStatus @default(AVAILABLE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  appointments Appointment[]
+}
+
+model Treatment {
+  id            String   @id @default(cuid())
+  patientId     String
+  patient       Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  toothId       String?
+  tooth         Tooth?   @relation(fields: [toothId], references: [id])
+  dentistId     String
+  dentist       User     @relation(fields: [dentistId], references: [id])
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  procedure     String
+  description   String?
+  notes         String?
+  cost          Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  prescriptions Prescription[]
+}
+
+model Prescription {
+  id          String   @id @default(cuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  treatmentId String?
+  treatment   Treatment? @relation(fields: [treatmentId], references: [id])
+  medication  String
+  dosage      String
+  frequency   String
+  duration    String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model XrayImage {
+  id         String   @id @default(cuid())
+  patientId  String
+  patient    Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  filePath   String
+  fileType   String
+  uploadedBy String
+  uploader   User     @relation(fields: [uploadedBy], references: [id])
+  analysis   Json?
+  createdAt  DateTime @default(now())
+}
+
+model QueueEntry {
+  id            String      @id @default(cuid())
+  patientId     String
+  patient       Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  position      Int
+  status        QueueStatus @default(WAITING)
+  estimatedWait Int?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model DentistSchedule {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("DentistSchedules", fields: [userId], references: [id])
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, dayOfWeek])
+}
