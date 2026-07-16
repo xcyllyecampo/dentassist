@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,7 @@ export default function Records() {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
-  useState(() => {
+  useEffect(() => {
     api.get('/patients').then(res => setPatients(res.data));
   }, []);
 

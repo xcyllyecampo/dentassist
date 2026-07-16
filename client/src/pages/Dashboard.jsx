@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { Users, Calendar, Clock, TrendingUp, Activity, AlertCircle } from 'lucide-react';
@@ -14,8 +16,8 @@ export default function Dashboard() {
     api.get('/dashboard').then(res => { setData(res.data); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <Layout><div className="p-6 text-center">Loading...</div></Layout>;
-  if (!data) return <Layout><div className="p-6 text-center text-red-500">Failed to load dashboard</div></Layout>;
+  if (loading) return <Layout><Header title="Dashboard" /><div className="p-6 text-center">Loading...</div></Layout>;
+  if (!data) return <Layout><Header title="Dashboard" /><div className="p-6 text-center text-red-500">Failed to load dashboard</div></Layout>;
 
   const roomStats = data.roomStatus.reduce((acc, r) => {
     acc[r.status] = (acc[r.status] || 0) + 1;
@@ -24,7 +26,8 @@ export default function Dashboard() {
   const roomPie = Object.entries(roomStats).map(([name, value]) => ({ name, value }));
 
   return (
-    <LayoutWrapper title="Dashboard">
+    <Layout>
+      <Header title="Dashboard" />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={Users} label="Total Patients" value={data.totalPatients} color="bg-sky-500" />
@@ -101,16 +104,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </LayoutWrapper>
-  );
-}
-
-function LayoutWrapper({ children, title }) {
-  const Layout = require('../components/Layout').default;
-  return (
-    <Layout>
-      <Header title={title} />
-      {children}
     </Layout>
   );
 }
@@ -147,9 +140,9 @@ function StatusBadge({ status }) {
 
 function QuickAction({ to, icon: Icon, label }) {
   return (
-    <a href={to} className="flex items-center gap-3 p-3 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">
+    <Link to={to} className="flex items-center gap-3 p-3 bg-sky-50 hover:bg-sky-100 rounded-lg transition-colors">
       <Icon size={20} className="text-sky-600" />
       <span className="text-sm font-medium text-sky-900">{label}</span>
-    </a>
+    </Link>
   );
 }
