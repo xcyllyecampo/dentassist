@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
-import { Upload, Brain, AlertTriangle } from 'lucide-react';
+import { Upload, Brain, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function XrayAnalysis() {
   const [patients, setPatients] = useState([]);
@@ -10,6 +10,7 @@ export default function XrayAnalysis() {
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(null);
+  const [directAnalysis, setDirectAnalysis] = useState(null);
 
   useEffect(() => { api.get('/patients').then(res => setPatients(res.data)); }, []);
 
@@ -34,6 +35,20 @@ export default function XrayAnalysis() {
     setUploading(false);
   };
 
+  const handleDirectAnalyze = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAnalyzing('direct');
+    setDirectAnalysis(null);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await api.post('/ai/xray/analyze', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setDirectAnalysis({ ...res.data, fileName: file.name });
+    } catch (err) { alert('Error analyzing image. Make sure the AI service is running.'); }
+    setAnalyzing(null);
+  };
+
   const handleAnalyze = async (imageId) => {
     setAnalyzing(imageId);
     try {
@@ -50,7 +65,7 @@ export default function XrayAnalysis() {
         <div className="flex items-center gap-4 mb-6">
           <select value={selectedPatient} onChange={e => setSelectedPatient(e.target.value)}
             className="px-4 py-2 border border-sky-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none w-64">
-            <option value="">Select Patient</option>
+            <option value="">Select Patient (for saved images)</option>
             {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
           </select>
 
@@ -62,11 +77,89 @@ export default function XrayAnalysis() {
           )}
         </div>
 
-        {!selectedPatient && (
+        <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-xl border border-sky-200 p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-sky-600 text-white rounded-xl flex items-center justify-center">
+              <Brain size={28} />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-sky-900">Quick AI Analysis</h3>
+              <p className="text-sm text-gray-600">Upload an X-ray directly for instant AI analysis (no patient record needed)</p>
+            </div>
+            <label className="flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 cursor-pointer text-sm font-medium">
+              <Upload size={16} /> {analyzing === 'direct' ? 'Analyzing...' : 'Choose X-Ray File'}
+              <input type="file" accept="image/*" onChange={handleDirectAnalyze} className="hidden" disabled={analyzing} />
+            </label>
+          </div>
+        </div>
+
+        {directAnalysis && (
+          <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-sky-900">AI Analysis Result — {directAnalysis.fileName}</h3>
+              <span className={`text-xs px-3 py-1 rounded-full ${directAnalysis.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                {directAnalysis.source === 'openai' ? 'GPT-4 Vision' : 'Demo Mode'}
+              </span>
+            </div>
+
+            {directAnalysis.overall_assessment && (
+              <div className="p-3 bg-sky-50 rounded-lg border border-sky-200 text-sm text-sky-800 mb-4">
+                <strong>Assessment:</strong> {directAnalysis.overall_assessment}
+              </div>
+            )}
+
+            <div className="space-y-3 mb-4">
+              {directAnalysis.findings?.map((finding, i) => (
+                <div key={i} className={`p-4 rounded-lg border ${
+                  finding.severity === 'severe' ? 'bg-red-50 border-red-200' :
+                  finding.severity === 'moderate' ? 'bg-amber-50 border-amber-200' :
+                  'bg-green-50 border-green-200'
+                }`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-sky-900">{finding.area}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        finding.severity === 'severe' ? 'bg-red-200 text-red-800' :
+                        finding.severity === 'moderate' ? 'bg-amber-200 text-amber-800' :
+                        'bg-green-200 text-green-800'
+                      }`}>{finding.severity}</span>
+                      <span className="text-xs text-gray-500">{(finding.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600">{finding.description}</p>
+                </div>
+              ))}
+            </div>
+
+            {directAnalysis.recommendations?.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-bold text-sky-900 mb-2">Recommendations</h4>
+                <ul className="space-y-1">
+                  {directAnalysis.recommendations.map((rec, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <CheckCircle size={14} className="mt-0.5 text-green-500 shrink-0" />
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-100 text-xs text-red-700">
+              <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+              {directAnalysis.disclaimer || "This is an AI-generated analysis and should NOT be considered a definitive diagnosis. All findings must be verified by a licensed dentist."}
+            </div>
+          </div>
+        )}
+
+        {!selectedPatient && !directAnalysis && (
           <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-12 text-center">
             <Brain size={48} className="text-sky-300 mx-auto mb-4" />
             <h3 className="text-lg font-bold text-sky-900 mb-2">AI Dental X-Ray Assistant</h3>
-            <p className="text-gray-500 text-sm">Select a patient to view and analyze their X-ray images. The AI will highlight possible cavities, bone loss, and impacted teeth.</p>
+            <p className="text-gray-500 text-sm max-w-md mx-auto">
+              Upload an X-ray image using the button above for instant AI analysis, or select a patient to manage their saved X-ray records.
+              The AI will identify possible cavities, bone loss, and impacted teeth.
+            </p>
           </div>
         )}
 
@@ -100,10 +193,12 @@ export default function XrayAnalysis() {
                         <div className="text-amber-600 mt-1">Confidence: {(finding.confidence * 100).toFixed(0)}%</div>
                       </div>
                     ))}
-                    <div className="flex items-start gap-2 p-2 bg-red-50 rounded-lg border border-red-100 text-xs text-red-700">
-                      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                      {img.analysis.disclaimer}
-                    </div>
+                    {img.analysis.disclaimer && (
+                      <div className="flex items-start gap-2 p-2 bg-red-50 rounded-lg border border-red-100 text-xs text-red-700">
+                        <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                        {img.analysis.disclaimer}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

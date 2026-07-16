@@ -30,6 +30,7 @@ app.use("/api/prescriptions", require("./routes/prescriptions"));
 app.use("/api/xray", require("./routes/xray"));
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/ai", require("./routes/ai"));
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);

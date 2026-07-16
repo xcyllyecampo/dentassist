@@ -1,79 +1,49 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import { Stethoscope, AlertTriangle, CheckCircle } from 'lucide-react';
+import api from '../lib/api';
+import { Stethoscope, AlertTriangle, CheckCircle, Brain } from 'lucide-react';
 
-const SYMPTOMS_DB = {
-  'toothache': { possibleConditions: ['Dental cavity', 'Pulpitis', 'Abscess', 'Cracked tooth'], severity: 'high' },
-  'sensitivity': { possibleConditions: ['Tooth erosion', 'Gum recession', 'Cavity', 'Worn filling'], severity: 'moderate' },
-  'bleeding_gums': { possibleConditions: ['Gingivitis', 'Periodontitis', 'Vitamin deficiency'], severity: 'moderate' },
-  'swelling': { possibleConditions: ['Abscess', 'Infection', 'Impacted tooth', 'TMJ disorder'], severity: 'high' },
-  'bad_breath': { possibleConditions: ['Gum disease', 'Cavity', 'Tongue coating', 'Dry mouth'], severity: 'low' },
-  'broken_tooth': { possibleConditions: ['Fracture', 'Enamel wear', 'Trauma'], severity: 'high' },
-  'jaw_pain': { possibleConditions: ['TMJ disorder', 'Bruxism', 'Sinus issue', 'Impacted wisdom tooth'], severity: 'moderate' },
-  'loose_tooth': { possibleConditions: ['Periodontitis', 'Trauma', 'Bone loss'], severity: 'high' },
-};
-
-const TREATMENTS_DB = {
-  'Dental cavity': [
-    { name: 'Composite Filling', description: 'Tooth-colored resin filling for small to medium cavities', cost: '$100-200', duration: '30-60 min' },
-    { name: 'Crown', description: 'Full coverage for large cavities', cost: '$500-1000', duration: '2 visits' },
-  ],
-  'Pulpitis': [
-    { name: 'Root Canal Treatment', description: 'Remove infected pulp, clean and seal the canal', cost: '$500-800', duration: '1-2 visits' },
-    { name: 'Extraction + Implant', description: 'Remove tooth and place implant', cost: '$2000-3500', duration: 'Multiple visits' },
-  ],
-  'Abscess': [
-    { name: 'Drainage + Antibiotics', description: 'Drain the abscess and prescribe antibiotics', cost: '$200-400', duration: '1 visit' },
-    { name: 'Root Canal', description: 'If tooth is salvageable', cost: '$500-800', duration: '1-2 visits' },
-  ],
-  'Gingivitis': [
-    { name: 'Professional Cleaning', description: 'Scale and polish to remove tartar', cost: '$80-150', duration: '30-45 min' },
-    { name: 'Antibacterial Rinse', description: 'Chlorhexidine rinse prescription', cost: '$20-30', duration: '2 weeks' },
-  ],
-  'default': [
-    { name: 'Consultation', description: 'Schedule a comprehensive examination', cost: '$30', duration: '30 min' },
-    { name: 'X-Ray Examination', description: 'Digital X-ray for accurate diagnosis', cost: '$50-100', duration: '15 min' },
-  ],
-};
+const SYMPTOMS = [
+  { id: 'toothache', label: 'Toothache', severity: 'high' },
+  { id: 'sensitivity', label: 'Sensitivity', severity: 'moderate' },
+  { id: 'bleeding_gums', label: 'Bleeding Gums', severity: 'moderate' },
+  { id: 'swelling', label: 'Swelling', severity: 'high' },
+  { id: 'bad_breath', label: 'Bad Breath', severity: 'low' },
+  { id: 'broken_tooth', label: 'Broken Tooth', severity: 'high' },
+  { id: 'jaw_pain', label: 'Jaw Pain', severity: 'moderate' },
+  { id: 'loose_tooth', label: 'Loose Tooth', severity: 'high' },
+];
 
 export default function TreatmentSupport() {
   const [symptoms, setSymptoms] = useState([]);
   const [examination, setExamination] = useState('');
+  const [patientAge, setPatientAge] = useState('');
+  const [patientGender, setPatientGender] = useState('');
+  const [medicalHistory, setMedicalHistory] = useState('');
   const [results, setResults] = useState(null);
-
-  const symptomOptions = Object.entries(SYMPTOMS_DB).map(([key, val]) => ({
-    id: key,
-    label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-    severity: val.severity,
-  }));
+  const [loading, setLoading] = useState(false);
 
   const toggleSymptom = (id) => {
     setSymptoms(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (symptoms.length === 0) return;
-
-    const conditions = new Set();
-    symptoms.forEach(s => {
-      SYMPTOMS_DB[s]?.possibleConditions.forEach(c => conditions.add(c));
-    });
-
-    const treatments = [];
-    conditions.forEach(condition => {
-      const t = TREATMENTS_DB[condition] || TREATMENTS_DB['default'];
-      treatments.push({ condition, treatments: t });
-    });
-
-    const highSeverity = symptoms.some(s => SYMPTOMS_DB[s]?.severity === 'high');
-
-    setResults({
-      conditions: [...conditions],
-      treatments,
-      urgency: highSeverity ? 'HIGH — Recommend immediate consultation' : 'MODERATE — Schedule appointment within 1-2 days',
-      disclaimer: 'This is a clinical decision support tool. The final treatment decision must be made by the licensed dentist after a thorough examination.',
-    });
+    setLoading(true);
+    try {
+      const res = await api.post('/ai/treatment/suggest', {
+        symptoms,
+        examination_findings: examination,
+        patient_age: patientAge ? parseInt(patientAge) : 0,
+        patient_gender: patientGender,
+        medical_history: medicalHistory,
+      });
+      setResults(res.data);
+    } catch (err) {
+      alert('Error getting suggestions. Make sure the AI service is running.');
+    }
+    setLoading(false);
   };
 
   return (
@@ -83,11 +53,38 @@ export default function TreatmentSupport() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
             <h3 className="font-bold text-sky-900 mb-4 flex items-center gap-2">
-              <Stethoscope size={18} /> Patient Symptoms
+              <Stethoscope size={18} /> Patient Information
             </h3>
 
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {symptomOptions.map(({ id, label, severity }) => (
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Patient Age</label>
+                <input type="number" value={patientAge} onChange={e => setPatientAge(e.target.value)}
+                  className="w-full px-3 py-2 border border-sky-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                  placeholder="e.g. 35" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select value={patientGender} onChange={e => setPatientGender(e.target.value)}
+                  className="w-full px-3 py-2 border border-sky-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Medical History</label>
+              <input type="text" value={medicalHistory} onChange={e => setMedicalHistory(e.target.value)}
+                className="w-full px-3 py-2 border border-sky-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                placeholder="e.g. Diabetes, allergies, current medications" />
+            </div>
+
+            <h4 className="text-sm font-bold text-sky-900 mb-3">Symptoms</h4>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {SYMPTOMS.map(({ id, label, severity }) => (
                 <button key={id} onClick={() => toggleSymptom(id)}
                   className={`p-3 rounded-lg border text-left text-sm transition-all ${
                     symptoms.includes(id)
@@ -111,14 +108,22 @@ export default function TreatmentSupport() {
                 placeholder="e.g., Visible cavity on tooth #19, gum inflammation, etc." />
             </div>
 
-            <button onClick={handleAnalyze} disabled={symptoms.length === 0}
-              className="w-full bg-sky-600 text-white py-3 rounded-lg font-medium hover:bg-sky-700 disabled:opacity-50">
-              Analyze & Suggest Treatments
+            <button onClick={handleAnalyze} disabled={symptoms.length === 0 || loading}
+              className="w-full bg-sky-600 text-white py-3 rounded-lg font-medium hover:bg-sky-700 disabled:opacity-50 flex items-center justify-center gap-2">
+              <Brain size={18} />
+              {loading ? 'Analyzing...' : 'Analyze & Suggest Treatments'}
             </button>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-            <h3 className="font-bold text-sky-900 mb-4">Recommendation Results</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-sky-900">Recommendation Results</h3>
+              {results && (
+                <span className={`text-xs px-3 py-1 rounded-full ${results.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {results.source === 'openai' ? 'GPT-4' : 'Rule-Based'}
+                </span>
+              )}
+            </div>
 
             {!results ? (
               <div className="text-center py-12 text-gray-400">
@@ -127,34 +132,33 @@ export default function TreatmentSupport() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className={`p-3 rounded-lg border text-sm font-medium ${
-                  results.urgency.includes('HIGH') ? 'bg-red-50 border-red-200 text-red-700' : 'bg-amber-50 border-amber-200 text-amber-700'
-                }`}>
-                  {results.urgency}
-                </div>
-
-                <div>
-                  <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">Possible Conditions</div>
-                  <div className="flex flex-wrap gap-2">
-                    {results.conditions.map(c => (
-                      <span key={c} className="text-xs px-3 py-1 bg-sky-100 text-sky-700 rounded-full">{c}</span>
-                    ))}
+                {results.red_flags?.length > 0 && (
+                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                    <div className="font-bold mb-1">Red Flags:</div>
+                    <ul className="list-disc list-inside">
+                      {results.red_flags.map((flag, i) => <li key={i}>{flag}</li>)}
+                    </ul>
                   </div>
-                </div>
+                )}
 
-                {results.treatments.map((item, i) => (
+                {results.diagnoses?.map((diagnosis, i) => (
                   <div key={i}>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{item.condition}</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{diagnosis.name}</div>
                     <div className="space-y-2">
-                      {item.treatments.map((t, j) => (
-                        <div key={j} className="p-3 bg-green-50 rounded-lg border border-green-100">
+                      {diagnosis.treatments?.map((t, j) => (
+                        <div key={j} className={`p-3 rounded-lg border ${
+                          t.priority === 'urgent' ? 'bg-red-50 border-red-100' :
+                          t.priority === 'recommended' ? 'bg-green-50 border-green-100' :
+                          'bg-sky-50 border-sky-100'
+                        }`}>
                           <div className="flex items-center gap-2 mb-1">
-                            <CheckCircle size={14} className="text-green-600" />
-                            <span className="font-medium text-sm text-green-800">{t.name}</span>
+                            <CheckCircle size={14} className={t.priority === 'urgent' ? 'text-red-500' : 'text-green-500'} />
+                            <span className="font-medium text-sm text-sky-900">{t.name}</span>
+                            {t.priority === 'urgent' && <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full">Urgent</span>}
                           </div>
                           <div className="text-xs text-gray-600 ml-6">{t.description}</div>
                           <div className="flex gap-4 mt-1 ml-6 text-xs text-gray-500">
-                            <span>Cost: {t.cost}</span>
+                            <span>Cost: {t.cost_range}</span>
                             <span>Duration: {t.duration}</span>
                           </div>
                         </div>
@@ -163,9 +167,18 @@ export default function TreatmentSupport() {
                   </div>
                 ))}
 
+                {results.additional_tests?.length > 0 && (
+                  <div className="p-3 bg-sky-50 rounded-lg border border-sky-200">
+                    <div className="text-xs font-bold text-sky-800 mb-1">Additional Tests Recommended:</div>
+                    <ul className="text-xs text-sky-700 list-disc list-inside">
+                      {results.additional_tests.map((t, i) => <li key={i}>{t}</li>)}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-100 text-xs text-red-700 mt-4">
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                  {results.disclaimer}
+                  {results.disclaimer || 'This is a clinical decision support tool. The final treatment decision must be made by the licensed dentist.'}
                 </div>
               </div>
             )}

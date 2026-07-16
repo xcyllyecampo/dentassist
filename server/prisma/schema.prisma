@@ -61,6 +61,7 @@ model User {
 
   patient          Patient?
   dentistSchedules DentistSchedule[]
+  dentistAppointments  Appointment[] @relation("DentistAppointments")
   treatments       Treatment[]
   xrayUploads      XrayImage[]
 }
@@ -108,7 +109,7 @@ model Appointment {
   patientId   String
   patient     Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
   dentistId   String
-  dentist     User              @relation("DentistSchedules", fields: [dentistId], references: [id])
+  dentist     User              @relation("DentistAppointments", fields: [dentistId], references: [id])
   roomId      String?
   room        Room?             @relation(fields: [roomId], references: [id])
   date        DateTime

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import { Camera, AlertTriangle, CheckCircle } from 'lucide-react';
+import api from '../lib/api';
+import { Camera, AlertTriangle, CheckCircle, Brain } from 'lucide-react';
 
 export default function OralScreening() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -17,20 +18,18 @@ export default function OralScreening() {
     setResult(null);
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (!selectedFile) return;
     setAnalyzing(true);
-    setTimeout(() => {
-      setResult({
-        areas: [
-          { region: 'Upper left molar area', concern: 'Possible plaque buildup', severity: 'mild', confidence: 0.78 },
-          { region: 'Lower front teeth', concern: 'Slight gum recession detected', severity: 'moderate', confidence: 0.65 },
-          { region: 'Right wisdom tooth area', concern: 'Appears normal', severity: 'none', confidence: 0.92 },
-        ],
-        overallScore: 72,
-        recommendation: 'Schedule a professional cleaning within the next 2 weeks. Monitor gum recession in lower front teeth area.',
-      });
-      setAnalyzing(false);
-    }, 2500);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const res = await api.post('/ai/oral/screen', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setResult(res.data);
+    } catch (err) {
+      alert('Error analyzing image. Make sure the AI service is running.');
+    }
+    setAnalyzing(false);
   };
 
   return (
@@ -57,28 +56,34 @@ export default function OralScreening() {
               <h3 className="font-bold text-sky-900 mb-4">Uploaded Photo</h3>
               <img src={preview} alt="Oral photo" className="w-full rounded-lg" />
               <button onClick={handleAnalyze} disabled={analyzing}
-                className="w-full mt-4 bg-sky-600 text-white py-3 rounded-lg font-medium hover:bg-sky-700 disabled:opacity-50">
-                {analyzing ? 'Analyzing...' : 'Run AI Analysis'}
+                className="w-full mt-4 bg-sky-600 text-white py-3 rounded-lg font-medium hover:bg-sky-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                <Brain size={18} />
+                {analyzing ? 'Analyzing with AI...' : 'Run AI Analysis'}
               </button>
             </div>
 
             {result && (
               <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-                <h3 className="font-bold text-sky-900 mb-4">Analysis Results</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-sky-900">Analysis Results</h3>
+                  <span className={`text-xs px-3 py-1 rounded-full ${result.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {result.source === 'openai' ? 'GPT-4 Vision' : 'Demo Mode'}
+                  </span>
+                </div>
 
                 <div className="mb-4">
                   <div className="text-sm text-gray-500 mb-1">Overall Oral Health Score</div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${result.overallScore > 80 ? 'bg-green-500' : result.overallScore > 60 ? 'bg-amber-500' : 'bg-red-500'}`}
-                        style={{ width: `${result.overallScore}%` }} />
+                      <div className={`h-full rounded-full ${(result.overall_score || 0) > 80 ? 'bg-green-500' : (result.overall_score || 0) > 60 ? 'bg-amber-500' : 'bg-red-500'}`}
+                        style={{ width: `${result.overall_score || 0}%` }} />
                     </div>
-                    <span className="text-lg font-bold text-sky-900">{result.overallScore}/100</span>
+                    <span className="text-lg font-bold text-sky-900">{result.overall_score}/100</span>
                   </div>
                 </div>
 
                 <div className="space-y-3 mb-4">
-                  {result.areas.map((area, i) => (
+                  {result.areas?.map((area, i) => (
                     <div key={i} className={`p-3 rounded-lg border ${
                       area.severity === 'none' ? 'bg-green-50 border-green-200' :
                       area.severity === 'mild' ? 'bg-amber-50 border-amber-200' :
@@ -93,16 +98,23 @@ export default function OralScreening() {
                   ))}
                 </div>
 
-                <div className="p-3 bg-sky-50 rounded-lg border border-sky-200 text-sm text-sky-800 mb-4">
-                  <strong>Recommendation:</strong> {result.recommendation}
-                </div>
+                {result.recommendations?.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-bold text-sky-900 mb-2">Recommendations</h4>
+                    <ul className="space-y-1">
+                      {result.recommendations.map((rec, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                          <CheckCircle size={14} className="mt-0.5 text-green-500 shrink-0" />
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-100 text-xs text-red-700">
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                  <div>
-                    <strong>Disclaimer:</strong> This is an AI-generated screening and is NOT a medical diagnosis. 
-                    Please consult a licensed dentist for professional evaluation and treatment.
-                  </div>
+                  {result.disclaimer || "This is an AI-generated screening and is NOT a medical diagnosis. Please consult a licensed dentist for professional evaluation."}
                 </div>
               </div>
             )}
