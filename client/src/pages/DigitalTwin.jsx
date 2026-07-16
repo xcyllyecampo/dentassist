@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
+import ClinicScene3D from '../components/ClinicScene3D';
 import api from '../lib/api';
 import { io } from 'socket.io-client';
 
@@ -22,6 +23,7 @@ export default function DigitalTwin() {
   const [rooms, setRooms] = useState([]);
   const [queue, setQueue] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -40,12 +42,14 @@ export default function DigitalTwin() {
 
     socket.on('room-update', ({ roomId, status }) => {
       setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status } : r));
+      setLastUpdate(new Date());
     });
 
-    socket.on('queue-update', (data) => {
-      if (data.waitingCount !== undefined) {
-        api.get('/queue').then(res => setQueue(res.data));
-      }
+    socket.on('queue-update', () => {
+      api.get('/queue').then(res => {
+        setQueue(res.data);
+        setLastUpdate(new Date());
+      });
     });
 
     return () => socket.disconnect();
@@ -56,83 +60,53 @@ export default function DigitalTwin() {
 
   return (
     <Layout>
-      <Header title="Digital Twin — Clinic Overview" />
+      <Header title="Digital Twin — Live Clinic View" />
       <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* 3D Viewport */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-              <h3 className="font-bold text-sky-900 mb-6">Clinic Floor Plan</h3>
-
-              <div className="relative bg-gradient-to-br from-sky-50 to-indigo-50 rounded-xl p-8 min-h-[400px]">
-                {/* Reception */}
-                <div className="absolute top-4 left-4 right-4 h-16 bg-sky-100 border-2 border-sky-300 rounded-xl flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-sky-900">Reception</div>
-                    <div className="text-xs text-sky-600">Queue: {waiting.length} waiting</div>
-                  </div>
+            <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-sky-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-medium text-sky-900">Live — Real-time 3D View</span>
                 </div>
+                <span className="text-[10px] text-gray-400">
+                  Last update: {lastUpdate.toLocaleTimeString()}
+                </span>
+              </div>
 
-                {/* Waiting Area */}
-                <div className="absolute top-28 left-4 right-4 h-20 bg-amber-50 border-2 border-amber-200 rounded-xl flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-amber-800">Waiting Area</div>
-                    <div className="flex items-center justify-center gap-2 mt-1">
-                      {waiting.slice(0, 5).map((entry, i) => (
-                        <div key={entry.id} className="w-8 h-8 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
-                          {entry.patient?.user?.name?.charAt(0)}
-                        </div>
-                      ))}
-                      {waiting.length > 5 && <span className="text-xs text-amber-600">+{waiting.length - 5}</span>}
-                      {waiting.length === 0 && <span className="text-xs text-gray-400">Empty</span>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Rooms Grid */}
-                <div className="absolute top-56 left-4 right-4 bottom-4 grid grid-cols-3 gap-4">
-                  {rooms.map((room) => (
-                    <div key={room.id}
-                      onClick={() => setSelectedRoom(room)}
-                      className="rounded-xl border-2 p-4 cursor-pointer transition-all hover:scale-105 hover:shadow-lg flex flex-col items-center justify-center"
-                      style={{
-                        borderColor: ROOM_COLORS[room.status],
-                        backgroundColor: ROOM_COLORS[room.status] + '15',
-                      }}>
-                      <div className="text-xs font-medium mb-1" style={{ color: ROOM_COLORS[room.status] }}>
-                        Room {room.number}
-                      </div>
-                      <div className="w-4 h-4 rounded-full mb-2" style={{ backgroundColor: ROOM_COLORS[room.status] }} />
-                      <div className="text-xs font-bold" style={{ color: ROOM_COLORS[room.status] }}>
-                        {ROOM_LABELS[room.status]}
-                      </div>
-                      {room.appointments?.length > 0 && (
-                        <div className="text-[10px] text-gray-600 mt-1 text-center">
-                          <div>{room.appointments[0].patient?.user?.name}</div>
-                          <div>{room.appointments[0].dentist?.name}</div>
-                          <div>{room.appointments[0].reason}</div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+              <div className="h-[520px] bg-gradient-to-b from-sky-50 to-indigo-50 relative">
+                <ClinicScene3D
+                  rooms={rooms}
+                  queue={queue}
+                  selectedRoom={selectedRoom}
+                  onSelectRoom={setSelectedRoom}
+                />
               </div>
 
               {/* Legend */}
-              <div className="flex items-center gap-6 mt-4">
+              <div className="flex items-center gap-6 px-4 py-3 border-t border-sky-100 bg-gray-50">
                 {Object.entries(ROOM_COLORS).map(([status, color]) => (
                   <div key={status} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
                     <span className="text-xs text-gray-600">{ROOM_LABELS[status]}</span>
                   </div>
                 ))}
+                <span className="text-[10px] text-gray-400 ml-auto">Click rooms for details • Drag to rotate • Scroll to zoom</span>
               </div>
             </div>
           </div>
 
+          {/* Side Panel */}
           <div className="space-y-4">
+            {/* Live Queue */}
             <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3">Live Queue</h3>
-              <div className="space-y-2">
+              <h3 className="font-bold text-sky-900 text-sm mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                Live Queue
+              </h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {waiting.length === 0 ? (
                   <p className="text-gray-400 text-xs">No one waiting</p>
                 ) : waiting.map((entry) => (
@@ -149,9 +123,13 @@ export default function DigitalTwin() {
               </div>
             </div>
 
+            {/* Currently Serving */}
             <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3">Currently Serving</h3>
-              <div className="space-y-2">
+              <h3 className="font-bold text-sky-900 text-sm mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+                Currently Serving
+              </h3>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
                 {inProgress.length === 0 ? (
                   <p className="text-gray-400 text-xs">None</p>
                 ) : inProgress.map((entry) => (
@@ -165,8 +143,9 @@ export default function DigitalTwin() {
               </div>
             </div>
 
+            {/* Room Summary */}
             <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3">Room Status Summary</h3>
+              <h3 className="font-bold text-sky-900 text-sm mb-3">Room Status</h3>
               <div className="space-y-2">
                 {Object.entries(ROOM_COLORS).map(([status, color]) => (
                   <div key={status} className="flex items-center justify-between">
@@ -180,14 +159,45 @@ export default function DigitalTwin() {
                   </div>
                 ))}
               </div>
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-500">Total Rooms</span>
+                  <span className="text-sm font-bold text-sky-900">{rooms.length}</span>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs font-medium text-gray-500">Utilization</span>
+                  <span className="text-sm font-bold text-sky-900">
+                    {rooms.length > 0 ? Math.round((rooms.filter(r => r.status === 'OCCUPIED').length / rooms.length) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Queue Stats */}
+            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
+              <h3 className="font-bold text-sky-900 text-sm mb-3">Queue Stats</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-amber-50 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-amber-700">{waiting.length}</div>
+                  <div className="text-[10px] text-amber-600">Waiting</div>
+                </div>
+                <div className="bg-sky-50 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-sky-700">{inProgress.length}</div>
+                  <div className="text-[10px] text-sky-600">In Service</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Room Detail Modal */}
         {selectedRoom && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setSelectedRoom(null)}>
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-              <h2 className="text-lg font-bold text-sky-900 mb-4">Room {selectedRoom.number} — {selectedRoom.name}</h2>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: ROOM_COLORS[selectedRoom.status] }} />
+                <h2 className="text-lg font-bold text-sky-900">Room {selectedRoom.number} — {selectedRoom.name}</h2>
+              </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">Status</span>
@@ -197,6 +207,9 @@ export default function DigitalTwin() {
                 </div>
                 {selectedRoom.appointments?.length > 0 && (
                   <>
+                    <div className="border-t border-gray-100 pt-3">
+                      <h4 className="text-xs font-bold text-gray-400 uppercase mb-2">Current Appointment</h4>
+                    </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Patient</span>
                       <span className="text-sm font-medium text-sky-900">{selectedRoom.appointments[0].patient?.user?.name}</span>
@@ -216,7 +229,7 @@ export default function DigitalTwin() {
                   </>
                 )}
               </div>
-              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-sky-600 text-white py-2 rounded-lg text-sm hover:bg-sky-700">Close</button>
+              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-sky-600 text-white py-2 rounded-lg text-sm hover:bg-sky-700 transition-colors">Close</button>
             </div>
           </div>
         )}

@@ -60,10 +60,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   patient          Patient?
-  dentistSchedules DentistSchedule[]
+  dentistSchedules DentistSchedule[] @relation("DentistSchedules")
   dentistAppointments  Appointment[] @relation("DentistAppointments")
   treatments       Treatment[]
   xrayUploads      XrayImage[]
+  refreshTokens    RefreshToken[]
 }
 
 model Patient {
@@ -203,4 +204,13 @@ model DentistSchedule {
   createdAt DateTime @default(now())
 
   @@unique([userId, dayOfWeek])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
