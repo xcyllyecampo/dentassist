@@ -133,7 +133,35 @@ export default function PatientDetail() {
 
           {activeTab === 'x-rays' && (
             <div>
-              <p className="text-gray-500 text-sm">X-ray images will appear here. Upload from the X-Ray Analysis module.</p>
+              {patient.xrayImages?.length === 0 ? (
+                <p className="text-gray-400">No X-ray images yet. Upload from the X-Ray Analysis module.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {patient.xrayImages?.map(img => (
+                    <div key={img.id} className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                      <div className="aspect-square bg-gray-100">
+                        <img src={`/${img.filePath}`} alt="X-Ray" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-gray-500">{new Date(img.createdAt).toLocaleDateString()}</span>
+                          <span className="text-xs px-2 py-0.5 bg-sky-100 text-sky-700 rounded-full">{img.fileType}</span>
+                        </div>
+                        {img.analysis?.findings?.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {img.analysis.findings.slice(0, 2).map((f, i) => (
+                              <div key={i} className="text-xs p-2 bg-amber-50 rounded border border-amber-100">
+                                <div className="font-medium text-amber-800">{f.area}</div>
+                                <div className="text-gray-600 truncate">{f.description}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
