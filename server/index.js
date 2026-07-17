@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
-const { PrismaClient } = require("./generated/prisma");
+const { PrismaClient } = require("@prisma/client");
 
 const app = express();
 const server = http.createServer(app);

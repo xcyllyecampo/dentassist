@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
-  Stethoscope, Image, MessageCircle, BarChart3, Box,
+  Stethoscope, Image, BarChart3, Box,
   Settings, LogOut, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useState } from 'react';
@@ -18,7 +18,6 @@ const navItems = [
   { to: '/treatment-support', icon: Settings, label: 'Treatment Support' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/digital-twin', icon: Box, label: 'Digital Twin' },
-  { to: '/ai-assistant', icon: MessageCircle, label: 'AI Assistant' },
 ];
 
 export default function Sidebar() {

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import FloatingAI from './components/FloatingAI';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
@@ -11,7 +12,6 @@ import XrayAnalysis from './pages/XrayAnalysis';
 import OralScreening from './pages/OralScreening';
 import Analytics from './pages/Analytics';
 import DigitalTwin from './pages/DigitalTwin';
-import AIAssistant from './pages/AIAssistant';
 import TreatmentSupport from './pages/TreatmentSupport';
 
 function ProtectedRoute({ children, roles }) {
@@ -33,6 +33,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <FloatingAI />
         <Routes>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -45,7 +46,6 @@ export default function App() {
           <Route path="/oral-screening" element={<ProtectedRoute><OralScreening /></ProtectedRoute>} />
           <Route path="/analytics" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><Analytics /></ProtectedRoute>} />
           <Route path="/digital-twin" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><DigitalTwin /></ProtectedRoute>} />
-          <Route path="/ai-assistant" element={<ProtectedRoute><AIAssistant /></ProtectedRoute>} />
           <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
