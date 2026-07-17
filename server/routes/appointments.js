@@ -8,7 +8,13 @@ router.get("/", auth, async (req, res) => {
     const prisma = req.app.get("prisma");
     const { date, dentistId } = req.query;
     const where = {};
-    if (date) where.date = new Date(date);
+    if (date) {
+      const start = new Date(date);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      where.date = { gte: start, lt: end };
+    }
     if (dentistId) where.dentistId = dentistId;
 
     const appointments = await prisma.appointment.findMany({

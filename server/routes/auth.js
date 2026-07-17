@@ -6,7 +6,7 @@ const { auth } = require("../middleware/auth");
 
 const router = express.Router();
 
-function generateTokens(user, prisma) {
+async function generateTokens(user, prisma) {
   const accessToken = jwt.sign(
     { id: user.id, email: user.email, role: user.role, name: user.name },
     process.env.JWT_SECRET,
@@ -17,7 +17,7 @@ function generateTokens(user, prisma) {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7);
 
-  prisma.refreshToken.create({
+  await prisma.refreshToken.create({
     data: { token: refreshToken, userId: user.id, expiresAt },
   });
 
@@ -43,7 +43,7 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const { accessToken, refreshToken } = generateTokens(user, prisma);
+    const { accessToken, refreshToken } = await generateTokens(user, prisma);
     res.status(201).json({
       token: accessToken,
       refreshToken,
@@ -66,7 +66,7 @@ router.post("/login", async (req, res) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.status(400).json({ error: "Invalid credentials" });
 
-    const { accessToken, refreshToken } = generateTokens(user, prisma);
+    const { accessToken, refreshToken } = await generateTokens(user, prisma);
     res.json({
       token: accessToken,
       refreshToken,
@@ -98,7 +98,7 @@ router.post("/refresh", async (req, res) => {
 
     await prisma.refreshToken.delete({ where: { token: refreshToken } });
 
-    const tokens = generateTokens(user, prisma);
+    const tokens = await generateTokens(user, prisma);
     res.json(tokens);
   } catch (err) {
     console.error(err);
