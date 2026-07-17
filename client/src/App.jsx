@@ -13,6 +13,7 @@ import OralScreening from './pages/OralScreening';
 import Analytics from './pages/Analytics';
 import DigitalTwin from './pages/DigitalTwin';
 import TreatmentSupport from './pages/TreatmentSupport';
+import SmileSimulation from './pages/SmileSimulation';
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/analytics" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><Analytics /></ProtectedRoute>} />
           <Route path="/digital-twin" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><DigitalTwin /></ProtectedRoute>} />
           <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
+          <Route path="/smile-simulation" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><SmileSimulation /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </BrowserRouter>

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
   Stethoscope, Image, BarChart3, Box,
-  Settings, LogOut, ChevronLeft, ChevronRight
+  Settings, LogOut, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/records', icon: Activity, label: 'Records' },
   { to: '/xray', icon: Image, label: 'X-Ray Analysis' },
   { to: '/oral-screening', icon: Stethoscope, label: 'Oral Screening' },
+  { to: '/smile-simulation', icon: Sparkles, label: 'Smile Simulation' },
   { to: '/treatment-support', icon: Settings, label: 'Treatment Support' },
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/digital-twin', icon: Box, label: 'Digital Twin' },

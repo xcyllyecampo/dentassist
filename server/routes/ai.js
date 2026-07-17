@@ -197,4 +197,25 @@ router.post("/treatment/suggest", auth, async (req, res) => {
   }
 });
 
+router.post("/smile/simulate", auth, upload.single("file"), async (req, res) => {
+  try {
+    const treatmentType = req.body.treatment_type || "whitening";
+    const formData = new FormData();
+    const fileBuffer = fs.readFileSync(req.file.path);
+    const blob = new Blob([fileBuffer], { type: req.file.mimetype });
+    formData.append("file", blob, req.file.originalname);
+    formData.append("treatment_type", treatmentType);
+
+    const response = await fetch(`${AI_SERVICE_URL}/smile/simulate?treatment_type=${treatmentType}`, {
+      method: "POST",
+      body: formData,
+    });
+    const result = await response.json();
+    res.json(result);
+  } catch (err) {
+    console.error("AI service error:", err.message);
+    res.status(500).json({ error: "AI service unavailable", details: err.message });
+  }
+});
+
 module.exports = router;
