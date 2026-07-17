@@ -31,6 +31,8 @@ app.use("/api/xray", require("./routes/xray"));
 app.use("/api/analytics", require("./routes/analytics"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/ai", require("./routes/ai"));
+app.use("/api/loyalty", require("./routes/loyalty"));
+app.use("/api/badges", require("./routes/badges"));
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);

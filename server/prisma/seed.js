@@ -12,6 +12,10 @@ async function main() {
   await prisma.queueEntry.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.tooth.deleteMany();
+  await prisma.patientBadge.deleteMany();
+  await prisma.pointTransaction.deleteMany();
+  await prisma.loyaltyPoints.deleteMany();
+  await prisma.badge.deleteMany();
   await prisma.patient.deleteMany();
   await prisma.room.deleteMany();
   await prisma.dentistSchedule.deleteMany();
@@ -123,6 +127,29 @@ async function main() {
         data: { userId: dentist.id, dayOfWeek: day, startTime: "09:00", endTime: "17:00" },
       });
     }
+  }
+
+  const badges = [
+    { name: "First Visit", description: "Completed your first dental visit", icon: "🎉", category: "Milestone", threshold: 1 },
+    { name: "Regular Visitor", description: "Attended 3 or more appointments", icon: "⭐", category: "Loyalty", threshold: 3 },
+    { name: "Committed Patient", description: "Completed 5 or more treatments", icon: "🏆", category: "Achievement", threshold: 5 },
+    { name: "Streak Master", description: "Maintained a 3-month visit streak", icon: "🔥", category: "Dedication", threshold: 3 },
+  ];
+  for (const b of badges) {
+    await prisma.badge.create({ data: b });
+  }
+
+  const firstPatient = await prisma.patient.findFirst();
+  if (firstPatient) {
+    const firstVisitBadge = await prisma.badge.findUnique({ where: { name: "First Visit" } });
+    await prisma.patientBadge.create({ data: { patientId: firstPatient.id, badgeId: firstVisitBadge.id } });
+    await prisma.loyaltyPoints.create({
+      data: { patientId: firstPatient.id, points: 50, tier: "Silver" },
+    });
+    const loyalty = await prisma.loyaltyPoints.findUnique({ where: { patientId: firstPatient.id } });
+    await prisma.pointTransaction.create({
+      data: { loyaltyPointsId: loyalty.id, amount: 50, description: "Welcome bonus + First Visit badge", type: "EARNED" },
+    });
   }
 
   console.log("Database seeded successfully!");

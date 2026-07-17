@@ -4,7 +4,8 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import Spinner from '../components/Spinner';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Award, Star, TrendingUp, Gift, Check } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 export default function PatientDetail() {
   const { id } = useParams();
@@ -12,6 +13,11 @@ export default function PatientDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [loyalty, setLoyalty] = useState(null);
+  const [badges, setBadges] = useState([]);
+  const [allBadges, setAllBadges] = useState([]);
+  const [awarding, setAwarding] = useState(null);
+  const toast = useToast();
 
   const fetchPatient = () => {
     setLoading(true);
@@ -24,10 +30,35 @@ export default function PatientDetail() {
 
   useEffect(() => { fetchPatient(); }, [id]);
 
+  useEffect(() => {
+    if (activeTab === 'rewards' && id) {
+      api.get(`/loyalty/patient/${id}`).then(res => setLoyalty(res.data)).catch(() => {});
+      api.get(`/badges/patient/${id}`).then(res => setBadges(res.data)).catch(() => {});
+      api.get('/badges').then(res => setAllBadges(res.data)).catch(() => {});
+    }
+  }, [activeTab, id]);
+
+  const awardBadge = async (badgeId) => {
+    setAwarding(badgeId);
+    try {
+      await api.post('/badges/award', { patientId: id, badgeId });
+      toast.success('Badge awarded!');
+      const [loyaltyRes, badgesRes] = await Promise.all([
+        api.get(`/loyalty/patient/${id}`),
+        api.get(`/badges/patient/${id}`),
+      ]);
+      setLoyalty(loyaltyRes.data);
+      setBadges(badgesRes.data);
+    } catch (e) {
+      toast.error('Failed to award badge');
+    }
+    setAwarding(null);
+  };
+
   if (loading) return <Layout><Header title="Patient Detail" /><Spinner className="py-20" /></Layout>;
   if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-sky-600 hover:text-sky-800 font-medium">Retry</button></div></Layout>;
 
-  const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays'];
+  const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays', 'rewards'];
 
   return (
     <Layout>
@@ -174,6 +205,89 @@ export default function PatientDetail() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'rewards' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl p-5 text-white">
+                  <div className="flex items-center gap-2 mb-2"><Star size={20} /><span className="font-medium">Loyalty Points</span></div>
+                  <div className="text-3xl font-bold">{loyalty?.points || 0}</div>
+                  <div className="text-sky-100 text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
+                </div>
+                <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white">
+                  <div className="flex items-center gap-2 mb-2"><Award size={20} /><span className="font-medium">Badges Earned</span></div>
+                  <div className="text-3xl font-bold">{badges.length}</div>
+                  <div className="text-amber-100 text-sm mt-1">of {allBadges.length} available</div>
+                </div>
+                <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white">
+                  <div className="flex items-center gap-2 mb-2"><TrendingUp size={20} /><span className="font-medium">Next Tier</span></div>
+                  <div className="text-lg font-bold mt-1">
+                    {loyalty?.tier === 'Bronze' ? 'Silver (50 pts)' : loyalty?.tier === 'Silver' ? 'Gold (200 pts)' : loyalty?.tier === 'Gold' ? 'Platinum (500 pts)' : 'Max Tier!'}
+                  </div>
+                  <div className="text-green-100 text-sm mt-1">
+                    {loyalty?.tier !== 'Platinum' && `${Math.max(0, (loyalty?.tier === 'Bronze' ? 50 : loyalty?.tier === 'Silver' ? 200 : 500) - (loyalty?.points || 0))} pts to go`}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-sky-900 mb-3">Earned Badges</h3>
+                {badges.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No badges earned yet</p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {badges.map(pb => (
+                      <div key={pb.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                        <div className="text-3xl mb-2">{pb.badge.icon}</div>
+                        <div className="font-medium text-sky-900 text-sm">{pb.badge.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">{pb.badge.description}</div>
+                        <div className="text-xs text-amber-600 mt-2">{new Date(pb.earnedAt).toLocaleDateString()}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-bold text-sky-900 mb-3">Award Badge</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {allBadges.map(b => {
+                    const earned = badges.some(pb => pb.badgeId === b.id);
+                    return (
+                      <button key={b.id} onClick={() => !earned && awardBadge(b.id)} disabled={earned || awarding === b.id}
+                        className={`rounded-xl p-4 text-center transition-all ${earned ? 'bg-green-50 border-2 border-green-300 cursor-default' : 'bg-gray-50 border border-gray-200 hover:border-sky-400 hover:bg-sky-50 cursor-pointer'}`}>
+                        <div className="text-3xl mb-2">{b.icon}</div>
+                        <div className="font-medium text-sky-900 text-sm">{b.name}</div>
+                        <div className="text-xs text-gray-500 mt-1">{b.description}</div>
+                        {earned ? (
+                          <div className="flex items-center justify-center gap-1 text-green-600 text-xs mt-2"><Check size={12} /> Earned</div>
+                        ) : (
+                          <div className="text-xs text-sky-600 mt-2">{b.threshold} pts</div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {loyalty?.transactions?.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-sky-900 mb-3">Transaction History</h3>
+                  <div className="space-y-2">
+                    {loyalty.transactions.map(t => (
+                      <div key={t.id} className="flex items-center justify-between p-3 bg-sky-50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Gift size={14} className="text-sky-600" />
+                          <span className="text-sm text-sky-900">{t.description}</span>
+                        </div>
+                        <span className="text-sm font-medium text-green-600">+{t.amount}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

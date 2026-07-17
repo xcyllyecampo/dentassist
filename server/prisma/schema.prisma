@@ -88,6 +88,8 @@ model Patient {
   prescriptions Prescription[]
   xrayImages    XrayImage[]
   queueEntries  QueueEntry[]
+  patientBadges PatientBadge[]
+  loyaltyPoints LoyaltyPoints?
 }
 
 model Tooth {
@@ -213,4 +215,48 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  icon        String
+  category    String
+  threshold   Int      @default(1)
+  createdAt   DateTime @default(now())
+
+  patientBadges PatientBadge[]
+}
+
+model PatientBadge {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  earnedAt  DateTime @default(now())
+
+  @@unique([patientId, badgeId])
+}
+
+model LoyaltyPoints {
+  id        String   @id @default(cuid())
+  patientId String   @unique
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  points    Int      @default(0)
+  tier      String   @default("Bronze")
+  updatedAt DateTime @updatedAt
+
+  transactions PointTransaction[]
+}
+
+model PointTransaction {
+  id              String   @id @default(cuid())
+  loyaltyPointsId String
+  loyaltyPoints   LoyaltyPoints @relation(fields: [loyaltyPointsId], references: [id], onDelete: Cascade)
+  amount          Int
+  description     String
+  type            String   @default("EARNED")
+  createdAt       DateTime @default(now())
 }
