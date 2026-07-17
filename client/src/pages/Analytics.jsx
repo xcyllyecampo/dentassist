@@ -3,7 +3,8 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { TrendingUp, Users, DollarSign, Calendar } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Calendar, AlertTriangle } from 'lucide-react';
+import Spinner from '../components/Spinner';
 
 const COLORS = ['#0ea5e9', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
@@ -12,8 +13,12 @@ export default function Analytics() {
   const [procedures, setProcedures] = useState([]);
   const [returning, setReturning] = useState([]);
   const [daily, setDaily] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchData = () => {
+    setLoading(true);
+    setError(null);
     Promise.all([
       api.get('/analytics/revenue?days=7'),
       api.get('/analytics/procedures'),
@@ -24,8 +29,22 @@ export default function Analytics() {
       setProcedures(proc.data);
       setReturning(ret.data);
       setDaily(day.data);
-    });
-  }, []);
+    }).catch(() => setError('Failed to load analytics')).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  if (loading) return <Layout><Header title="Clinic Analytics" /><Spinner className="py-20" /></Layout>;
+  if (error) return (
+    <Layout>
+      <Header title="Clinic Analytics" />
+      <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
+        <AlertTriangle className="text-red-500" size={48} />
+        <p className="text-red-600 font-medium">{error}</p>
+        <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">Retry</button>
+      </div>
+    </Layout>
+  );
 
   return (
     <Layout>

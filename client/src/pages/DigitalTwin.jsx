@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import ClinicScene3D from '../components/ClinicScene3D';
+import Spinner from '../components/Spinner';
 import api from '../lib/api';
 import { io } from 'socket.io-client';
+import { AlertTriangle } from 'lucide-react';
 
 const ROOM_COLORS = {
   AVAILABLE: '#10b981',
@@ -24,16 +26,24 @@ export default function DigitalTwin() {
   const [queue, setQueue] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const socketRef = useRef(null);
 
-  useEffect(() => {
+  const fetchData = () => {
+    setLoading(true);
+    setError(null);
     Promise.all([
       api.get('/rooms'),
       api.get('/queue'),
     ]).then(([rms, q]) => {
       setRooms(rms.data);
       setQueue(q.data);
-    });
+    }).catch(() => setError('Failed to load digital twin')).finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchData();
 
     const socket = io(window.location.origin, { path: '/socket.io' });
     socketRef.current = socket;
@@ -54,6 +64,18 @@ export default function DigitalTwin() {
 
     return () => socket.disconnect();
   }, []);
+
+  if (loading) return <Layout><Header title="Digital Twin — Live Clinic View" /><Spinner className="py-20" /></Layout>;
+  if (error) return (
+    <Layout>
+      <Header title="Digital Twin — Live Clinic View" />
+      <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
+        <AlertTriangle className="text-red-500" size={48} />
+        <p className="text-red-600 font-medium">{error}</p>
+        <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">Retry</button>
+      </div>
+    </Layout>
+  );
 
   const waiting = queue.filter(e => e.status === 'WAITING');
   const inProgress = queue.filter(e => e.status === 'IN_PROGRESS');

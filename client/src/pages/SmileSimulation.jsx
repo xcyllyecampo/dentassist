@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
+import { useToast } from '../context/ToastContext';
 import { Sparkles, Camera, Brain, AlertTriangle, CheckCircle, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react';
 
 const TREATMENT_TYPES = [
@@ -30,6 +31,7 @@ function ScoreBar({ current, simulated, label }) {
 }
 
 export default function SmileSimulation() {
+  const toast = useToast();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [treatmentType, setTreatmentType] = useState('whitening');
@@ -54,7 +56,7 @@ export default function SmileSimulation() {
       const res = await api.post('/ai/smile/simulate', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
     } catch (err) {
-      alert('Error running simulation. Make sure the AI service is running.');
+      toast.error('Error running simulation. Make sure the AI service is running.');
     }
     setSimulating(false);
   };

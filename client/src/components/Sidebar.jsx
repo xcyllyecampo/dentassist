@@ -5,7 +5,6 @@ import {
   Stethoscope, Image, BarChart3, Box,
   Settings, LogOut, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
-import { useState } from 'react';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -21,54 +20,103 @@ const navItems = [
   { to: '/digital-twin', icon: Box, label: 'Digital Twin' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+
+  const handleNavClick = () => {
+    if (mobileOpen) setMobileOpen(false);
+  };
 
   return (
-    <aside className={`fixed left-0 top-0 h-full bg-sky-900 text-white transition-all duration-300 z-50 flex flex-col ${collapsed ? 'w-16' : 'w-64'}`}>
-      <div className="p-4 flex items-center justify-between border-b border-sky-700">
-        {!collapsed && (
+    <>
+      {/* Desktop sidebar */}
+      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-sky-900 text-white transition-all duration-300 z-50 flex-col ${collapsed ? 'w-16' : 'w-64'}`}>
+        <div className="p-4 flex items-center justify-between border-b border-sky-700">
+          {!collapsed && (
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🦷</span>
+              <span className="font-bold text-lg">DentAssist</span>
+            </div>
+          )}
+          <button onClick={() => setCollapsed(!collapsed)} className="p-1 hover:bg-sky-700 rounded">
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        </div>
+
+        <nav className="flex-1 py-4 overflow-y-auto">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActive ? 'bg-sky-700 text-white' : 'text-sky-200 hover:bg-sky-800 hover:text-white'}`
+              }
+            >
+              <Icon size={20} />
+              {!collapsed && <span className="text-sm">{label}</span>}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-sky-700">
+          {!collapsed && (
+            <div className="text-xs text-sky-300 mb-2">
+              <div className="font-medium text-white">{user?.name}</div>
+              <div>{user?.role}</div>
+            </div>
+          )}
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sky-200 hover:bg-sky-800 rounded-lg transition-colors"
+          >
+            <LogOut size={18} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile sidebar */}
+      <aside className={`md:hidden fixed left-0 top-0 h-full bg-sky-900 text-white transition-all duration-300 z-50 flex flex-col ${mobileOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
+        <div className="p-4 flex items-center justify-between border-b border-sky-700 min-w-[16rem]">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🦷</span>
             <span className="font-bold text-lg">DentAssist</span>
           </div>
-        )}
-        <button onClick={() => setCollapsed(!collapsed)} className="p-1 hover:bg-sky-700 rounded">
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
+          <button onClick={() => setMobileOpen(false)} className="p-1 hover:bg-sky-700 rounded text-white">
+            <ChevronLeft size={18} />
+          </button>
+        </div>
 
-      <nav className="flex-1 py-4 overflow-y-auto">
-        {navItems.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActive ? 'bg-sky-700 text-white' : 'text-sky-200 hover:bg-sky-800 hover:text-white'}`
-            }
-          >
-            <Icon size={20} />
-            {!collapsed && <span className="text-sm">{label}</span>}
-          </NavLink>
-        ))}
-      </nav>
+        <nav className="flex-1 py-4 overflow-y-auto min-w-[16rem]">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              onClick={handleNavClick}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActive ? 'bg-sky-700 text-white' : 'text-sky-200 hover:bg-sky-800 hover:text-white'}`
+              }
+            >
+              <Icon size={20} />
+              <span className="text-sm">{label}</span>
+            </NavLink>
+          ))}
+        </nav>
 
-      <div className="p-4 border-t border-sky-700">
-        {!collapsed && (
+        <div className="p-4 border-t border-sky-700 min-w-[16rem]">
           <div className="text-xs text-sky-300 mb-2">
             <div className="font-medium text-white">{user?.name}</div>
             <div>{user?.role}</div>
           </div>
-        )}
-        <button
-          onClick={logout}
-          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sky-200 hover:bg-sky-800 rounded-lg transition-colors"
-        >
-          <LogOut size={18} />
-          {!collapsed && <span>Logout</span>}
-        </button>
-      </div>
-    </aside>
+          <button
+            onClick={logout}
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sky-200 hover:bg-sky-800 rounded-lg transition-colors"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

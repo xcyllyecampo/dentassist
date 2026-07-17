@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
+import { useToast } from '../context/ToastContext';
 import { Stethoscope, AlertTriangle, CheckCircle, Brain } from 'lucide-react';
 
 const SYMPTOMS = [
@@ -16,6 +17,7 @@ const SYMPTOMS = [
 ];
 
 export default function TreatmentSupport() {
+  const toast = useToast();
   const [symptoms, setSymptoms] = useState([]);
   const [examination, setExamination] = useState('');
   const [patientAge, setPatientAge] = useState('');
@@ -41,7 +43,7 @@ export default function TreatmentSupport() {
       });
       setResults(res.data);
     } catch (err) {
-      alert('Error getting suggestions. Make sure the AI service is running.');
+      toast.error('Error getting suggestions. Make sure the AI service is running.');
     }
     setLoading(false);
   };

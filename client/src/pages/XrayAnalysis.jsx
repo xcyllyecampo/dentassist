@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
+import { useToast } from '../context/ToastContext';
 import { Upload, Brain, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function XrayAnalysis() {
+  const toast = useToast();
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState('');
   const [images, setImages] = useState([]);
@@ -12,11 +14,11 @@ export default function XrayAnalysis() {
   const [analyzing, setAnalyzing] = useState(null);
   const [directAnalysis, setDirectAnalysis] = useState(null);
 
-  useEffect(() => { api.get('/patients').then(res => setPatients(res.data)); }, []);
+  useEffect(() => { api.get('/patients').then(res => setPatients(res.data)).catch(() => {}); }, []);
 
   useEffect(() => {
     if (selectedPatient) {
-      api.get(`/xray/patient/${selectedPatient}`).then(res => setImages(res.data));
+      api.get(`/xray/patient/${selectedPatient}`).then(res => setImages(res.data)).catch(() => setImages([]));
     }
   }, [selectedPatient]);
 
@@ -31,7 +33,8 @@ export default function XrayAnalysis() {
     try {
       const res = await api.post('/xray/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setImages([res.data, ...images]);
-    } catch (err) { alert('Error uploading image'); }
+      toast.success('X-ray uploaded');
+    } catch (err) { toast.error('Error uploading image'); }
     setUploading(false);
   };
 
@@ -45,7 +48,7 @@ export default function XrayAnalysis() {
     try {
       const res = await api.post('/ai/xray/analyze', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setDirectAnalysis({ ...res.data, fileName: file.name });
-    } catch (err) { alert('Error analyzing image. Make sure the AI service is running.'); }
+    } catch (err) { toast.error('Error analyzing image. Make sure the AI service is running.'); }
     setAnalyzing(null);
   };
 
@@ -54,7 +57,7 @@ export default function XrayAnalysis() {
     try {
       const res = await api.post(`/xray/analyze/${imageId}`);
       setImages(images.map(img => img.id === imageId ? res.data : img));
-    } catch (err) { alert('Error analyzing image'); }
+    } catch (err) { toast.error('Error analyzing image'); }
     setAnalyzing(null);
   };
 

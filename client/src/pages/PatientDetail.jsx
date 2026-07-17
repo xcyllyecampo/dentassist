@@ -3,15 +3,29 @@ import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
+import Spinner from '../components/Spinner';
+import { AlertTriangle } from 'lucide-react';
 
 export default function PatientDetail() {
   const { id } = useParams();
   const [patient, setPatient] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => { api.get(`/patients/${id}`).then(res => setPatient(res.data)); }, [id]);
+  const fetchPatient = () => {
+    setLoading(true);
+    setError(null);
+    api.get(`/patients/${id}`)
+      .then(res => setPatient(res.data))
+      .catch(() => setError('Failed to load patient details'))
+      .finally(() => setLoading(false));
+  };
 
-  if (!patient) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center">Loading...</div></Layout>;
+  useEffect(() => { fetchPatient(); }, [id]);
+
+  if (loading) return <Layout><Header title="Patient Detail" /><Spinner className="py-20" /></Layout>;
+  if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-sky-600 hover:text-sky-800 font-medium">Retry</button></div></Layout>;
 
   const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays'];
 

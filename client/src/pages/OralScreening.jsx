@@ -2,9 +2,11 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
+import { useToast } from '../context/ToastContext';
 import { Camera, AlertTriangle, CheckCircle, Brain } from 'lucide-react';
 
 export default function OralScreening() {
+  const toast = useToast();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
@@ -27,7 +29,7 @@ export default function OralScreening() {
       const res = await api.post('/ai/oral/screen', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
     } catch (err) {
-      alert('Error analyzing image. Make sure the AI service is running.');
+      toast.error('Error analyzing image. Make sure the AI service is running.');
     }
     setAnalyzing(false);
   };

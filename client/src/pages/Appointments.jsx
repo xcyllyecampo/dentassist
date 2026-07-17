@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
+import Spinner from '../components/Spinner';
+import EmptyState from '../components/EmptyState';
 import api from '../lib/api';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { Plus, ChevronLeft, ChevronRight, Calendar, AlertTriangle } from 'lucide-react';
 
 export default function Appointments() {
+  const toast = useToast();
   const [appointments, setAppointments] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [patients, setPatients] = useState([]);
@@ -12,8 +16,12 @@ export default function Appointments() {
   const [rooms, setRooms] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [form, setForm] = useState({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
+    setLoading(true);
+    setError(null);
     const dateStr = selectedDate.toISOString().split('T')[0];
     Promise.all([
       api.get(`/appointments?date=${dateStr}`),
@@ -25,8 +33,13 @@ export default function Appointments() {
       setPatients(pts.data);
       setDentists(dash.data.dentists);
       setRooms(rms.data);
-    });
+    }).catch(() => setError('Failed to load appointments'))
+      .finally(() => setLoading(false));
   }, [selectedDate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -35,14 +48,16 @@ export default function Appointments() {
       setAppointments([...appointments, res.data]);
       setShowModal(false);
       setForm({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
-    } catch (err) { alert(err.response?.data?.error || 'Error creating appointment'); }
+      toast.success('Appointment booked');
+    } catch (err) { toast.error(err.response?.data?.error || 'Error creating appointment'); }
   };
 
   const handleStatusUpdate = async (id, status) => {
     try {
       const res = await api.put(`/appointments/${id}`, { status });
       setAppointments(appointments.map(a => a.id === id ? res.data : a));
-    } catch (err) { alert('Error updating appointment'); }
+      toast.success('Status updated');
+    } catch (err) { toast.error('Error updating appointment'); }
   };
 
   const prevDay = () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d); };
@@ -54,6 +69,18 @@ export default function Appointments() {
     <Layout>
       <Header title="Appointments" />
       <div className="p-6">
+        {loading ? (
+          <Spinner className="py-20" />
+        ) : error ? (
+          <div className="text-center py-20">
+            <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
+            <h3 className="text-sm font-medium text-gray-700 mb-2">{error}</h3>
+            <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">Retry</button>
+          </div>
+        ) : appointments.length === 0 ? (
+          <EmptyState icon={Calendar} title="No appointments for this day" description="Create a new appointment or navigate to a different day" />
+        ) : (
+        <>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <button onClick={prevDay} className="p-2 hover:bg-sky-100 rounded-lg"><ChevronLeft size={20} /></button>
@@ -99,6 +126,8 @@ export default function Appointments() {
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

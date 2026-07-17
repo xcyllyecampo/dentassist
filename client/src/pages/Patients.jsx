@@ -3,15 +3,30 @@ import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
-import { Plus, Search, Eye, Trash2 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import Spinner from '../components/Spinner';
+import EmptyState from '../components/EmptyState';
+import { Plus, Search, Eye, Trash2, Users, AlertTriangle } from 'lucide-react';
 
 export default function Patients() {
+  const toast = useToast();
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', dob: '', gender: '', bloodType: '', allergies: '', medicalHistory: '' });
 
-  useEffect(() => { api.get('/patients').then(res => setPatients(res.data)); }, []);
+  const fetchPatients = () => {
+    setLoading(true);
+    setError(null);
+    api.get('/patients')
+      .then(res => setPatients(res.data))
+      .catch(() => setError('Failed to load patients'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchPatients(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -20,7 +35,8 @@ export default function Patients() {
       setPatients([res.data, ...patients]);
       setShowModal(false);
       setForm({ name: '', email: '', phone: '', dob: '', gender: '', bloodType: '', allergies: '', medicalHistory: '' });
-    } catch (err) { alert(err.response?.data?.error || 'Error creating patient'); }
+      toast.success('Patient created successfully');
+    } catch (err) { toast.error(err.response?.data?.error || 'Error creating patient'); }
   };
 
   const handleDelete = async (id) => {
@@ -28,7 +44,8 @@ export default function Patients() {
     try {
       await api.delete(`/patients/${id}`);
       setPatients(patients.filter(p => p.id !== id));
-    } catch (err) { alert('Error deleting patient'); }
+      toast.success('Patient deleted');
+    } catch (err) { toast.error('Error deleting patient'); }
   };
 
   const filtered = patients.filter(p =>
@@ -54,8 +71,17 @@ export default function Patients() {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-x-auto">
+          {loading ? (
+            <Spinner className="py-20" />
+          ) : error ? (
+            <div className="py-12 text-center">
+              <AlertTriangle size={36} className="mx-auto mb-3 text-red-400" />
+              <p className="text-sm text-red-600 mb-3">{error}</p>
+              <button onClick={fetchPatients} className="text-sm text-sky-600 hover:text-sky-800 font-medium">Retry</button>
+            </div>
+          ) : (
+          <table className="w-full min-w-[640px]">
             <thead className="bg-sky-50 text-sky-900 text-sm">
               <tr>
                 <th className="text-left px-6 py-3 font-medium">Name</th>
@@ -67,7 +93,9 @@ export default function Patients() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((p) => (
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6}><EmptyState icon={Users} title={search ? "No patients match your search" : "No patients yet"} description={search ? "Try a different search term" : "Add your first patient to get started"} /></td></tr>
+              ) : filtered.map((p) => (
                 <tr key={p.id} className="border-t border-sky-50 hover:bg-sky-25">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -93,6 +121,7 @@ export default function Patients() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
 
         {showModal && (

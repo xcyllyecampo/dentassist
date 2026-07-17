@@ -1,18 +1,34 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
+import Spinner from '../components/Spinner';
 import api from '../lib/api';
-import { Plus, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { Plus, Clock, CheckCircle, XCircle, Loader, AlertTriangle } from 'lucide-react';
 
 export default function Queue() {
+  const toast = useToast();
   const [queue, setQueue] = useState([]);
   const [patients, setPatients] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = () => {
+    setLoading(true);
+    setError(null);
+    Promise.all([api.get('/queue'), api.get('/patients')])
+      .then(([queueRes, patientsRes]) => {
+        setQueue(queueRes.data);
+        setPatients(patientsRes.data);
+      })
+      .catch(() => setError('Failed to load queue'))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    api.get('/queue').then(res => setQueue(res.data));
-    api.get('/patients').then(res => setPatients(res.data));
+    fetchData();
   }, []);
 
   const handleAdd = async () => {
@@ -22,14 +38,16 @@ export default function Queue() {
       setQueue([...queue, res.data]);
       setShowModal(false);
       setSelectedPatient('');
-    } catch (err) { alert('Error adding to queue'); }
+      toast.success('Patient added to queue');
+    } catch (err) { toast.error('Error adding to queue'); }
   };
 
   const handleStatusUpdate = async (id, status) => {
     try {
       await api.put(`/queue/${id}`, { status });
       setQueue(queue.filter(e => e.id !== id));
-    } catch (err) { alert('Error updating queue'); }
+      toast.success('Queue status updated');
+    } catch (err) { toast.error('Error updating queue'); }
   };
 
   const waiting = queue.filter(e => e.status === 'WAITING');
@@ -39,6 +57,16 @@ export default function Queue() {
     <Layout>
       <Header title="Queue Management" />
       <div className="p-6">
+        {loading && <Spinner className="py-20" />}
+        {error && (
+          <div className="text-center py-20">
+            <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
+            <p className="text-red-600 mb-4">{error}</p>
+            <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">Retry</button>
+          </div>
+        )}
+        {!loading && !error && (
+        <>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-6">
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 text-center">
@@ -123,19 +151,21 @@ export default function Queue() {
             </div>
           </div>
         </div>
-
+        </>
+        )}
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
               <h2 className="text-lg font-bold text-sky-900 mb-4">Add Patient to Queue</h2>
               <select value={selectedPatient} onChange={e => setSelectedPatient(e.target.value)}
-                className="w-full px-3 py-2 border border-sky-200 rounded-lg text-sm mb-4 focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 focus:ring-2 focus:ring-sky-400 focus:outline-none ${selectedPatient === '' ? 'border-red-300 bg-red-50' : 'border-sky-200'}`}>
                 <option value="">Select Patient</option>
                 {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
               </select>
+              {selectedPatient === '' && <p className="text-xs text-red-500 -mt-2 mb-3">Please select a patient</p>}
               <div className="flex justify-end gap-3">
                 <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                <button onClick={handleAdd} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">Add to Queue</button>
+                <button onClick={handleAdd} disabled={!selectedPatient} className={`px-4 py-2 text-white rounded-lg text-sm font-medium ${selectedPatient ? 'bg-sky-600 hover:bg-sky-700' : 'bg-gray-300 cursor-not-allowed'}`}>Add to Queue</button>
               </div>
             </div>
           </div>
