@@ -55,14 +55,14 @@ const MOCK_RESPONSES = {
       {
         name: "Dental Caries (Tooth Decay)",
         treatments: [
-          { name: "Composite Filling", description: "Tooth-colored resin filling to restore the damaged tooth structure.", cost_range: "$150-$300", duration: "30-45 min", priority: "recommended" },
-          { name: "Dental Crown", description: "Full coverage crown for extensively damaged teeth.", cost_range: "$800-$1,500", duration: "2 visits", priority: "alternative" },
+          { name: "Composite Filling", description: "Tooth-colored resin filling to restore the damaged tooth structure.", cost_range: "₱800 - ₱2,500", duration: "30-45 min", priority: "recommended" },
+          { name: "Dental Crown", description: "Full coverage crown (PFM or zirconia) for extensively damaged teeth.", cost_range: "₱8,000 - ₱20,000", duration: "2 visits", priority: "alternative" },
         ],
       },
       {
         name: "Gingivitis",
         treatments: [
-          { name: "Professional Cleaning", description: "Deep cleaning (scaling and root planing) to remove tartar and bacteria.", cost_range: "$200-$400", duration: "60-90 min", priority: "recommended" },
+          { name: "Professional Cleaning", description: "Deep cleaning (scaling and root planing) to remove tartar and bacteria.", cost_range: "₱500 - ₱1,500", duration: "60-90 min", priority: "recommended" },
         ],
       },
     ],
@@ -91,7 +91,7 @@ const MOCK_RESPONSES = {
         : ["Straighter tooth alignment", "Improved bite correction", "Gradual movement over treatment period"],
     },
     procedures: [
-      { name: treatmentType === "whitening" ? "Professional Teeth Whitening" : treatmentType === "veneers" ? "Porcelain Veneers" : "Orthodontic Alignment", description: `Professional ${treatmentType} treatment tailored to your needs.`, cost: treatmentType === "whitening" ? "$300-$600" : treatmentType === "veneers" ? "$900-$2,500/tooth" : "$3,000-$7,000", duration: treatmentType === "whitening" ? "1-2 hours" : treatmentType === "veneers" ? "2-3 visits" : "12-18 months" },
+      { name: treatmentType === "whitening" ? "Professional Teeth Whitening" : treatmentType === "veneers" ? "Porcelain Veneers" : "Orthodontic Alignment", description: `Professional ${treatmentType} treatment tailored to your needs.`, cost: treatmentType === "whitening" ? "₱5,000 - ₱12,000" : treatmentType === "veneers" ? "₱12,000 - ₱35,000/tooth" : "₱25,000 - ₱55,000", duration: treatmentType === "whitening" ? "1-2 hours" : treatmentType === "veneers" ? "2-3 visits" : "12-18 months" },
     ],
     timeline: treatmentType === "whitening" ? "Results visible immediately. Full effect within 48 hours." : treatmentType === "veneers" ? "Completed in 2-3 visits over 2-3 weeks." : "Gradual improvement over 12-18 months with regular check-ups.",
     maintenance: "Maintain good oral hygiene. Avoid staining foods for 48h after whitening. Regular dental check-ups every 6 months.",
