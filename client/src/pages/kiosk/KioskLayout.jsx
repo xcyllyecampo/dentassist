@@ -16,7 +16,7 @@ export default function KioskLayout({ children, showBack = true, title }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-[#003782] flex flex-col items-center">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 shrink-0 w-full max-w-md">
+      <header className="flex items-center justify-between px-6 py-3 shrink-0 w-full max-w-2xl">
         <div className="flex items-center gap-3">
           {showBack && !isHome && (
             <button
@@ -39,13 +39,13 @@ export default function KioskLayout({ children, showBack = true, title }) {
 
       {/* Title bar */}
       {title && (
-        <div className="px-4 pb-3 shrink-0 w-full max-w-md">
+        <div className="px-6 pb-3 shrink-0 w-full max-w-2xl">
           <h1 className="text-xl font-bold text-white">{title}</h1>
         </div>
       )}
 
-      {/* Content — centered vertical column */}
-      <main className="flex-1 overflow-y-auto px-4 pb-6 w-full max-w-md">
+      {/* Content */}
+      <main className="flex-1 overflow-y-auto px-6 pb-6 w-full max-w-2xl">
         {children}
       </main>
     </div>
