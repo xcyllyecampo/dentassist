@@ -38,14 +38,14 @@ export default function OralScreening() {
     <Layout>
       <Header title="AI Oral Screening" />
       <div className="p-6">
-        <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-8 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-6">
           <div className="text-center">
-            <Camera size={48} className="text-sky-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-sky-900 mb-2">Upload Mouth Photo for Screening</h3>
+            <Camera size={48} className="text-indigo-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Upload Mouth Photo for Screening</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               Take a clear photo of the inside of your mouth. The AI will analyze it and highlight any areas of concern.
             </p>
-            <label className="inline-flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 cursor-pointer font-medium">
+            <label className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 cursor-pointer font-medium">
               <Camera size={18} /> Choose Photo
               <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             </label>
@@ -54,20 +54,20 @@ export default function OralScreening() {
 
         {preview && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-              <h3 className="font-bold text-sky-900 mb-4">Uploaded Photo</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="font-bold text-slate-900 mb-4">Uploaded Photo</h3>
               <img src={preview} alt="Oral photo" className="w-full rounded-lg" />
               <button onClick={handleAnalyze} disabled={analyzing}
-                className="w-full mt-4 bg-sky-600 text-white py-3 rounded-lg font-medium hover:bg-sky-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full mt-4 bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
                 <Brain size={18} />
                 {analyzing ? 'Analyzing with AI...' : 'Run AI Analysis'}
               </button>
             </div>
 
             {result && (
-              <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-sky-900">Analysis Results</h3>
+                  <h3 className="font-bold text-slate-900">Analysis Results</h3>
                   <span className={`text-xs px-3 py-1 rounded-full ${result.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                     {result.source === 'openai' ? 'GPT-4 Vision' : 'Demo Mode'}
                   </span>
@@ -80,7 +80,7 @@ export default function OralScreening() {
                       <div className={`h-full rounded-full ${(result.overall_score || 0) > 80 ? 'bg-green-500' : (result.overall_score || 0) > 60 ? 'bg-amber-500' : 'bg-red-500'}`}
                         style={{ width: `${result.overall_score || 0}%` }} />
                     </div>
-                    <span className="text-lg font-bold text-sky-900">{result.overall_score}/100</span>
+                    <span className="text-lg font-bold text-slate-900">{result.overall_score}/100</span>
                   </div>
                 </div>
 
@@ -92,7 +92,7 @@ export default function OralScreening() {
                       'bg-red-50 border-red-200'
                     }`}>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm text-sky-900">{area.region}</span>
+                        <span className="font-medium text-sm text-slate-900">{area.region}</span>
                         <span className="text-xs text-gray-500">{(area.confidence * 100).toFixed(0)}%</span>
                       </div>
                       <div className="text-xs text-gray-600 mt-1">{area.concern}</div>
@@ -102,7 +102,7 @@ export default function OralScreening() {
 
                 {result.recommendations?.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-bold text-sky-900 mb-2">Recommendations</h4>
+                    <h4 className="text-sm font-bold text-slate-900 mb-2">Recommendations</h4>
                     <ul className="space-y-1">
                       {result.recommendations.map((rec, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-600">

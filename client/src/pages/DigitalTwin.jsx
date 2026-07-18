@@ -72,7 +72,7 @@ export default function DigitalTwin() {
       <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
         <AlertTriangle className="text-red-500" size={48} />
         <p className="text-red-600 font-medium">{error}</p>
-        <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors text-sm">Retry</button>
+        <button onClick={fetchData} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">Retry</button>
       </div>
     </Layout>
   );
@@ -87,18 +87,18 @@ export default function DigitalTwin() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* 3D Viewport */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-sky-100">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-xs font-medium text-sky-900">Live — Real-time 3D View</span>
+                  <span className="text-xs font-medium text-slate-900">Live — Real-time 3D View</span>
                 </div>
                 <span className="text-[10px] text-gray-400">
                   Last update: {lastUpdate.toLocaleTimeString()}
                 </span>
               </div>
 
-              <div className="h-[520px] bg-gradient-to-b from-sky-50 to-indigo-50 relative">
+              <div className="h-[520px] bg-gradient-to-b from-indigo-50 to-indigo-50 relative">
                 <ClinicScene3D
                   rooms={rooms}
                   queue={queue}
@@ -108,7 +108,7 @@ export default function DigitalTwin() {
               </div>
 
               {/* Legend */}
-              <div className="flex items-center gap-6 px-4 py-3 border-t border-sky-100 bg-gray-50">
+              <div className="flex items-center gap-6 px-4 py-3 border-t border-slate-200 bg-gray-50">
                 {Object.entries(ROOM_COLORS).map(([status, color]) => (
                   <div key={status} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
@@ -123,8 +123,8 @@ export default function DigitalTwin() {
           {/* Side Panel */}
           <div className="space-y-4">
             {/* Live Queue */}
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3 flex items-center gap-2">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <h3 className="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
                 <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
                 Live Queue
               </h3>
@@ -137,7 +137,7 @@ export default function DigitalTwin() {
                       {entry.position}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-sky-900 truncate">{entry.patient?.user?.name}</div>
+                      <div className="text-xs font-medium text-slate-900 truncate">{entry.patient?.user?.name}</div>
                       <div className="text-[10px] text-gray-500">~{entry.estimatedWait} min wait</div>
                     </div>
                   </div>
@@ -146,28 +146,28 @@ export default function DigitalTwin() {
             </div>
 
             {/* Currently Serving */}
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3 flex items-center gap-2">
-                <div className="w-2 h-2 bg-sky-500 rounded-full animate-pulse" />
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <h3 className="font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse" />
                 Currently Serving
               </h3>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {inProgress.length === 0 ? (
                   <p className="text-gray-400 text-xs">None</p>
                 ) : inProgress.map((entry) => (
-                  <div key={entry.id} className="flex items-center gap-2 p-2 bg-sky-50 rounded-lg">
-                    <div className="w-6 h-6 bg-sky-200 text-sky-800 rounded-full flex items-center justify-center text-xs font-bold">
+                  <div key={entry.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+                    <div className="w-6 h-6 bg-indigo-200 text-indigo-800 rounded-full flex items-center justify-center text-xs font-bold">
                       {entry.position}
                     </div>
-                    <div className="text-xs font-medium text-sky-900 truncate">{entry.patient?.user?.name}</div>
+                    <div className="text-xs font-medium text-slate-900 truncate">{entry.patient?.user?.name}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Room Summary */}
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3">Room Status</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <h3 className="font-bold text-slate-900 text-sm mb-3">Room Status</h3>
               <div className="space-y-2">
                 {Object.entries(ROOM_COLORS).map(([status, color]) => (
                   <div key={status} className="flex items-center justify-between">
@@ -175,7 +175,7 @@ export default function DigitalTwin() {
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
                       <span className="text-xs text-gray-600">{ROOM_LABELS[status]}</span>
                     </div>
-                    <span className="text-xs font-bold text-sky-900">
+                    <span className="text-xs font-bold text-slate-900">
                       {rooms.filter(r => r.status === status).length}
                     </span>
                   </div>
@@ -184,11 +184,11 @@ export default function DigitalTwin() {
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-gray-500">Total Rooms</span>
-                  <span className="text-sm font-bold text-sky-900">{rooms.length}</span>
+                  <span className="text-sm font-bold text-slate-900">{rooms.length}</span>
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-xs font-medium text-gray-500">Utilization</span>
-                  <span className="text-sm font-bold text-sky-900">
+                  <span className="text-sm font-bold text-slate-900">
                     {rooms.length > 0 ? Math.round((rooms.filter(r => r.status === 'OCCUPIED').length / rooms.length) * 100) : 0}%
                   </span>
                 </div>
@@ -196,16 +196,16 @@ export default function DigitalTwin() {
             </div>
 
             {/* Queue Stats */}
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-4">
-              <h3 className="font-bold text-sky-900 text-sm mb-3">Queue Stats</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+              <h3 className="font-bold text-slate-900 text-sm mb-3">Queue Stats</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-amber-50 rounded-lg p-3 text-center">
                   <div className="text-lg font-bold text-amber-700">{waiting.length}</div>
                   <div className="text-[10px] text-amber-600">Waiting</div>
                 </div>
-                <div className="bg-sky-50 rounded-lg p-3 text-center">
-                  <div className="text-lg font-bold text-sky-700">{inProgress.length}</div>
-                  <div className="text-[10px] text-sky-600">In Service</div>
+                <div className="bg-slate-50 rounded-lg p-3 text-center">
+                  <div className="text-lg font-bold text-indigo-700">{inProgress.length}</div>
+                  <div className="text-[10px] text-indigo-600">In Service</div>
                 </div>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function DigitalTwin() {
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: ROOM_COLORS[selectedRoom.status] }} />
-                <h2 className="text-lg font-bold text-sky-900">Room {selectedRoom.number} — {selectedRoom.name}</h2>
+                <h2 className="text-lg font-bold text-slate-900">Room {selectedRoom.number} — {selectedRoom.name}</h2>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -234,24 +234,24 @@ export default function DigitalTwin() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Patient</span>
-                      <span className="text-sm font-medium text-sky-900">{selectedRoom.appointments[0].patient?.user?.name}</span>
+                      <span className="text-sm font-medium text-slate-900">{selectedRoom.appointments[0].patient?.user?.name}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Dentist</span>
-                      <span className="text-sm font-medium text-sky-900">{selectedRoom.appointments[0].dentist?.name}</span>
+                      <span className="text-sm font-medium text-slate-900">{selectedRoom.appointments[0].dentist?.name}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Procedure</span>
-                      <span className="text-sm font-medium text-sky-900">{selectedRoom.appointments[0].reason}</span>
+                      <span className="text-sm font-medium text-slate-900">{selectedRoom.appointments[0].reason}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Time</span>
-                      <span className="text-sm font-medium text-sky-900">{selectedRoom.appointments[0].time}</span>
+                      <span className="text-sm font-medium text-slate-900">{selectedRoom.appointments[0].time}</span>
                     </div>
                   </>
                 )}
               </div>
-              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-sky-600 text-white py-2 rounded-lg text-sm hover:bg-sky-700 transition-colors">Close</button>
+              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-indigo-600 text-white py-2 rounded-lg text-sm hover:bg-indigo-700 transition-colors">Close</button>
             </div>
           </div>
         )}

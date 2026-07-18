@@ -19,7 +19,7 @@ function Floor() {
 }
 
 function Walls() {
-  const wallMat = { color: '#e0f2fe', transparent: true, opacity: 0.3 };
+  const wallMat = { color: '#e0e7ff', transparent: true, opacity: 0.3 };
   return (
     <group>
       <mesh position={[0, 1, -7]} castShadow>

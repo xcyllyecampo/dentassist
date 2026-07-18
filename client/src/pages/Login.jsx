@@ -35,34 +35,18 @@ export default function Login() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0c0f1a] via-[#1a1040] to-[#0f172a]"
-        style={{ backgroundSize: '400% 400%', animation: 'gradient-shift 15s ease infinite' }} />
+      {/* Video background */}
+      <video autoPlay loop muted playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%230f172a' width='1920' height='1080'/%3E%3C/svg%3E"
+        src="/videos/DentASSISTadvertisementvideo.mp4" />
 
-      {/* Floating orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-sky-500/8 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
-
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.03]"
-        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      {/* Dark overlay for readability */}
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* Login card */}
       <div className="relative z-10 w-full max-w-md animate-slide-up">
-        <div className="glass-card rounded-3xl shadow-2xl shadow-black/20 overflow-hidden">
-          {/* Logo header */}
-          <div className="relative p-8 text-center overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-violet-500/10" />
-            <div className="relative">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-xl shadow-indigo-500/30 animate-glow-pulse">
-                🦷
-              </div>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">DentAssist</h1>
-              <p className="text-sm text-slate-500 mt-1 font-medium">AI-Powered Dental Clinic System</p>
-            </div>
-          </div>
-
+        <div className="glass-card rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b border-slate-100 mx-6">
             <button onClick={() => { playClick(); setIsLogin(true); }}

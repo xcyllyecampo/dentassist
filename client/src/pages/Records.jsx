@@ -41,7 +41,7 @@ export default function Records() {
           <div className="text-center py-20">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <p className="text-red-600 mb-4">{error}</p>
-            <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">Retry</button>
+            <button onClick={fetchData} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Retry</button>
           </div>
         )}
         {!loading && !error && (
@@ -52,7 +52,7 @@ export default function Records() {
                 placeholder="Search patient to view records..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full px-4 py-3 border border-sky-200 rounded-xl text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -63,13 +63,13 @@ export default function Records() {
                 {filtered.map((p) => (
                   <div key={p.id}
                     onClick={() => navigate(`/patients/${p.id}`)}
-                    className="bg-white rounded-xl shadow-sm border border-sky-100 p-5 cursor-pointer hover:shadow-md hover:border-sky-300 transition-all">
+                    className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 cursor-pointer hover:shadow-md hover:border-indigo-300 transition-all">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 bg-sky-200 text-sky-800 rounded-full flex items-center justify-center font-bold text-lg">
+                      <div className="w-12 h-12 bg-indigo-200 text-indigo-800 rounded-full flex items-center justify-center font-bold text-lg">
                         {p.user?.name?.charAt(0)}
                       </div>
                       <div>
-                        <div className="font-bold text-sky-900">{p.user?.name}</div>
+                        <div className="font-bold text-slate-900">{p.user?.name}</div>
                         <div className="text-xs text-gray-500">{p.user?.email}</div>
                       </div>
                     </div>
@@ -78,7 +78,7 @@ export default function Records() {
                       <div>Gender: {p.gender || 'N/A'}</div>
                       <div className="col-span-2">Allergies: <span className="text-red-600">{p.allergies || 'None'}</span></div>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-sky-50 text-xs text-sky-600 font-medium">
+                    <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-indigo-600 font-medium">
                       Click to view full records →
                     </div>
                   </div>

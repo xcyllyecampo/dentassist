@@ -72,7 +72,7 @@ export default function FloatingAI() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-sky-600 hover:bg-sky-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
         >
           <MessageCircle size={24} className="group-hover:scale-110 transition-transform" />
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
@@ -83,14 +83,14 @@ export default function FloatingAI() {
       {open && (
         <div className="fixed bottom-6 right-6 z-50 w-[400px] h-[560px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden transition-all duration-300">
           {/* Header */}
-          <div className="bg-sky-900 text-white p-3 flex items-center justify-between shrink-0">
+          <div className="bg-slate-900 text-white p-3 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-sky-700 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-indigo-700 rounded-full flex items-center justify-center">
                 <Bot size={16} />
               </div>
               <div>
                 <div className="font-bold text-sm">DentAssist AI</div>
-                <div className="text-[10px] text-sky-300 flex items-center gap-1">
+                <div className="text-[10px] text-indigo-300 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
                   Live clinic data
                 </div>
@@ -104,7 +104,7 @@ export default function FloatingAI() {
                   {source === 'openai' ? 'GPT-4' : 'Smart Mode'}
                 </span>
               )}
-              <button onClick={() => setOpen(false)} className="p-1 hover:bg-sky-700 rounded transition-colors">
+              <button onClick={() => setOpen(false)} className="p-1 hover:bg-indigo-700 rounded transition-colors">
                 <Minus size={16} />
               </button>
             </div>
@@ -115,14 +115,14 @@ export default function FloatingAI() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-6 h-6 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shrink-0 mt-0.5">
                     <Bot size={12} />
                   </div>
                 )}
                 <div className={`max-w-[80%] px-3 py-2 rounded-xl text-[13px] leading-relaxed whitespace-pre-line ${
                   msg.role === 'user'
-                    ? 'bg-sky-600 text-white rounded-br-sm'
-                    : 'bg-sky-50 text-sky-900 border border-sky-100 rounded-bl-sm'
+                    ? 'bg-indigo-600 text-white rounded-br-sm'
+                    : 'bg-slate-50 text-slate-900 border border-slate-200 rounded-bl-sm'
                 }`}>
                   {msg.text}
                 </div>
@@ -135,14 +135,14 @@ export default function FloatingAI() {
             ))}
             {typing && (
               <div className="flex gap-2">
-                <div className="w-6 h-6 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center">
                   <Bot size={12} />
                 </div>
-                <div className="bg-sky-50 border border-sky-100 px-3 py-2 rounded-xl rounded-bl-sm">
+                <div className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl rounded-bl-sm">
                   <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" />
-                    <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-1.5 h-1.5 bg-sky-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" />
+                    <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                   </div>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function FloatingAI() {
                 <button
                   key={chip}
                   onClick={() => handleSend(chip)}
-                  className="text-[11px] px-2.5 py-1 bg-sky-100 text-sky-700 rounded-full hover:bg-sky-200 transition-colors font-medium"
+                  className="text-[11px] px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors font-medium"
                 >
                   {chip}
                 </button>
@@ -175,13 +175,13 @@ export default function FloatingAI() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask about patients, rooms, queue..."
-                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent"
+                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 disabled={typing}
               />
               <button
                 onClick={() => handleSend()}
                 disabled={typing || !input.trim()}
-                className="bg-sky-600 text-white px-3 py-2 rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Send size={14} />
               </button>

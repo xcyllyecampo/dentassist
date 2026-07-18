@@ -16,11 +16,11 @@ function ScoreBar({ current, simulated, label }) {
     <div className="mb-4">
       <div className="flex items-center justify-between text-sm mb-1">
         <span className="text-gray-500">{label}</span>
-        <span className="font-bold text-sky-900">{current} → {simulated}</span>
+        <span className="font-bold text-slate-900">{current} → {simulated}</span>
       </div>
       <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
         <div className="absolute h-full bg-gray-400 rounded-full" style={{ width: `${current}%` }} />
-        <div className="absolute h-full bg-gradient-to-r from-sky-400 to-green-400 rounded-full opacity-70" style={{ width: `${simulated}%` }} />
+        <div className="absolute h-full bg-gradient-to-r from-indigo-400 to-green-400 rounded-full opacity-70" style={{ width: `${simulated}%` }} />
       </div>
       <div className="flex justify-between text-xs text-gray-400 mt-0.5">
         <span>Current</span>
@@ -65,10 +65,10 @@ export default function SmileSimulation() {
     <Layout>
       <Header title="Smile Simulation" />
       <div className="p-6">
-        <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-8 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-6">
           <div className="text-center mb-6">
-            <Sparkles size={48} className="text-sky-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-sky-900 mb-2">Virtual Smile Makeover</h3>
+            <Sparkles size={48} className="text-indigo-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Virtual Smile Makeover</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
               Upload a smile photo and see how different treatments could transform your smile. Choose a treatment type below to get started.
             </p>
@@ -79,18 +79,18 @@ export default function SmileSimulation() {
               <button key={t.value} onClick={() => setTreatmentType(t.value)}
                 className={`p-4 rounded-xl border-2 text-left transition-all ${
                   treatmentType === t.value
-                    ? 'border-sky-500 bg-sky-50 shadow-sm'
-                    : 'border-gray-200 hover:border-sky-300 hover:bg-gray-50'
+                    ? 'border-indigo-500 bg-slate-50 shadow-sm'
+                    : 'border-gray-200 hover:border-indigo-300 hover:bg-gray-50'
                 }`}>
                 <div className="text-2xl mb-1">{t.icon}</div>
-                <div className="font-medium text-sky-900 text-sm">{t.label}</div>
+                <div className="font-medium text-slate-900 text-sm">{t.label}</div>
                 <div className="text-xs text-gray-500 mt-0.5">{t.desc}</div>
               </button>
             ))}
           </div>
 
           <div className="text-center">
-            <label className="inline-flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 cursor-pointer font-medium">
+            <label className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 cursor-pointer font-medium">
               <Camera size={18} /> Choose Smile Photo
               <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             </label>
@@ -99,20 +99,20 @@ export default function SmileSimulation() {
 
         {preview && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-              <h3 className="font-bold text-sky-900 mb-4">Your Smile Photo</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="font-bold text-slate-900 mb-4">Your Smile Photo</h3>
               <img src={preview} alt="Smile" className="w-full rounded-lg" />
               <button onClick={handleSimulate} disabled={simulating}
-                className="w-full mt-4 bg-gradient-to-r from-sky-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-sky-700 hover:to-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full mt-4 bg-gradient-to-r from-indigo-600 to-indigo-600 text-white py-3 rounded-lg font-medium hover:from-indigo-700 hover:to-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
                 <Sparkles size={18} />
                 {simulating ? 'Simulating...' : `Simulate ${TREATMENT_TYPES.find(t => t.value === treatmentType)?.label}`}
               </button>
             </div>
 
             {result && (
-              <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-sky-900">Simulation Results</h3>
+                  <h3 className="font-bold text-slate-900">Simulation Results</h3>
                   <span className={`text-xs px-3 py-1 rounded-full ${result.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                     {result.source === 'openai' ? 'AI-Powered' : 'Demo Mode'}
                   </span>
@@ -127,21 +127,21 @@ export default function SmileSimulation() {
                 )}
 
                 {result.simulated_result?.description && (
-                  <div className="p-4 bg-gradient-to-r from-sky-50 to-indigo-50 rounded-lg border border-sky-200 mb-4">
+                  <div className="p-4 bg-gradient-to-r from-indigo-50 to-indigo-50 rounded-lg border border-slate-200 mb-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp size={16} className="text-sky-600" />
-                      <span className="text-sm font-bold text-sky-900">Expected Outcome</span>
+                      <TrendingUp size={16} className="text-indigo-600" />
+                      <span className="text-sm font-bold text-slate-900">Expected Outcome</span>
                     </div>
                     <p className="text-sm text-gray-700">{result.simulated_result.description}</p>
                     {result.simulated_result.estimated_shade_change && (
-                      <p className="text-xs text-sky-600 mt-1 font-medium">{result.simulated_result.estimated_shade_change}</p>
+                      <p className="text-xs text-indigo-600 mt-1 font-medium">{result.simulated_result.estimated_shade_change}</p>
                     )}
                   </div>
                 )}
 
                 {result.simulated_result?.changes?.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-bold text-sky-900 mb-2">Expected Changes</h4>
+                    <h4 className="text-sm font-bold text-slate-900 mb-2">Expected Changes</h4>
                     <ul className="space-y-1">
                       {result.simulated_result.changes.map((change, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -155,7 +155,7 @@ export default function SmileSimulation() {
 
                 {result.current_analysis?.observations?.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-bold text-sky-900 mb-2">Current Observations</h4>
+                    <h4 className="text-sm font-bold text-slate-900 mb-2">Current Observations</h4>
                     <div className="space-y-2">
                       {result.current_analysis.observations.map((obs, i) => (
                         <div key={i} className={`p-3 rounded-lg border text-sm ${
@@ -163,7 +163,7 @@ export default function SmileSimulation() {
                           obs.severity === 'mild' ? 'bg-amber-50 border-amber-200' :
                           'bg-red-50 border-red-200'
                         }`}>
-                          <div className="font-medium text-sky-900">{obs.area}</div>
+                          <div className="font-medium text-slate-900">{obs.area}</div>
                           <div className="text-gray-600">{obs.finding}</div>
                         </div>
                       ))}
@@ -173,11 +173,11 @@ export default function SmileSimulation() {
 
                 {result.procedures?.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-bold text-sky-900 mb-2">Recommended Procedures</h4>
+                    <h4 className="text-sm font-bold text-slate-900 mb-2">Recommended Procedures</h4>
                     <div className="space-y-2">
                       {result.procedures.map((proc, i) => (
-                        <div key={i} className="p-3 bg-sky-50 rounded-lg border border-sky-200">
-                          <div className="font-medium text-sky-900 text-sm">{proc.name}</div>
+                        <div key={i} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <div className="font-medium text-slate-900 text-sm">{proc.name}</div>
                           <p className="text-xs text-gray-600 mt-0.5">{proc.description}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                             <span className="flex items-center gap-1"><DollarSign size={12} />{proc.cost}</span>
@@ -216,9 +216,9 @@ export default function SmileSimulation() {
         )}
 
         {!preview && (
-          <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-12 text-center">
-            <Sparkles size={48} className="text-sky-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-sky-900 mb-2">See Your Smile Transformation</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <Sparkles size={48} className="text-indigo-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">See Your Smile Transformation</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
               Upload a clear photo of your smile, choose a treatment type, and let our AI show you what your new smile could look like.
             </p>

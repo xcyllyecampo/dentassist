@@ -29,7 +29,7 @@ export default function Header({ title, onMenuClick }) {
 
   const roleColors = {
     ADMIN: 'bg-violet-100 text-violet-700',
-    DENTIST: 'bg-sky-100 text-sky-700',
+    DENTIST: 'bg-indigo-100 text-indigo-700',
     ASSISTANT: 'bg-emerald-100 text-emerald-700',
     PATIENT: 'bg-amber-100 text-amber-700',
   };

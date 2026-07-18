@@ -62,7 +62,7 @@ export default function Queue() {
           <div className="text-center py-20">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <p className="text-red-600 mb-4">{error}</p>
-            <button onClick={fetchData} className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium">Retry</button>
+            <button onClick={fetchData} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Retry</button>
           </div>
         )}
         {!loading && !error && (
@@ -73,23 +73,23 @@ export default function Queue() {
               <div className="text-2xl font-bold text-amber-600">{waiting.length}</div>
               <div className="text-xs text-amber-700">Waiting</div>
             </div>
-            <div className="bg-sky-50 border border-sky-200 rounded-xl px-4 py-2 text-center">
-              <div className="text-2xl font-bold text-sky-600">{inProgress.length}</div>
-              <div className="text-xs text-sky-700">In Progress</div>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-center">
+              <div className="text-2xl font-bold text-indigo-600">{inProgress.length}</div>
+              <div className="text-xs text-indigo-700">In Progress</div>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-2 text-center">
               <div className="text-2xl font-bold text-green-600">{queue.filter(e => e.status === 'COMPLETED').length}</div>
               <div className="text-xs text-green-700">Completed</div>
             </div>
           </div>
-          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 text-sm font-medium">
+          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
             <Plus size={16} /> Add to Queue
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-            <h3 className="font-bold text-sky-900 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
               <Clock size={18} className="text-amber-500" /> Waiting Queue
             </h3>
             <div className="space-y-3">
@@ -101,7 +101,7 @@ export default function Queue() {
                         {entry.position}
                       </div>
                       <div>
-                        <div className="font-medium text-sky-900">{entry.patient?.user?.name}</div>
+                        <div className="font-medium text-slate-900">{entry.patient?.user?.name}</div>
                         <div className="text-xs text-gray-500">
                           Est. wait: {entry.estimatedWait || '?'} min
                         </div>
@@ -109,7 +109,7 @@ export default function Queue() {
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => handleStatusUpdate(entry.id, 'IN_PROGRESS')}
-                        className="p-2 bg-sky-100 text-sky-700 rounded-lg hover:bg-sky-200" title="Call patient">
+                        className="p-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200" title="Call patient">
                         <Loader size={14} />
                       </button>
                       <button onClick={() => handleStatusUpdate(entry.id, 'CANCELLED')}
@@ -123,16 +123,16 @@ export default function Queue() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6">
-            <h3 className="font-bold text-sky-900 mb-4 flex items-center gap-2">
-              <Loader size={18} className="text-sky-500" /> In Progress
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Loader size={18} className="text-indigo-500" /> In Progress
             </h3>
             <div className="space-y-3">
               {inProgress.length === 0 ? <p className="text-gray-400 text-sm">No patients in progress</p> :
                 inProgress.map((entry) => (
-                  <div key={entry.id} className="flex items-center justify-between p-4 bg-sky-50 rounded-lg border border-sky-100">
+                  <div key={entry.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                     <div>
-                      <div className="font-medium text-sky-900">{entry.patient?.user?.name}</div>
+                      <div className="font-medium text-slate-900">{entry.patient?.user?.name}</div>
                       <div className="text-xs text-gray-500">Position #{entry.position}</div>
                     </div>
                     <div className="flex gap-2">
@@ -156,16 +156,16 @@ export default function Queue() {
         {showModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-              <h2 className="text-lg font-bold text-sky-900 mb-4">Add Patient to Queue</h2>
+              <h2 className="text-lg font-bold text-slate-900 mb-4">Add Patient to Queue</h2>
               <select value={selectedPatient} onChange={e => setSelectedPatient(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 focus:ring-2 focus:ring-sky-400 focus:outline-none ${selectedPatient === '' ? 'border-red-300 bg-red-50' : 'border-sky-200'}`}>
+                className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none ${selectedPatient === '' ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
                 <option value="">Select Patient</option>
                 {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
               </select>
               {selectedPatient === '' && <p className="text-xs text-red-500 -mt-2 mb-3">Please select a patient</p>}
               <div className="flex justify-end gap-3">
                 <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                <button onClick={handleAdd} disabled={!selectedPatient} className={`px-4 py-2 text-white rounded-lg text-sm font-medium ${selectedPatient ? 'bg-sky-600 hover:bg-sky-700' : 'bg-gray-300 cursor-not-allowed'}`}>Add to Queue</button>
+                <button onClick={handleAdd} disabled={!selectedPatient} className={`px-4 py-2 text-white rounded-lg text-sm font-medium ${selectedPatient ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-300 cursor-not-allowed'}`}>Add to Queue</button>
               </div>
             </div>
           </div>

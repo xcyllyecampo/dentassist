@@ -15,10 +15,11 @@ import Analytics from './pages/Analytics';
 import DigitalTwin from './pages/DigitalTwin';
 import TreatmentSupport from './pages/TreatmentSupport';
 import SmileSimulation from './pages/SmileSimulation';
+import Spinner from './components/Spinner';
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-sky-600 font-medium">Loading...</div></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
   if (!user) return <Navigate to="/login" />;
   if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" />;
   return children;

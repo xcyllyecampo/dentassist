@@ -67,29 +67,29 @@ export default function XrayAnalysis() {
       <div className="p-6">
         <div className="flex items-center gap-4 mb-6">
           <select value={selectedPatient} onChange={e => setSelectedPatient(e.target.value)}
-            className="px-4 py-2 border border-sky-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none w-64">
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-64">
             <option value="">Select Patient (for saved images)</option>
             {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
           </select>
 
           {selectedPatient && (
-            <label className="flex items-center gap-2 bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 cursor-pointer text-sm font-medium">
+            <label className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 cursor-pointer text-sm font-medium">
               <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload X-Ray'}
               <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />
             </label>
           )}
         </div>
 
-        <div className="bg-gradient-to-r from-sky-50 to-indigo-50 rounded-xl border border-sky-200 p-6 mb-6">
+        <div className="bg-gradient-to-r from-indigo-50 to-indigo-50 rounded-xl border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-sky-600 text-white rounded-xl flex items-center justify-center">
+            <div className="w-14 h-14 bg-indigo-600 text-white rounded-xl flex items-center justify-center">
               <Brain size={28} />
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-sky-900">Quick AI Analysis</h3>
+              <h3 className="font-bold text-slate-900">Quick AI Analysis</h3>
               <p className="text-sm text-gray-600">Upload an X-ray directly for instant AI analysis (no patient record needed)</p>
             </div>
-            <label className="flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 cursor-pointer text-sm font-medium">
+            <label className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 cursor-pointer text-sm font-medium">
               <Upload size={16} /> {analyzing === 'direct' ? 'Analyzing...' : 'Choose X-Ray File'}
               <input type="file" accept="image/*" onChange={handleDirectAnalyze} className="hidden" disabled={analyzing} />
             </label>
@@ -97,16 +97,16 @@ export default function XrayAnalysis() {
         </div>
 
         {directAnalysis && (
-          <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-sky-900">AI Analysis Result — {directAnalysis.fileName}</h3>
+              <h3 className="font-bold text-slate-900">AI Analysis Result — {directAnalysis.fileName}</h3>
               <span className={`text-xs px-3 py-1 rounded-full ${directAnalysis.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                 {directAnalysis.source === 'openai' ? 'GPT-4 Vision' : 'Demo Mode'}
               </span>
             </div>
 
             {directAnalysis.overall_assessment && (
-              <div className="p-3 bg-sky-50 rounded-lg border border-sky-200 text-sm text-sky-800 mb-4">
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm text-indigo-800 mb-4">
                 <strong>Assessment:</strong> {directAnalysis.overall_assessment}
               </div>
             )}
@@ -119,7 +119,7 @@ export default function XrayAnalysis() {
                   'bg-green-50 border-green-200'
                 }`}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-sky-900">{finding.area}</span>
+                    <span className="font-medium text-slate-900">{finding.area}</span>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${
                         finding.severity === 'severe' ? 'bg-red-200 text-red-800' :
@@ -136,7 +136,7 @@ export default function XrayAnalysis() {
 
             {directAnalysis.recommendations?.length > 0 && (
               <div className="mb-4">
-                <h4 className="text-sm font-bold text-sky-900 mb-2">Recommendations</h4>
+                <h4 className="text-sm font-bold text-slate-900 mb-2">Recommendations</h4>
                 <ul className="space-y-1">
                   {directAnalysis.recommendations.map((rec, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -156,9 +156,9 @@ export default function XrayAnalysis() {
         )}
 
         {!selectedPatient && !directAnalysis && (
-          <div className="bg-white rounded-xl shadow-sm border border-sky-100 p-12 text-center">
-            <Brain size={48} className="text-sky-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-sky-900 mb-2">AI Dental X-Ray Assistant</h3>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
+            <Brain size={48} className="text-indigo-300 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">AI Dental X-Ray Assistant</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
               Upload an X-ray image using the button above for instant AI analysis, or select a patient to manage their saved X-ray records.
               The AI will identify possible cavities, bone loss, and impacted teeth.
@@ -168,7 +168,7 @@ export default function XrayAnalysis() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {images.map((img) => (
-            <div key={img.id} className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
+            <div key={img.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="aspect-square bg-gray-100 relative">
                 <img src={`/${img.filePath}`} alt="X-Ray" className="w-full h-full object-cover" />
                 {img.analysis && (
@@ -180,10 +180,10 @@ export default function XrayAnalysis() {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-gray-500">{new Date(img.createdAt).toLocaleDateString()}</span>
-                  <span className="text-xs px-2 py-1 bg-sky-100 text-sky-700 rounded-full">{img.fileType}</span>
+                  <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full">{img.fileType}</span>
                 </div>
                 <button onClick={() => handleAnalyze(img.id)} disabled={analyzing === img.id}
-                  className="w-full flex items-center justify-center gap-2 bg-sky-600 text-white py-2 rounded-lg hover:bg-sky-700 text-sm font-medium disabled:opacity-50">
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50">
                   <Brain size={16} />
                   {analyzing === img.id ? 'Analyzing...' : img.analysis ? 'Re-analyze' : 'Analyze with AI'}
                 </button>
