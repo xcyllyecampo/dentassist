@@ -47,7 +47,7 @@ export default function KioskQueueStatus() {
 
   return (
     <KioskLayout title="My Queue Status">
-      <div className="flex flex-col items-center min-h-[calc(100vh-180px)] py-8">
+      <div className="flex flex-col items-center py-6">
         {loading && (
           <div className="flex items-center gap-3 text-white/60">
             <Loader size={24} className="animate-spin" />
@@ -72,7 +72,7 @@ export default function KioskQueueStatus() {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">Not in Queue</h2>
             <p className="text-white/60 text-lg mb-8">You haven't checked in yet.</p>
-            <a href="/kiosk/check-in" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30">
+            <a href="/kiosk/check-in" className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30">
               Check In Now
             </a>
           </div>
@@ -81,10 +81,10 @@ export default function KioskQueueStatus() {
         {!loading && !error && myEntry && (
           <>
             {/* My position card */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 max-w-lg w-full mb-8">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 w-full mb-6">
               <div className="text-center mb-6">
                 <div className="text-white/50 text-sm uppercase tracking-wider mb-2">Your Position</div>
-                <div className="text-7xl font-bold text-white mb-2">#{myEntry.position}</div>
+                <div className="text-6xl font-bold text-white mb-2">#{myEntry.position}</div>
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium ${
                   myEntry.status === 'WAITING'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
@@ -123,7 +123,7 @@ export default function KioskQueueStatus() {
             </div>
 
             {/* Queue stats */}
-            <div className="grid grid-cols-2 gap-4 max-w-lg w-full">
+            <div className="grid grid-cols-2 gap-3 w-full">
               <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-5 text-center">
                 <Users size={24} className="text-amber-400 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-white">{waitingCount}</div>

@@ -104,7 +104,7 @@ export default function KioskRecords() {
               <div key={t.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
                 <div className="text-white font-medium">{t.procedure}</div>
                 <div className="text-white/50 text-sm">{t.description} {t.dentist?.name && `· by ${t.dentist.name}`}</div>
-                {t.cost && <div className="text-green-400 text-sm mt-1 font-medium">${t.cost}</div>}
+                {t.cost && <div className="text-green-400 text-sm mt-1 font-medium">₱{t.cost}</div>}
               </div>
             ))}
           </div>
