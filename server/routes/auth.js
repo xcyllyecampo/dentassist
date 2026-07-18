@@ -99,7 +99,7 @@ router.post("/refresh", async (req, res) => {
     await prisma.refreshToken.delete({ where: { token: refreshToken } });
 
     const tokens = await generateTokens(user, prisma);
-    res.json(tokens);
+    res.json({ token: tokens.accessToken, refreshToken: tokens.refreshToken });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
