@@ -1,10 +1,11 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
   Stethoscope, Image, BarChart3, Box,
   Settings, LogOut, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
+import { playClick, playWhoosh } from '../lib/sounds';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -22,99 +23,97 @@ const navItems = [
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const handleNavClick = () => {
+    playClick();
     if (mobileOpen) setMobileOpen(false);
   };
 
-  return (
+  const handleCollapse = () => {
+    playWhoosh();
+    setCollapsed(!collapsed);
+  };
+
+  const sidebarContent = (isMobile = false) => (
     <>
-      {/* Desktop sidebar */}
-      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-sky-900 text-white transition-all duration-300 z-50 flex-col ${collapsed ? 'w-16' : 'w-64'}`}>
-        <div className="p-4 flex items-center justify-between border-b border-sky-700">
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🦷</span>
-              <span className="font-bold text-lg">DentAssist</span>
+      <div className={`p-4 flex items-center ${collapsed && !isMobile ? 'justify-center' : 'justify-between'} border-b border-white/10`}>
+        {(!collapsed || isMobile) && (
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-violet-500 rounded-xl flex items-center justify-center text-lg shadow-lg shadow-indigo-500/30">
+              🦷
             </div>
-          )}
-          <button onClick={() => setCollapsed(!collapsed)} className="p-1 hover:bg-sky-700 rounded">
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          </button>
-        </div>
-
-        <nav className="flex-1 py-4 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActive ? 'bg-sky-700 text-white' : 'text-sky-200 hover:bg-sky-800 hover:text-white'}`
-              }
-            >
-              <Icon size={20} />
-              {!collapsed && <span className="text-sm">{label}</span>}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-sky-700">
-          {!collapsed && (
-            <div className="text-xs text-sky-300 mb-2">
-              <div className="font-medium text-white">{user?.name}</div>
-              <div>{user?.role}</div>
+            <div>
+              <div className="font-bold text-white text-sm tracking-tight">DentAssist</div>
+              <div className="text-[10px] text-indigo-300/60 font-medium tracking-wide uppercase">AI Dental Clinic</div>
             </div>
-          )}
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sky-200 hover:bg-sky-800 rounded-lg transition-colors"
-          >
-            <LogOut size={18} />
-            {!collapsed && <span>Logout</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* Mobile sidebar */}
-      <aside className={`md:hidden fixed left-0 top-0 h-full bg-sky-900 text-white transition-all duration-300 z-50 flex flex-col ${mobileOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
-        <div className="p-4 flex items-center justify-between border-b border-sky-700 min-w-[16rem]">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">🦷</span>
-            <span className="font-bold text-lg">DentAssist</span>
           </div>
-          <button onClick={() => setMobileOpen(false)} className="p-1 hover:bg-sky-700 rounded text-white">
-            <ChevronLeft size={18} />
+        )}
+        {!isMobile && (
+          <button onClick={handleCollapse}
+            className="p-1.5 hover:bg-white/10 rounded-lg text-indigo-300/60 hover:text-white transition-colors">
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
-        </div>
+        )}
+      </div>
 
-        <nav className="flex-1 py-4 overflow-y-auto min-w-[16rem]">
-          {navItems.map(({ to, icon: Icon, label }) => (
+      <nav className="flex-1 py-3 overflow-y-auto px-2 space-y-0.5">
+        {navItems.map(({ to, icon: Icon, label }) => {
+          const isActive = location.pathname === to;
+          return (
             <NavLink
               key={to}
               to={to}
               onClick={handleNavClick}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 mx-2 rounded-lg transition-colors ${isActive ? 'bg-sky-700 text-white' : 'text-sky-200 hover:bg-sky-800 hover:text-white'}`
-              }
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
+                isActive
+                  ? 'bg-gradient-to-r from-indigo-500/20 to-violet-500/10 text-white'
+                  : 'text-indigo-300/60 hover:text-white hover:bg-white/5'
+              }`}
             >
-              <Icon size={20} />
-              <span className="text-sm">{label}</span>
+              {isActive && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-indigo-400 to-violet-500 rounded-r-full" />
+              )}
+              <Icon size={18} className={isActive ? 'text-indigo-400' : 'text-indigo-400/40 group-hover:text-indigo-300'} />
+              {(!collapsed || isMobile) && (
+                <span className="text-sm font-medium truncate">{label}</span>
+              )}
             </NavLink>
-          ))}
-        </nav>
+          );
+        })}
+      </nav>
 
-        <div className="p-4 border-t border-sky-700 min-w-[16rem]">
-          <div className="text-xs text-sky-300 mb-2">
-            <div className="font-medium text-white">{user?.name}</div>
-            <div>{user?.role}</div>
+      <div className="p-3 border-t border-white/10">
+        {(!collapsed || isMobile) && (
+          <div className="px-3 py-2 mb-2">
+            <div className="text-sm font-semibold text-white truncate">{user?.name}</div>
+            <div className="text-[11px] text-indigo-300/50 uppercase tracking-wider font-medium">{user?.role}</div>
           </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-sky-200 hover:bg-sky-800 rounded-lg transition-colors"
-          >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
+        )}
+        <button
+          onClick={() => { playClick(); logout(); }}
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-indigo-300/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+        >
+          <LogOut size={17} />
+          {(!collapsed || isMobile) && <span className="font-medium">Logout</span>}
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop */}
+      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex-col ${collapsed ? 'w-16' : 'w-64'}`}
+        style={{ borderRight: '1px solid rgba(99, 102, 241, 0.08)' }}>
+        {sidebarContent()}
+      </aside>
+
+      {/* Mobile */}
+      <aside className={`md:hidden fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex flex-col ${mobileOpen ? 'w-64' : 'w-0'} overflow-hidden`}
+        style={{ borderRight: '1px solid rgba(99, 102, 241, 0.08)' }}>
+        <div className="min-w-[16rem] flex flex-col h-full">
+          {sidebarContent(true)}
         </div>
       </aside>
     </>

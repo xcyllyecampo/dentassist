@@ -134,9 +134,6 @@ async function main() {
     { name: "Regular Visitor", description: "Attended 3 or more appointments", icon: "⭐", category: "Loyalty", threshold: 3 },
     { name: "Committed Patient", description: "Completed 5 or more treatments", icon: "🏆", category: "Achievement", threshold: 5 },
     { name: "Streak Master", description: "Maintained a 3-month visit streak", icon: "🔥", category: "Dedication", threshold: 3 },
-    { name: "X-Ray Pioneer", description: "Uploaded your first X-ray", icon: "📸", category: "Milestone", threshold: 1 },
-    { name: "Treatment Champ", description: "Completed your first treatment", icon: "💪", category: "Milestone", threshold: 1 },
-    { name: "Smile Explorer", description: "Used the Smile Simulation feature", icon: "✨", category: "Experience", threshold: 1 },
   ];
   for (const b of badges) {
     await prisma.badge.create({ data: b });

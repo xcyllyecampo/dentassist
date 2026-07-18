@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { CheckCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { playSuccess, playError, playNotification } from '../lib/sounds';
 
 const ToastContext = createContext(null);
 
@@ -11,10 +12,11 @@ export function ToastProvider({ children }) {
   const addToast = useCallback((message, type = 'info', duration = 4000) => {
     const id = ++toastId;
     setToasts(prev => [...prev, { id, message, type }]);
+    if (type === 'success') playSuccess();
+    else if (type === 'error') playError();
+    else playNotification();
     if (duration > 0) {
-      setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== id));
-      }, duration);
+      setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
     }
     return id;
   }, []);
@@ -30,15 +32,15 @@ export function ToastProvider({ children }) {
   };
 
   const icons = {
-    success: <CheckCircle size={18} className="text-green-500 shrink-0" />,
-    error: <AlertTriangle size={18} className="text-red-500 shrink-0" />,
-    info: <Info size={18} className="text-sky-500 shrink-0" />,
+    success: <CheckCircle size={18} className="text-emerald-500 shrink-0" />,
+    error: <AlertTriangle size={18} className="text-rose-500 shrink-0" />,
+    info: <Info size={18} className="text-indigo-500 shrink-0" />,
   };
 
   const styles = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    info: 'bg-sky-50 border-sky-200 text-sky-800',
+    success: 'bg-emerald-50 border-emerald-200/60 text-emerald-800',
+    error: 'bg-rose-50 border-rose-200/60 text-rose-800',
+    info: 'bg-indigo-50 border-indigo-200/60 text-indigo-800',
   };
 
   return (
@@ -47,9 +49,9 @@ export function ToastProvider({ children }) {
       <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
         {toasts.map(t => (
           <div key={t.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg pointer-events-auto animate-slide-in ${styles[t.type]}`}>
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg pointer-events-auto animate-slide-in backdrop-blur-sm ${styles[t.type]}`}>
             {icons[t.type]}
-            <span className="text-sm flex-1">{t.message}</span>
+            <span className="text-sm font-medium flex-1">{t.message}</span>
             <button onClick={() => removeToast(t.id)} className="p-0.5 hover:opacity-70 shrink-0">
               <X size={14} />
             </button>
