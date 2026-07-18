@@ -51,7 +51,7 @@ router.post("/analyze/:id", auth, async (req, res) => {
 
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     try {
-      const response = await fetch(`${aiServiceUrl}/analyze-xray`, {
+      const response = await fetch(`${aiServiceUrl}/analyze/xray`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imagePath: image.filePath }),

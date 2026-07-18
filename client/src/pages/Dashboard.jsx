@@ -8,7 +8,7 @@ import { Users, Calendar, Clock, TrendingUp, Activity, ArrowUpRight, Zap, Star }
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { playClick } from '../lib/sounds';
 
-const COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+const COLORS = ['#004aad', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -32,7 +32,7 @@ export default function Dashboard() {
       <Header title="Dashboard" />
       <div className="p-6 space-y-6 animate-fade-in">
         {/* Welcome banner */}
-        <div className="bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-600 rounded-2xl p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#1a5fb4] via-[#1a5fb4] to-[#003782] rounded-2xl p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
             <div className="flex items-center gap-2 mb-1">
@@ -46,8 +46,8 @@ export default function Dashboard() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard icon={Users} label="Total Patients" value={data.totalPatients} gradient="from-indigo-500 to-indigo-600" delay="0" />
-          <StatCard icon={Calendar} label="Today's Appointments" value={data.todayAppointments.length} gradient="from-violet-500 to-purple-600" delay="0.05" />
+          <StatCard icon={Users} label="Total Patients" value={data.totalPatients} gradient="from-[#1a5fb4] to-[#004aad]" delay="0" />
+          <StatCard icon={Calendar} label="Today's Appointments" value={data.todayAppointments.length} gradient="from-[#1a5fb4] to-[#003782]" delay="0.05" />
           <StatCard icon={Clock} label="In Queue" value={data.queueCount} gradient="from-amber-500 to-orange-500" delay="0.1" />
           <StatCard icon={TrendingUp} label="Today's Revenue" value={`$${data.totalRevenue}`} gradient="from-emerald-500 to-teal-500" delay="0.15" />
         </div>
@@ -56,8 +56,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-white rounded-2xl shadow-sm p-6 card-premium animate-slide-up stagger-1">
             <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <Activity size={16} className="text-indigo-600" />
+              <div className="w-8 h-8 bg-[#e6efff] rounded-lg flex items-center justify-center">
+                <Activity size={16} className="text-[#004aad]" />
               </div>
               Room Status
             </h3>
@@ -82,8 +82,8 @@ export default function Dashboard() {
 
           <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6 card-premium animate-slide-up stagger-2">
             <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center">
-                <Calendar size={16} className="text-violet-600" />
+              <div className="w-8 h-8 bg-[#e6efff] rounded-lg flex items-center justify-center">
+                <Calendar size={16} className="text-[#004aad]" />
               </div>
               Today's Appointments
             </h3>
@@ -91,9 +91,9 @@ export default function Dashboard() {
               {data.todayAppointments.length === 0 ? (
                 <p className="text-slate-400 text-sm py-8 text-center">No appointments today</p>
               ) : data.todayAppointments.map((appt) => (
-                <div key={appt.id} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-indigo-50/50 rounded-xl transition-colors group">
+                <div key={appt.id} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-[#f0f5ff]/50 rounded-xl transition-colors group">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-violet-500 text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-md shadow-indigo-200">
+                    <div className="w-11 h-11 bg-gradient-to-br from-[#1a5fb4] to-[#1a5fb4] text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-md shadow-[#c2d5f7]">
                       {appt.time}
                     </div>
                     <div>
@@ -125,7 +125,7 @@ export default function Dashboard() {
                 <Bar dataKey="appointments" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="0%" stopColor="#004aad" />
                     <stop offset="100%" stopColor="#8b5cf6" />
                   </linearGradient>
                 </defs>
@@ -172,7 +172,7 @@ function StatCard({ icon: Icon, label, value, gradient, delay }) {
 
 function StatusBadge({ status }) {
   const colors = {
-    SCHEDULED: 'bg-indigo-100 text-indigo-700',
+    SCHEDULED: 'bg-[#e6efff] text-[#003782]',
     CONFIRMED: 'bg-blue-100 text-blue-700',
     IN_PROGRESS: 'bg-amber-100 text-amber-700',
     COMPLETED: 'bg-emerald-100 text-emerald-700',
@@ -189,11 +189,11 @@ function StatusBadge({ status }) {
 function QuickAction({ to, icon: Icon, label }) {
   return (
     <Link to={to} onClick={() => playClick()}
-      className="flex items-center gap-3 p-3.5 bg-slate-50 hover:bg-indigo-50 rounded-xl transition-all duration-200 group hover:shadow-md hover:shadow-indigo-100/50">
-      <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-500 text-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-indigo-200">
+      className="flex items-center gap-3 p-3.5 bg-slate-50 hover:bg-[#f0f5ff] rounded-xl transition-all duration-200 group hover:shadow-md hover:shadow-[#e6efff]/50">
+      <div className="w-9 h-9 bg-gradient-to-br from-[#1a5fb4] to-[#1a5fb4] text-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-[#c2d5f7]">
         <Icon size={17} />
       </div>
-      <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">{label}</span>
+      <span className="text-sm font-semibold text-slate-700 group-hover:text-[#003782] transition-colors">{label}</span>
     </Link>
   );
 }

@@ -3,6 +3,27 @@ const { auth, roleGuard } = require("../middleware/auth");
 
 const router = express.Router();
 
+router.get("/me", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const patient = await prisma.patient.findUnique({
+      where: { userId: req.user.id },
+      include: {
+        user: { select: { name: true, email: true, phone: true } },
+        teeth: { orderBy: { toothNumber: "asc" } },
+        appointments: { orderBy: { date: "desc" }, take: 10 },
+        treatments: { orderBy: { createdAt: "desc" }, take: 10 },
+        prescriptions: { orderBy: { createdAt: "desc" }, take: 10 },
+        xrayImages: { orderBy: { createdAt: "desc" }, take: 10 },
+      },
+    });
+    if (!patient) return res.status(404).json({ error: "Patient profile not found" });
+    res.json(patient);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.get("/", auth, async (req, res) => {
   try {
     const prisma = req.app.get("prisma");

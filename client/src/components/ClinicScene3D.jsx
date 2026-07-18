@@ -119,8 +119,8 @@ function DentalRoom({ room, position, onClick, isSelected }) {
         onPointerOut={(e) => { document.body.style.cursor = 'default'; }}
       >
         <meshStandardMaterial
-          color={isSelected ? '#818cf8' : color}
-          emissive={isSelected ? '#818cf8' : color}
+          color={isSelected ? '#1a5fb4' : color}
+          emissive={isSelected ? '#1a5fb4' : color}
           emissiveIntensity={isSelected ? 0.4 : 0.15}
           transparent
           opacity={0.85}

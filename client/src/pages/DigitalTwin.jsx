@@ -72,7 +72,7 @@ export default function DigitalTwin() {
       <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
         <AlertTriangle className="text-red-500" size={48} />
         <p className="text-red-600 font-medium">{error}</p>
-        <button onClick={fetchData} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">Retry</button>
+        <button onClick={fetchData} className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] transition-colors text-sm">Retry</button>
       </div>
     </Layout>
   );
@@ -98,7 +98,7 @@ export default function DigitalTwin() {
                 </span>
               </div>
 
-              <div className="h-[520px] bg-gradient-to-b from-indigo-50 to-indigo-50 relative">
+              <div className="h-[520px] bg-gradient-to-b from-[#f0f5ff] to-[#f0f5ff] relative">
                 <ClinicScene3D
                   rooms={rooms}
                   queue={queue}
@@ -130,7 +130,7 @@ export default function DigitalTwin() {
               </h3>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {waiting.length === 0 ? (
-                  <p className="text-gray-400 text-xs">No one waiting</p>
+                  <p className="text-gray-400 text-xs">No patients waiting</p>
                 ) : waiting.map((entry) => (
                   <div key={entry.id} className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg">
                     <div className="w-6 h-6 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
@@ -153,10 +153,10 @@ export default function DigitalTwin() {
               </h3>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {inProgress.length === 0 ? (
-                  <p className="text-gray-400 text-xs">None</p>
+                  <p className="text-gray-400 text-xs">No patients in service</p>
                 ) : inProgress.map((entry) => (
                   <div key={entry.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                    <div className="w-6 h-6 bg-indigo-200 text-indigo-800 rounded-full flex items-center justify-center text-xs font-bold">
+                    <div className="w-6 h-6 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-xs font-bold">
                       {entry.position}
                     </div>
                     <div className="text-xs font-medium text-slate-900 truncate">{entry.patient?.user?.name}</div>
@@ -204,8 +204,8 @@ export default function DigitalTwin() {
                   <div className="text-[10px] text-amber-600">Waiting</div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3 text-center">
-                  <div className="text-lg font-bold text-indigo-700">{inProgress.length}</div>
-                  <div className="text-[10px] text-indigo-600">In Service</div>
+                  <div className="text-lg font-bold text-[#003782]">{inProgress.length}</div>
+                  <div className="text-[10px] text-[#004aad]">In Service</div>
                 </div>
               </div>
             </div>
@@ -251,7 +251,7 @@ export default function DigitalTwin() {
                   </>
                 )}
               </div>
-              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-indigo-600 text-white py-2 rounded-lg text-sm hover:bg-indigo-700 transition-colors">Close</button>
+              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-[#004aad] text-white py-2 rounded-lg text-sm hover:bg-[#003782] transition-colors">Close</button>
             </div>
           </div>
         )}

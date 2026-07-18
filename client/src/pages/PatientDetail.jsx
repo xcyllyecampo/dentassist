@@ -4,8 +4,9 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import Spinner from '../components/Spinner';
-import { AlertTriangle, Award, Star, TrendingUp, Gift, Check } from 'lucide-react';
+import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function PatientDetail() {
   const { id } = useParams();
@@ -18,6 +19,7 @@ export default function PatientDetail() {
   const [allBadges, setAllBadges] = useState([]);
   const [awarding, setAwarding] = useState(null);
   const toast = useToast();
+  const navigate = useNavigate();
 
   const fetchPatient = () => {
     setLoading(true);
@@ -56,7 +58,7 @@ export default function PatientDetail() {
   };
 
   if (loading) return <Layout><Header title="Patient Detail" /><Spinner className="py-20" /></Layout>;
-  if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">Retry</button></div></Layout>;
+  if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-[#004aad] hover:text-[#002d6b] font-medium">Retry</button></div></Layout>;
 
   const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays', 'rewards'];
 
@@ -64,9 +66,13 @@ export default function PatientDetail() {
     <Layout>
       <Header title={`Patient: ${patient.user?.name}`} />
       <div className="p-6">
+        <button onClick={() => navigate('/records')}
+          className="flex items-center gap-2 px-4 py-2 mb-4 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
+          <ArrowLeft size={16} /> Back to Records
+        </button>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-indigo-200 text-indigo-800 rounded-full flex items-center justify-center text-2xl font-bold">
+            <div className="w-16 h-16 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-2xl font-bold">
               {patient.user?.name?.charAt(0)}
             </div>
             <div>
@@ -84,7 +90,7 @@ export default function PatientDetail() {
         <div className="flex gap-1 mb-6 border-b border-slate-200">
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors ${activeTab === tab ? 'bg-slate-50 text-indigo-700 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}>
+              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors ${activeTab === tab ? 'bg-slate-50 text-[#003782] border-b-2 border-[#004aad]' : 'text-gray-500 hover:text-[#004aad]'}`}>
               {tab}
             </button>
           ))}
@@ -112,7 +118,7 @@ export default function PatientDetail() {
                       tooth.status === 'CROWN' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
                       tooth.status === 'DECAYED' ? 'bg-red-100 text-red-700 border border-red-200' :
                       tooth.status === 'MISSING' ? 'bg-gray-200 text-gray-500 border border-gray-300' :
-                      'bg-indigo-100 text-indigo-700 border border-slate-200'
+                      'bg-[#e6efff] text-[#003782] border border-slate-200'
                     }`}>
                     <span>#{tooth.toothNumber}</span>
                     <span className="text-[10px] font-normal">{tooth.status}</span>
@@ -141,7 +147,7 @@ export default function PatientDetail() {
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       a.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                       a.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
-                      'bg-indigo-100 text-indigo-700'
+                      'bg-[#e6efff] text-[#003782]'
                     }`}>{a.status}</span>
                   </div>
                 ))
@@ -190,7 +196,7 @@ export default function PatientDetail() {
                       <div className="p-3">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs text-gray-500">{new Date(img.createdAt).toLocaleDateString()}</span>
-                          <span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">{img.fileType}</span>
+                          <span className="text-xs px-2 py-0.5 bg-[#e6efff] text-[#003782] rounded-full">{img.fileType}</span>
                         </div>
                         {img.analysis?.findings?.length > 0 && (
                           <div className="mt-2 space-y-1">
@@ -213,10 +219,10 @@ export default function PatientDetail() {
           {activeTab === 'rewards' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl p-5 text-white">
+                <div className="bg-gradient-to-br from-[#1a5fb4] to-[#004aad] rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><Star size={20} /><span className="font-medium">Loyalty Points</span></div>
                   <div className="text-3xl font-bold">{loyalty?.points || 0}</div>
-                  <div className="text-indigo-100 text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
+                  <div className="text-[#e6efff] text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
                 </div>
                 <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><Award size={20} /><span className="font-medium">Badges Earned</span></div>
@@ -259,14 +265,14 @@ export default function PatientDetail() {
                     const earned = badges.some(pb => pb.badgeId === b.id);
                     return (
                       <button key={b.id} onClick={() => !earned && awardBadge(b.id)} disabled={earned || awarding === b.id}
-                        className={`rounded-xl p-4 text-center transition-all ${earned ? 'bg-green-50 border-2 border-green-300 cursor-default' : 'bg-gray-50 border border-gray-200 hover:border-indigo-400 hover:bg-slate-50 cursor-pointer'}`}>
+                        className={`rounded-xl p-4 text-center transition-all ${earned ? 'bg-green-50 border-2 border-green-300 cursor-default' : 'bg-gray-50 border border-gray-200 hover:border-[#4a85d6] hover:bg-slate-50 cursor-pointer'}`}>
                         <div className="text-3xl mb-2">{b.icon}</div>
                         <div className="font-medium text-slate-900 text-sm">{b.name}</div>
                         <div className="text-xs text-gray-500 mt-1">{b.description}</div>
                         {earned ? (
                           <div className="flex items-center justify-center gap-1 text-green-600 text-xs mt-2"><Check size={12} /> Earned</div>
                         ) : (
-                          <div className="text-xs text-indigo-600 mt-2">{b.threshold} pts</div>
+                          <div className="text-xs text-[#004aad] mt-2">{b.threshold} pts</div>
                         )}
                       </button>
                     );
@@ -281,7 +287,7 @@ export default function PatientDetail() {
                     {loyalty.transactions.map(t => (
                       <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <Gift size={14} className="text-indigo-600" />
+                          <Gift size={14} className="text-[#004aad]" />
                           <span className="text-sm text-slate-900">{t.description}</span>
                         </div>
                         <span className="text-sm font-medium text-green-600">+{t.amount}</span>

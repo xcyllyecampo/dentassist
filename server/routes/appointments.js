@@ -32,6 +32,27 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+router.get("/my", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const patient = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+    if (!patient) return res.json([]);
+
+    const appointments = await prisma.appointment.findMany({
+      where: { patientId: patient.id },
+      include: {
+        patient: { include: { user: { select: { name: true } } } },
+        dentist: { select: { name: true } },
+        room: true,
+      },
+      orderBy: [{ date: "desc" }, { time: "asc" }],
+    });
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.get("/:id", auth, async (req, res) => {
   try {
     const prisma = req.app.get("prisma");

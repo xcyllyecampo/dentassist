@@ -2,8 +2,8 @@
 
 @layer base {
   :root {
-    --color-primary: #6366f1;
-    --color-primary-dark: #4f46e5;
+    --color-primary: #004aad;
+    --color-primary-dark: #003782;
     --color-secondary: #0ea5e9;
     --color-accent: #10b981;
     --color-danger: #ef4444;
@@ -34,12 +34,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c7d2fe;
+  background: #c2d5f7;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #818cf8;
+  background: #1a5fb4;
 }
 
 /* Animations */
@@ -64,8 +64,8 @@ body {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.15); }
-  50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.3); }
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 74, 173, 0.15); }
+  50% { box-shadow: 0 0 40px rgba(0, 74, 173, 0.3); }
 }
 
 @keyframes gradient-shift {
@@ -148,12 +148,12 @@ body {
 .card-premium:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
-  border-color: rgba(165, 180, 252, 0.4);
+  border-color: rgba(107, 154, 232, 0.4);
 }
 
 /* Premium button */
 .btn-premium {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #004aad 0%, #003782 100%);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
@@ -174,7 +174,7 @@ body {
 
 .btn-premium:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 25px rgba(0, 74, 173, 0.35);
 }
 
 .btn-premium:active {
@@ -187,3 +187,8 @@ body {
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.2s; }
 .stagger-5 { animation-delay: 0.25s; }
+
+.kiosk-scrollbar::-webkit-scrollbar { width: 4px; }
+.kiosk-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.kiosk-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+.kiosk-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }

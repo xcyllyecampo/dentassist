@@ -6,7 +6,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tool
 import { TrendingUp, Users, DollarSign, Calendar, AlertTriangle } from 'lucide-react';
 import Spinner from '../components/Spinner';
 
-const COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6', '#0ea5e9'];
+const COLORS = ['#004aad', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6', '#0ea5e9'];
 
 export default function Analytics() {
   const [revenue, setRevenue] = useState([]);
@@ -41,7 +41,7 @@ export default function Analytics() {
       <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
         <AlertTriangle className="text-red-500" size={48} />
         <p className="text-red-600 font-medium">{error}</p>
-        <button onClick={fetchData} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">Retry</button>
+        <button onClick={fetchData} className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] transition-colors text-sm">Retry</button>
       </div>
     </Layout>
   );
@@ -51,8 +51,8 @@ export default function Analytics() {
       <Header title="Clinic Analytics" />
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <StatCard icon={Users} label="Total Patients" value={daily?.patientCount || 0} color="bg-indigo-500" />
-          <StatCard icon={Calendar} label="Today's Appointments" value={daily?.appointmentCount || 0} color="bg-indigo-500" />
+          <StatCard icon={Users} label="Total Patients" value={daily?.patientCount || 0} color="bg-[#1a5fb4]" />
+          <StatCard icon={Calendar} label="Today's Appointments" value={daily?.appointmentCount || 0} color="bg-[#1a5fb4]" />
           <StatCard icon={TrendingUp} label="Completed Today" value={daily?.completedCount || 0} color="bg-emerald-500" />
           <StatCard icon={DollarSign} label="Today's Revenue" value={`$${daily?.revenue || 0}`} color="bg-amber-500" />
         </div>
@@ -66,7 +66,7 @@ export default function Analytics() {
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Line type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="revenue" stroke="#004aad" strokeWidth={2} dot={{ r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -96,7 +96,7 @@ export default function Analytics() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Bar dataKey="visits" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="visits" fill="#004aad" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

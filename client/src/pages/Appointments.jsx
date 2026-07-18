@@ -75,7 +75,7 @@ export default function Appointments() {
           <div className="text-center py-20">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <h3 className="text-sm font-medium text-gray-700 mb-2">{error}</h3>
-            <button onClick={fetchData} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Retry</button>
+            <button onClick={fetchData} className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] text-sm font-medium">Retry</button>
           </div>
         ) : appointments.length === 0 ? (
           <EmptyState icon={Calendar} title="No appointments for this day" description="Create a new appointment or navigate to a different day" />
@@ -87,7 +87,7 @@ export default function Appointments() {
             <h2 className="text-lg font-bold text-slate-900">{selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h2>
             <button onClick={nextDay} className="p-2 hover:bg-slate-100 rounded-lg"><ChevronRight size={20} /></button>
           </div>
-          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
+          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-[#004aad] text-white px-4 py-2 rounded-lg hover:bg-[#003782] text-sm font-medium">
             <Plus size={16} /> New Appointment
           </button>
         </div>
@@ -96,7 +96,7 @@ export default function Appointments() {
           <div className="grid grid-cols-[80px_1fr] divide-x divide-slate-200">
             <div className="bg-slate-50">
               {timeSlots.map(time => (
-                <div key={time} className="h-16 flex items-center justify-center text-xs text-indigo-600 font-medium border-b border-slate-200">
+                <div key={time} className="h-16 flex items-center justify-center text-xs text-[#004aad] font-medium border-b border-slate-200">
                   {time}
                 </div>
               ))}
@@ -114,7 +114,7 @@ export default function Appointments() {
                     className={`absolute left-1 right-1 rounded-lg p-2 text-xs cursor-pointer transition-shadow hover:shadow-md ${
                       appt.status === 'COMPLETED' ? 'bg-green-100 border border-green-300' :
                       appt.status === 'IN_PROGRESS' ? 'bg-amber-100 border border-amber-300' :
-                      'bg-indigo-100 border border-indigo-300'
+                      'bg-[#e6efff] border border-[#6b9ae8]'
                     }`}
                     style={{ top: `${top}px`, height: `${height - 4}px` }}>
                     <div className="font-bold text-slate-900">{appt.patient?.user?.name}</div>
@@ -138,7 +138,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
                     <select required value={form.patientId} onChange={e => setForm({...form, patientId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
                       <option value="">Select Patient</option>
                       {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
                     </select>
@@ -146,7 +146,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
                     <select required value={form.dentistId} onChange={e => setForm({...form, dentistId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
                       <option value="">Select Dentist</option>
                       {dentists.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
@@ -154,7 +154,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
                     <select value={form.roomId} onChange={e => setForm({...form, roomId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
                       <option value="">Select Room</option>
                       {rooms.filter(r => r.status === 'AVAILABLE').map(r => <option key={r.id} value={r.id}>Room {r.number} - {r.name}</option>)}
                     </select>
@@ -162,7 +162,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                     <select required value={form.time} onChange={e => setForm({...form, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
                       <option value="">Select Time</option>
                       {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -170,12 +170,12 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                     <input type="date" value={form.date || selectedDate.toISOString().split('T')[0]} onChange={e => setForm({...form, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
                     <select value={form.duration} onChange={e => setForm({...form, duration: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
                       <option value={15}>15 min</option>
                       <option value={30}>30 min</option>
                       <option value={45}>45 min</option>
@@ -186,12 +186,12 @@ export default function Appointments() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
                   <input type="text" value={form.reason} onChange={e => setForm({...form, reason: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
                     placeholder="Regular checkup, tooth pain, etc." />
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium">Book Appointment</button>
+                  <button type="submit" className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] text-sm font-medium">Book Appointment</button>
                 </div>
               </form>
             </div>

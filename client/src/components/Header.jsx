@@ -28,8 +28,8 @@ export default function Header({ title, onMenuClick }) {
   };
 
   const roleColors = {
-    ADMIN: 'bg-violet-100 text-violet-700',
-    DENTIST: 'bg-indigo-100 text-indigo-700',
+    ADMIN: 'bg-[#e6efff] text-[#003782]',
+    DENTIST: 'bg-[#e6efff] text-[#003782]',
     ASSISTANT: 'bg-emerald-100 text-emerald-700',
     PATIENT: 'bg-amber-100 text-amber-700',
   };
@@ -39,7 +39,7 @@ export default function Header({ title, onMenuClick }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => { playClick(); onMenuClick?.(); }}
-            className="md:hidden p-2 hover:bg-indigo-50 rounded-xl text-indigo-600 transition-colors">
+            className="md:hidden p-2 hover:bg-[#f0f5ff] rounded-xl text-[#004aad] transition-colors">
             <Menu size={20} />
           </button>
           <div>
@@ -47,7 +47,7 @@ export default function Header({ title, onMenuClick }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="relative p-2.5 hover:bg-indigo-50 rounded-xl transition-colors text-slate-400 hover:text-indigo-600 group">
+          <button className="relative p-2.5 hover:bg-[#f0f5ff] rounded-xl transition-colors text-slate-400 hover:text-[#004aad] group">
             <Bell size={18} />
             <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
           </button>
@@ -55,7 +55,7 @@ export default function Header({ title, onMenuClick }) {
           <div className="relative" ref={dropdownRef}>
             <button onClick={() => { playClick(); setDropdownOpen(!dropdownOpen); }}
               className="flex items-center gap-2.5 pl-1 pr-3 py-1 rounded-xl hover:bg-slate-100 transition-all duration-200 group">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-md shadow-indigo-200">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#1a5fb4] to-[#003782] text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-md shadow-[#c2d5f7]">
                 {user?.name?.charAt(0)}
               </div>
               <div className="hidden sm:block text-left">

@@ -62,13 +62,13 @@ export default function TreatmentSupport() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Patient Age</label>
                 <input type="number" value={patientAge} onChange={e => setPatientAge(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
                   placeholder="e.g. 35" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                 <select value={patientGender} onChange={e => setPatientGender(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
                   <option value="">Select</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -80,7 +80,7 @@ export default function TreatmentSupport() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Medical History</label>
               <input type="text" value={medicalHistory} onChange={e => setMedicalHistory(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
                 placeholder="e.g. Diabetes, allergies, current medications" />
             </div>
 
@@ -90,7 +90,7 @@ export default function TreatmentSupport() {
                 <button key={id} onClick={() => toggleSymptom(id)}
                   className={`p-3 rounded-lg border text-left text-sm transition-all ${
                     symptoms.includes(id)
-                      ? 'bg-indigo-100 border-indigo-400 text-indigo-800'
+                      ? 'bg-[#e6efff] border-[#4a85d6] text-[#002d6b]'
                       : 'bg-white border-slate-200 text-gray-600 hover:bg-slate-50'
                   }`}>
                   <div className="flex items-center justify-between">
@@ -106,20 +106,20 @@ export default function TreatmentSupport() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Additional Examination Findings</label>
               <textarea value={examination} onChange={e => setExamination(e.target.value)} rows={4}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
                 placeholder="e.g., Visible cavity on tooth #19, gum inflammation, etc." />
             </div>
 
             <button onClick={handleAnalyze} disabled={symptoms.length === 0 || loading}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full bg-[#004aad] text-white py-3 rounded-lg font-medium hover:bg-[#003782] disabled:opacity-50 flex items-center justify-center gap-2">
               <Brain size={18} />
               {loading ? 'Analyzing...' : 'Analyze & Suggest Treatments'}
             </button>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-slate-900 rounded-xl shadow-sm border border-slate-700 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900">Recommendation Results</h3>
+              <h3 className="font-bold text-white">Recommendation Results</h3>
               {results && (
                 <span className={`text-xs px-3 py-1 rounded-full ${results.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                   {results.source === 'openai' ? 'GPT-4' : 'Rule-Based'}
@@ -128,14 +128,14 @@ export default function TreatmentSupport() {
             </div>
 
             {!results ? (
-              <div className="text-center py-12 text-gray-400">
-                <Stethoscope size={48} className="mx-auto mb-4 text-gray-300" />
+              <div className="text-center py-12 text-slate-500">
+                <Stethoscope size={48} className="mx-auto mb-4 text-slate-600" />
                 <p className="text-sm">Select symptoms and click Analyze to see treatment recommendations.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {results.red_flags?.length > 0 && (
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                  <div className="p-3 rounded-lg bg-red-900/40 border border-red-700 text-sm text-red-300">
                     <div className="font-bold mb-1">Red Flags:</div>
                     <ul className="list-disc list-inside">
                       {results.red_flags.map((flag, i) => <li key={i}>{flag}</li>)}
@@ -145,21 +145,21 @@ export default function TreatmentSupport() {
 
                 {results.diagnoses?.map((diagnosis, i) => (
                   <div key={i}>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide mb-2">{diagnosis.name}</div>
+                    <div className="text-xs text-slate-400 uppercase tracking-wide mb-2">{diagnosis.name}</div>
                     <div className="space-y-2">
                       {diagnosis.treatments?.map((t, j) => (
                         <div key={j} className={`p-3 rounded-lg border ${
-                          t.priority === 'urgent' ? 'bg-red-50 border-red-100' :
-                          t.priority === 'recommended' ? 'bg-green-50 border-green-100' :
-                          'bg-slate-50 border-slate-200'
+                          t.priority === 'urgent' ? 'bg-red-900/30 border-red-700' :
+                          t.priority === 'recommended' ? 'bg-green-900/30 border-green-700' :
+                          'bg-slate-800 border-slate-700'
                         }`}>
                           <div className="flex items-center gap-2 mb-1">
-                            <CheckCircle size={14} className={t.priority === 'urgent' ? 'text-red-500' : 'text-green-500'} />
-                            <span className="font-medium text-sm text-slate-900">{t.name}</span>
+                            <CheckCircle size={14} className={t.priority === 'urgent' ? 'text-red-400' : 'text-green-400'} />
+                            <span className="font-medium text-sm text-white">{t.name}</span>
                             {t.priority === 'urgent' && <span className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full">Urgent</span>}
                           </div>
-                          <div className="text-xs text-gray-600 ml-6">{t.description}</div>
-                          <div className="flex gap-4 mt-1 ml-6 text-xs text-gray-500">
+                          <div className="text-xs text-slate-300 ml-6">{t.description}</div>
+                          <div className="flex gap-4 mt-1 ml-6 text-xs text-slate-400">
                             <span>Cost: {t.cost_range}</span>
                             <span>Duration: {t.duration}</span>
                           </div>
@@ -170,15 +170,15 @@ export default function TreatmentSupport() {
                 ))}
 
                 {results.additional_tests?.length > 0 && (
-                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                    <div className="text-xs font-bold text-indigo-800 mb-1">Additional Tests Recommended:</div>
-                    <ul className="text-xs text-indigo-700 list-disc list-inside">
+                  <div className="p-3 bg-slate-800 rounded-lg border border-slate-700">
+                    <div className="text-xs font-bold text-slate-300 mb-1">Additional Tests Recommended:</div>
+                    <ul className="text-xs text-slate-400 list-disc list-inside">
                       {results.additional_tests.map((t, i) => <li key={i}>{t}</li>)}
                     </ul>
                   </div>
                 )}
 
-                <div className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-100 text-xs text-red-700 mt-4">
+                <div className="flex items-start gap-2 p-3 bg-red-900/20 rounded-lg border border-red-800 text-xs text-red-400 mt-4">
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                   {results.disclaimer || 'This is a clinical decision support tool. The final treatment decision must be made by the licensed dentist.'}
                 </div>

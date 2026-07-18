@@ -17,6 +17,58 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+router.get("/my-entry", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const patient = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+    if (!patient) return res.json(null);
+
+    const entry = await prisma.queueEntry.findFirst({
+      where: { patientId: patient.id, status: { in: ["WAITING", "IN_PROGRESS"] } },
+      include: { patient: { include: { user: { select: { name: true } } } } },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(entry || null);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/self-check-in", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const io = req.app.get("io");
+
+    const patient = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+    if (!patient) return res.status(404).json({ error: "Patient profile not found" });
+
+    const existing = await prisma.queueEntry.findFirst({
+      where: { patientId: patient.id, status: { in: ["WAITING", "IN_PROGRESS"] } },
+    });
+    if (existing) return res.status(400).json({ error: "You are already in the queue" });
+
+    const lastEntry = await prisma.queueEntry.findFirst({
+      where: { status: "WAITING" },
+      orderBy: { position: "desc" },
+    });
+    const position = (lastEntry?.position || 0) + 1;
+
+    const waitingCount = await prisma.queueEntry.count({ where: { status: "WAITING" } });
+    const estimatedWait = waitingCount * 30;
+
+    const entry = await prisma.queueEntry.create({
+      data: { patientId: patient.id, position, estimatedWait },
+      include: { patient: { include: { user: { select: { name: true } } } } },
+    });
+
+    io.to("queue").emit("queue-update", entry);
+    io.to("twin").emit("queue-update", { waitingCount: waitingCount + 1 });
+    res.status(201).json(entry);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 router.post("/", auth, async (req, res) => {
   try {
     const prisma = req.app.get("prisma");

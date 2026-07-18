@@ -46,18 +46,22 @@ export default function Login() {
 
       {/* Login card */}
       <div className="relative z-10 w-full max-w-md animate-slide-up">
+        {/* Logo above card */}
+        <div className="mb-5 text-center">
+          <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-32 mx-auto object-contain drop-shadow-lg" />
+        </div>
         <div className="glass-card rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b border-slate-100 mx-6">
             <button onClick={() => { playClick(); setIsLogin(true); }}
               className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${
-                isLogin ? 'text-indigo-600 border-indigo-600' : 'text-slate-400 border-transparent hover:text-slate-600'
+                isLogin ? 'text-[#004aad] border-[#004aad]' : 'text-slate-400 border-transparent hover:text-slate-600'
               }`}>
               <LogIn size={15} className="inline mr-1.5" /> Sign In
             </button>
             <button onClick={() => { playClick(); setIsLogin(false); }}
               className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${
-                !isLogin ? 'text-indigo-600 border-indigo-600' : 'text-slate-400 border-transparent hover:text-slate-600'
+                !isLogin ? 'text-[#004aad] border-[#004aad]' : 'text-slate-400 border-transparent hover:text-slate-600'
               }`}>
               <UserPlus size={15} className="inline mr-1.5" /> Register
             </button>
@@ -76,7 +80,7 @@ export default function Login() {
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
                 <input type="text" required value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none text-sm transition-all"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
                   placeholder="Dr. Juan Dela Cruz" />
               </div>
             )}
@@ -85,7 +89,7 @@ export default function Login() {
               <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
                 <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none text-sm transition-all">
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all">
                   <option value="PATIENT">Patient</option>
                   <option value="DENTIST">Dentist</option>
                   <option value="ASSISTANT">Assistant</option>
@@ -98,7 +102,7 @@ export default function Login() {
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
               <input type="email" required value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none text-sm transition-all"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
                 placeholder="you@example.com" />
             </div>
 
@@ -107,7 +111,7 @@ export default function Login() {
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} required value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 focus:outline-none text-sm transition-all pr-10"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all pr-10"
                   placeholder="••••••••" />
                 <button type="button" onClick={() => { playClick(); setShowPassword(!showPassword); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">

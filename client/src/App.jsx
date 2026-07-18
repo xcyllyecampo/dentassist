@@ -15,21 +15,37 @@ import Analytics from './pages/Analytics';
 import DigitalTwin from './pages/DigitalTwin';
 import TreatmentSupport from './pages/TreatmentSupport';
 import SmileSimulation from './pages/SmileSimulation';
+import KioskHome from './pages/kiosk/KioskHome';
+import KioskCheckIn from './pages/kiosk/KioskCheckIn';
+import KioskQueueStatus from './pages/kiosk/KioskQueueStatus';
+import KioskRecords from './pages/kiosk/KioskRecords';
+import KioskOralScreening from './pages/kiosk/KioskOralScreening';
+import KioskSmileSimulation from './pages/kiosk/KioskSmileSimulation';
 import Spinner from './components/Spinner';
+
+const STAFF_ROLES = ["ADMIN", "DENTIST", "ASSISTANT"];
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
   if (!user) return <Navigate to="/login" />;
-  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" />;
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to={user.role === "PATIENT" ? "/kiosk" : "/dashboard"} />;
+  }
   return children;
 }
 
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (user) return <Navigate to="/dashboard" />;
+  if (user) return <Navigate to={user.role === "PATIENT" ? "/kiosk" : "/dashboard"} />;
   return children;
+}
+
+function DefaultRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return <Navigate to={user?.role === "PATIENT" ? "/kiosk" : "/dashboard"} replace />;
 }
 
 export default function App() {
@@ -39,20 +55,32 @@ export default function App() {
         <BrowserRouter>
         <FloatingAI />
         <Routes>
+          {/* Public */}
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/patients" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Patients /></ProtectedRoute>} />
-          <Route path="/patients/:id" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><PatientDetail /></ProtectedRoute>} />
-          <Route path="/appointments" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Appointments /></ProtectedRoute>} />
-          <Route path="/queue" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Queue /></ProtectedRoute>} />
-          <Route path="/records" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><Records /></ProtectedRoute>} />
-          <Route path="/xray" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><XrayAnalysis /></ProtectedRoute>} />
+
+          {/* Staff routes */}
+          <Route path="/dashboard" element={<ProtectedRoute roles={STAFF_ROLES}><Dashboard /></ProtectedRoute>} />
+          <Route path="/patients" element={<ProtectedRoute roles={STAFF_ROLES}><Patients /></ProtectedRoute>} />
+          <Route path="/patients/:id" element={<ProtectedRoute roles={STAFF_ROLES}><PatientDetail /></ProtectedRoute>} />
+          <Route path="/appointments" element={<ProtectedRoute roles={STAFF_ROLES}><Appointments /></ProtectedRoute>} />
+          <Route path="/queue" element={<ProtectedRoute roles={STAFF_ROLES}><Queue /></ProtectedRoute>} />
+          <Route path="/records" element={<ProtectedRoute roles={STAFF_ROLES}><Records /></ProtectedRoute>} />
+          <Route path="/xray" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><XrayAnalysis /></ProtectedRoute>} />
           <Route path="/oral-screening" element={<ProtectedRoute><OralScreening /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><Analytics /></ProtectedRoute>} />
-          <Route path="/digital-twin" element={<ProtectedRoute roles={["ADMIN","DENTIST","ASSISTANT"]}><DigitalTwin /></ProtectedRoute>} />
-          <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
-          <Route path="/smile-simulation" element={<ProtectedRoute roles={["ADMIN","DENTIST"]}><SmileSimulation /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/dashboard" />} />
+          <Route path="/analytics" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><Analytics /></ProtectedRoute>} />
+          <Route path="/digital-twin" element={<ProtectedRoute roles={STAFF_ROLES}><DigitalTwin /></ProtectedRoute>} />
+          <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
+          <Route path="/smile-simulation" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><SmileSimulation /></ProtectedRoute>} />
+
+          {/* Patient kiosk routes */}
+          <Route path="/kiosk" element={<ProtectedRoute roles={["PATIENT"]}><KioskHome /></ProtectedRoute>} />
+          <Route path="/kiosk/check-in" element={<ProtectedRoute roles={["PATIENT"]}><KioskCheckIn /></ProtectedRoute>} />
+          <Route path="/kiosk/queue" element={<ProtectedRoute roles={["PATIENT"]}><KioskQueueStatus /></ProtectedRoute>} />
+          <Route path="/kiosk/records" element={<ProtectedRoute roles={["PATIENT"]}><KioskRecords /></ProtectedRoute>} />
+          <Route path="/kiosk/oral-screening" element={<ProtectedRoute roles={["PATIENT"]}><KioskOralScreening /></ProtectedRoute>} />
+          <Route path="/kiosk/smile" element={<ProtectedRoute roles={["PATIENT"]}><KioskSmileSimulation /></ProtectedRoute>} />
+
+          <Route path="*" element={<DefaultRedirect />} />
         </Routes>
       </BrowserRouter>
       </ToastProvider>

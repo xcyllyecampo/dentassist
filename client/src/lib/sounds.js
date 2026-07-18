@@ -72,3 +72,10 @@ export function playWhoosh() {
 export function playHover() {
   playTone(1200, 0.03, 'sine');
 }
+
+export function playCallPatient() {
+  playTone(523, 0.12, 'sine');
+  setTimeout(() => playTone(659, 0.12, 'sine'), 100);
+  setTimeout(() => playTone(784, 0.12, 'sine'), 200);
+  setTimeout(() => playTone(1047, 0.2, 'sine'), 300);
+}
