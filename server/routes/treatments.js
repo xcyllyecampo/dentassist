@@ -1,5 +1,6 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const { tryAwardBadge } = require("../utils/badges");
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.post("/", auth, roleGuard("DENTIST"), async (req, res) => {
       },
       include: { dentist: { select: { name: true } }, tooth: true },
     });
+    tryAwardBadge(prisma, patientId, "Treatment Champ");
     res.status(201).json(treatment);
   } catch (err) {
     res.status(500).json({ error: "Server error" });

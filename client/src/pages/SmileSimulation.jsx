@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
@@ -32,11 +32,20 @@ function ScoreBar({ current, simulated, label }) {
 
 export default function SmileSimulation() {
   const toast = useToast();
+  const [patients, setPatients] = useState([]);
+  const [selectedPatientId, setSelectedPatientId] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [treatmentType, setTreatmentType] = useState('whitening');
   const [simulating, setSimulating] = useState(false);
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    api.get('/patients').then(res => {
+      setPatients(res.data);
+      if (res.data.length > 0) setSelectedPatientId(res.data[0].id);
+    }).catch(() => {});
+  }, []);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
@@ -53,6 +62,7 @@ export default function SmileSimulation() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('treatment_type', treatmentType);
+      if (selectedPatientId) formData.append('patientId', selectedPatientId);
       const res = await api.post('/ai/smile/simulate', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
     } catch (err) {
@@ -90,6 +100,16 @@ export default function SmileSimulation() {
           </div>
 
           <div className="text-center">
+            {patients.length > 0 && (
+              <div className="mb-4 max-w-xs mx-auto">
+                <label className="block text-xs text-gray-500 mb-1">Patient (optional)</label>
+                <select value={selectedPatientId} onChange={e => setSelectedPatientId(e.target.value)}
+                  className="w-full px-3 py-2 border border-sky-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-400 focus:outline-none">
+                  <option value="">No patient (demo only)</option>
+                  {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
+                </select>
+              </div>
+            )}
             <label className="inline-flex items-center gap-2 bg-sky-600 text-white px-6 py-3 rounded-lg hover:bg-sky-700 cursor-pointer font-medium">
               <Camera size={18} /> Choose Smile Photo
               <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />

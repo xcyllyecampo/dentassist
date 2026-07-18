@@ -3,6 +3,7 @@ const { auth } = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { tryAwardBadge } = require("../utils/badges");
 
 const router = express.Router();
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://localhost:8000";
@@ -199,6 +200,7 @@ router.post("/treatment/suggest", auth, async (req, res) => {
 
 router.post("/smile/simulate", auth, upload.single("file"), async (req, res) => {
   try {
+    const patientId = req.body.patientId;
     const treatmentType = req.body.treatment_type || "whitening";
     const formData = new FormData();
     const fileBuffer = fs.readFileSync(req.file.path);
@@ -211,6 +213,7 @@ router.post("/smile/simulate", auth, upload.single("file"), async (req, res) => 
       body: formData,
     });
     const result = await response.json();
+    if (patientId) tryAwardBadge(req.app.get("prisma"), patientId, "Smile Explorer");
     res.json(result);
   } catch (err) {
     console.error("AI service error:", err.message);

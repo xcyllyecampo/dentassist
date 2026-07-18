@@ -2,6 +2,7 @@ const express = require("express");
 const { auth } = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
+const { tryAwardBadge } = require("../utils/badges");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
@@ -37,6 +38,7 @@ router.post("/upload", auth, upload.single("image"), async (req, res) => {
         uploadedBy: req.user.id,
       },
     });
+    tryAwardBadge(prisma, patientId, "X-Ray Pioneer");
     res.status(201).json(image);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
