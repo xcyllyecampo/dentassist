@@ -6,6 +6,7 @@ import EmptyState from '../components/EmptyState';
 import api from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { playClick } from '../lib/sounds';
 import { Plus, ChevronLeft, ChevronRight, Calendar, AlertTriangle, X, CheckCircle, Clock, Play, Ban, Trash2, Edit3, UserX, CalendarDays, LayoutList } from 'lucide-react';
 
 const STATUS_CONFIG = {

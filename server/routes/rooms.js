@@ -44,4 +44,27 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) => {
   }
 });
 
+router.post("/", auth, roleGuard("ADMIN"), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const { number, name } = req.body;
+    if (!number || !name) return res.status(400).json({ error: "Room number and name are required" });
+    const room = await prisma.room.create({ data: { number, name } });
+    res.status(201).json(room);
+  } catch (err) {
+    if (err.code === "P2002") return res.status(409).json({ error: "Room number already exists" });
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    await prisma.room.delete({ where: { id: req.params.id } });
+    res.json({ message: "Room deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

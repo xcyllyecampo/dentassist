@@ -5,18 +5,8 @@ import { useToast } from '../../context/ToastContext';
 import { playClick, playSuccess, playError } from '../../lib/sounds';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
+import { KIOSK_TREATMENTS as TREATMENTS } from '../../lib/treatments';
 import { CalendarCheck, Clock, User, ChevronLeft, CheckCircle, Calendar } from 'lucide-react';
-
-const TREATMENTS = [
-  { id: 'checkup', label: 'General Checkup', duration: 30 },
-  { id: 'cleaning', label: 'Teeth Cleaning', duration: 45 },
-  { id: 'filling', label: 'Tooth Filling', duration: 45 },
-  { id: 'extraction', label: 'Tooth Extraction', duration: 30 },
-  { id: 'whitening', label: 'Teeth Whitening', duration: 60 },
-  { id: 'braces', label: 'Braces Consultation', duration: 30 },
-  { id: 'rootcanal', label: 'Root Canal', duration: 60 },
-  { id: 'other', label: 'Other', duration: 30 },
-];
 
 export default function KioskBookAppointment() {
   const navigate = useNavigate();

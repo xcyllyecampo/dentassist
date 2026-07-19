@@ -18,12 +18,16 @@ export default function KioskRecords() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('appointments');
 
-  useEffect(() => {
+  const fetchPatient = () => {
+    setLoading(true);
+    setError(null);
     api.get('/patients/me')
       .then(res => setPatient(res.data))
       .catch(() => setError('Failed to load your records'))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchPatient(); }, []);
 
   if (loading) return <KioskLayout title="My Records"><Spinner className="py-20" /></KioskLayout>;
   if (error) return (
@@ -31,7 +35,7 @@ export default function KioskRecords() {
       <div className="text-center py-20">
         <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
         <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Retry</button>
+        <button onClick={fetchPatient} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Retry</button>
       </div>
     </KioskLayout>
   );

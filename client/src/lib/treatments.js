@@ -72,3 +72,14 @@ export const TREATMENTS = [
     gradient: 'from-rose-500 to-rose-600',
   },
 ];
+
+export const KIOSK_TREATMENTS = [
+  { id: 'checkup', label: 'General Checkup', duration: 30 },
+  { id: 'cleaning', label: 'Teeth Cleaning', duration: 45 },
+  { id: 'filling', label: 'Tooth Filling', duration: 45 },
+  { id: 'extraction', label: 'Tooth Extraction', duration: 30 },
+  { id: 'whitening', label: 'Teeth Whitening', duration: 60 },
+  { id: 'braces', label: 'Braces Consultation', duration: 30 },
+  { id: 'rootcanal', label: 'Root Canal', duration: 60 },
+  { id: 'other', label: 'Other', duration: 30 },
+];

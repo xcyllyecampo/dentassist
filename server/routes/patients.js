@@ -24,7 +24,7 @@ router.get("/me", auth, async (req, res) => {
   }
 });
 
-router.get("/", auth, async (req, res) => {
+router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const patients = await prisma.patient.findMany({

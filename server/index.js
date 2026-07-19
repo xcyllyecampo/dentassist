@@ -43,6 +43,20 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+async function cleanupExpiredTokens() {
+  try {
+    const result = await prisma.refreshToken.deleteMany({
+      where: { expiresAt: { lt: new Date() } },
+    });
+    if (result.count > 0) console.log(`Cleaned up ${result.count} expired refresh tokens`);
+  } catch (err) {
+    console.error("Token cleanup failed:", err.message);
+  }
+}
+
+cleanupExpiredTokens();
+
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 module.exports = { app, server, io, prisma };

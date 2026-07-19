@@ -225,7 +225,7 @@ router.post("/chat", auth, async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.log("AI service unavailable, using mock chat response");
+    console.debug("AI service unavailable, using mock chat response");
     res.json(MOCK_RESPONSES.chat(req.body.message || ""));
   }
 });
@@ -244,7 +244,7 @@ router.post("/xray/analyze", auth, upload.single("file"), async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.log("AI service unavailable, using mock xray analysis");
+    console.debug("AI service unavailable, using mock xray analysis");
     res.json(MOCK_RESPONSES.xray);
   }
 });
@@ -263,7 +263,7 @@ router.post("/oral/screen", auth, upload.single("file"), async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.log("AI service unavailable, using mock oral screening");
+    console.debug("AI service unavailable, using mock oral screening");
     res.json(MOCK_RESPONSES.oral);
   }
 });
@@ -279,7 +279,7 @@ router.post("/treatment/suggest", auth, async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.log("AI service unavailable, using mock treatment suggestions");
+    console.debug("AI service unavailable, using mock treatment suggestions");
     res.json(MOCK_RESPONSES.treatment);
   }
 });
@@ -300,7 +300,7 @@ router.post("/smile/simulate", auth, upload.single("file"), async (req, res) => 
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.log("AI service unavailable, using mock smile simulation");
+    console.debug("AI service unavailable, using mock smile simulation");
     res.json(MOCK_RESPONSES.smile(req.body.treatment_type || "whitening"));
   }
 });

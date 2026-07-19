@@ -69,7 +69,7 @@ router.post("/self-check-in", auth, async (req, res) => {
   }
 });
 
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");

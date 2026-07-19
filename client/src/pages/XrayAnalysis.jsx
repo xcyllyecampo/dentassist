@@ -15,7 +15,7 @@ export default function XrayAnalysis() {
   const [directAnalysis, setDirectAnalysis] = useState(null);
   const [directPreview, setDirectPreview] = useState(null);
 
-  useEffect(() => { api.get('/patients').then(res => setPatients(res.data)).catch(() => {}); }, []);
+  useEffect(() => { api.get('/patients').then(res => setPatients(res.data)).catch(() => toast.error('Failed to load patients')); }, []);
 
   useEffect(() => {
     if (selectedPatient) {
