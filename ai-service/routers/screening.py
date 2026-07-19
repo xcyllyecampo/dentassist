@@ -1,46 +1,20 @@
 import os
 import base64
+import json
 from fastapi import APIRouter, UploadFile, File
-from openai import OpenAI
+from gemini_client import get_client, GEMINI_MODEL
 from prompts.dental import ORAL_SCREENING
 
 router = APIRouter()
 
 
-def get_client():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "your_openai_api_key_here":
-        return None
-    return OpenAI(api_key=api_key)
-
-
 def mock_oral_screening():
     return {
         "areas": [
-            {
-                "region": "Upper left molar area",
-                "concern": "Visible plaque buildup on the buccal surface of the upper left molars",
-                "severity": "mild",
-                "confidence": 0.78,
-            },
-            {
-                "region": "Lower front teeth (lingual surface)",
-                "concern": "Moderate tartar accumulation with slight gum recession observed",
-                "severity": "moderate",
-                "confidence": 0.72,
-            },
-            {
-                "region": "Upper front teeth",
-                "concern": "Mild yellowing consistent with surface staining, no visible decay",
-                "severity": "mild",
-                "confidence": 0.85,
-            },
-            {
-                "region": "Right wisdom tooth area",
-                "concern": "Area appears normal with no visible concerns",
-                "severity": "none",
-                "confidence": 0.92,
-            },
+            {"region": "Upper left molar area", "concern": "Visible plaque buildup on the buccal surface of the upper left molars", "severity": "mild", "confidence": 0.78},
+            {"region": "Lower front teeth (lingual surface)", "concern": "Moderate tartar accumulation with slight gum recession observed", "severity": "moderate", "confidence": 0.72},
+            {"region": "Upper front teeth", "concern": "Mild yellowing consistent with surface staining, no visible decay", "severity": "mild", "confidence": 0.85},
+            {"region": "Right wisdom tooth area", "concern": "Area appears normal with no visible concerns", "severity": "none", "confidence": 0.92},
         ],
         "overall_score": 72,
         "recommendations": [
@@ -64,32 +38,24 @@ async def screen_oral(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         base64_image = base64.b64encode(contents).decode("utf-8")
+        mime_type = file.content_type or "image/jpeg"
 
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": ORAL_SCREENING},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Please analyze this intraoral photograph for oral health screening."},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/{file.content_type.split('/')[-1]};base64,{base64_image}",
-                                "detail": "high",
-                            },
-                        },
-                    ],
-                },
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                ORAL_SCREENING,
+                "\n\nPlease analyze this intraoral photograph for oral health screening. Provide your findings in JSON format.",
+                {"inline_data": {"mime_type": mime_type, "data": base64_image}},
             ],
-            max_tokens=2000,
         )
 
-        ai_text = response.choices[0].message.content
-        import json
+        ai_text = response.text
+
         try:
-            result = json.loads(ai_text)
+            cleaned = ai_text.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            result = json.loads(cleaned)
         except json.JSONDecodeError:
             result = {
                 "areas": [],
@@ -98,7 +64,7 @@ async def screen_oral(file: UploadFile = File(...)):
                 "disclaimer": "This is an AI-generated screening and is NOT a medical diagnosis.",
             }
 
-        result["source"] = "openai"
+        result["source"] = "gemini"
         return result
 
     except Exception as e:

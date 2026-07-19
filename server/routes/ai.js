@@ -15,7 +15,7 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const MOCK_RESPONSES = {
   chat: (message) => ({
-    response: `I'm DentAssist AI (Demo Mode). Based on your query about "${message.slice(0, 50)}", here's what I can tell you:\n\n- The clinic currently has patients in queue\n- Room availability looks good for today\n- For specific clinical advice, please consult with the attending dentist.\n\nNote: The AI service is running in demo mode. Connect OpenAI for full AI-powered responses.`,
+    response: `I'm DentAssist AI (Demo Mode). Based on your query about "${message.slice(0, 50)}", here's what I can tell you:\n\n- The clinic currently has patients in queue\n- Room availability looks good for today\n- For specific clinical advice, please consult with the attending dentist.\n\nNote: The AI service is running in demo mode. Connect Gemini for full AI-powered responses.`,
     source: "mock",
   }),
   xray: {

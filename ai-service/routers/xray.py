@@ -1,19 +1,11 @@
 import os
 import base64
 import json
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from pydantic import BaseModel
-from openai import OpenAI
+from fastapi import APIRouter, UploadFile, File
+from gemini_client import get_client, GEMINI_MODEL
 from prompts.dental import XRAY_ANALYSIS
 
 router = APIRouter()
-
-
-def get_client():
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key or api_key == "your_openai_api_key_here":
-        return None
-    return OpenAI(api_key=api_key)
 
 
 def mock_xray_analysis():
@@ -64,32 +56,24 @@ async def analyze_xray(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         base64_image = base64.b64encode(contents).decode("utf-8")
+        mime_type = file.content_type or "image/jpeg"
 
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": XRAY_ANALYSIS},
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Please analyze this dental X-ray and provide your findings."},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/{file.content_type.split('/')[-1]};base64,{base64_image}",
-                                "detail": "high",
-                            },
-                        },
-                    ],
-                },
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=[
+                XRAY_ANALYSIS,
+                "\n\nPlease analyze this dental X-ray and provide your findings in JSON format.",
+                {"inline_data": {"mime_type": mime_type, "data": base64_image}},
             ],
-            max_tokens=2000,
         )
 
-        ai_text = response.choices[0].message.content
+        ai_text = response.text
 
         try:
-            findings = json.loads(ai_text)
+            cleaned = ai_text.strip()
+            if cleaned.startswith("```"):
+                cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            findings = json.loads(cleaned)
         except json.JSONDecodeError:
             findings = {
                 "findings": [],
@@ -98,7 +82,7 @@ async def analyze_xray(file: UploadFile = File(...)):
                 "disclaimer": "This is an AI-generated analysis and should NOT be considered a definitive diagnosis.",
             }
 
-        findings["source"] = "openai"
+        findings["source"] = "gemini"
         return findings
 
     except Exception as e:

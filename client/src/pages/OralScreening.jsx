@@ -68,8 +68,8 @@ export default function OralScreening() {
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-slate-900">Analysis Results</h3>
-                  <span className={`text-xs px-3 py-1 rounded-full ${result.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {result.source === 'openai' ? 'GPT-4 Vision' : 'Demo Mode'}
+                  <span className={`text-xs px-3 py-1 rounded-full ${result.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {result.source === 'gemini' ? 'Gemini Vision' : 'Demo Mode'}
                   </span>
                 </div>
 

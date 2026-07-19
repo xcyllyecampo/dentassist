@@ -99,9 +99,9 @@ export default function FloatingAI() {
             <div className="flex items-center gap-1">
               {source && (
                 <span className={`text-[10px] px-2 py-0.5 rounded-full mr-2 ${
-                  source === 'openai' ? 'bg-green-500/20 text-green-300' : 'bg-amber-500/20 text-amber-300'
+                  source === 'gemini' ? 'bg-green-500/20 text-green-300' : 'bg-amber-500/20 text-amber-300'
                 }`}>
-                  {source === 'openai' ? 'GPT-4' : 'Smart Mode'}
+                  {source === 'gemini' ? 'Gemini AI' : 'Smart Mode'}
                 </span>
               )}
               <button onClick={() => setOpen(false)} className="p-1 hover:bg-[#003782] rounded transition-colors">

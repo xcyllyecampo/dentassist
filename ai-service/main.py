@@ -25,12 +25,12 @@ app.include_router(smile.router, prefix="/smile", tags=["Smile Simulation"])
 
 @app.get("/")
 def root():
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     return {
         "service": "DentAssist AI Service",
         "version": "1.0.0",
         "status": "running",
-        "openai_configured": bool(api_key and api_key != "your_openai_api_key_here"),
+        "gemini_configured": bool(api_key and len(api_key) > 10),
     }
 
 

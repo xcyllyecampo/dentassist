@@ -83,8 +83,8 @@ export default function KioskOralScreening() {
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-bold text-sm">Analysis Results</h3>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${result.source === 'openai' ? 'bg-green-500/20 text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
-                  {result.source === 'openai' ? 'AI-Powered' : 'Demo Mode'}
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${result.source === 'gemini' ? 'bg-green-500/20 text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
+                  {result.source === 'gemini' ? 'AI-Powered' : 'Demo Mode'}
                 </span>
               </div>
 

@@ -100,8 +100,8 @@ export default function XrayAnalysis() {
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-slate-900">AI Analysis Result — {directAnalysis.fileName}</h3>
-              <span className={`text-xs px-3 py-1 rounded-full ${directAnalysis.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                {directAnalysis.source === 'openai' ? 'GPT-4 Vision' : 'Demo Mode'}
+              <span className={`text-xs px-3 py-1 rounded-full ${directAnalysis.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                {directAnalysis.source === 'gemini' ? 'Gemini Vision' : 'Demo Mode'}
               </span>
             </div>
 

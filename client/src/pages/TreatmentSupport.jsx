@@ -121,8 +121,8 @@ export default function TreatmentSupport() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-white">Recommendation Results</h3>
               {results && (
-                <span className={`text-xs px-3 py-1 rounded-full ${results.source === 'openai' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {results.source === 'openai' ? 'GPT-4' : 'Rule-Based'}
+                <span className={`text-xs px-3 py-1 rounded-full ${results.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {results.source === 'gemini' ? 'Gemini AI' : 'Rule-Based'}
                 </span>
               )}
             </div>
