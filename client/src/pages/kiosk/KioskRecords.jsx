@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
+import { playClick } from '../../lib/sounds';
 import Spinner from '../../components/Spinner';
 import { AlertTriangle, Calendar, Stethoscope, Pill, X as XRayIcon, Circle } from 'lucide-react';
 
@@ -61,7 +62,7 @@ export default function KioskRecords() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { playClick(); setActiveTab(tab.id); }}
               className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.id
                   ? 'bg-white/20 text-white border border-white/30'

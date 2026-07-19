@@ -69,11 +69,11 @@ CLINIC INFORMATION:
 - Emergency Line: (02) 8123-4568 (24/7)
 - Hours: Monday-Friday 9:00 AM - 5:00 PM, Saturday 9:00 AM - 12:00 PM
 
-SERVICES & PRICING:
-- Consultation: $30, Cleaning: $80, Filling: $100-200
-- Root Canal: $500-800, Extraction: $150-300
-- Whitening: $300, Braces: $3,000-5,000
-- Veneers: $800-1,500/tooth, Implants: $2,000-3,500
+SERVICES & PRICING (all costs in Philippine Peso ₱):
+- Consultation: ₱500-₱1,500, Cleaning: ₱500-₱1,500, Filling: ₱800-₱2,500
+- Root Canal: ₱3,500-₱10,000, Extraction: ₱500-₱3,000
+- Whitening: ₱5,000-₱12,000, Braces: ₱25,000-₱55,000
+- Veneers: ₱12,000-₱35,000/tooth, Implants: ₱35,000-₱100,000
 
 RULES:
 - Be helpful, professional, and warm
@@ -90,7 +90,7 @@ Given the patient's symptoms and examination findings:
 2. For each diagnosis, suggest treatment options with:
    - name: Treatment name
    - description: Brief explanation
-   - cost_range: Estimated cost range
+   - cost_range: Estimated cost range in Philippine Peso (₱)
    - duration: Expected time
    - priority: "urgent", "recommended", or "optional"
 3. List any additional tests or examinations recommended
@@ -116,7 +116,7 @@ For the SIMULATED RESULT, describe:
 - changes: List of specific improvements expected
 
 Also provide:
-- procedures: List of recommended procedure options with name, description, cost, duration, and results
+- procedures: List of recommended procedure options with name, description, cost (in Philippine Peso ₱), duration, and results
 - timeline: Treatment timeline from start to finish
 - maintenance: Post-treatment care instructions
 

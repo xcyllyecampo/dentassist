@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { LogIn, UserPlus, Eye, EyeOff, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
 export default function Login() {
@@ -136,6 +137,25 @@ export default function Login() {
               </span>
             </div>
           </form>
+        </div>
+
+        {/* QR Code Section */}
+        <div className="mt-4 glass-card rounded-3xl shadow-2xl shadow-black/30 p-6 text-center">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <QrCode size={16} className="text-white/60" />
+            <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">or scan to access on your phone</span>
+          </div>
+          <div className="inline-block bg-white p-3 rounded-2xl mb-3">
+            <QRCodeSVG
+              value={typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}
+              size={140}
+              bgColor="#ffffff"
+              fgColor="#003782"
+              level="M"
+              includeMargin={false}
+            />
+          </div>
+          <p className="text-white/40 text-xs">Scan with your phone camera to open the kiosk</p>
         </div>
       </div>
     </div>

@@ -101,7 +101,7 @@ export default function FloatingAI() {
                 <span className={`text-[10px] px-2 py-0.5 rounded-full mr-2 ${
                   source === 'gemini' ? 'bg-green-500/20 text-green-300' : 'bg-amber-500/20 text-amber-300'
                 }`}>
-                  {source === 'gemini' ? 'Gemini AI' : 'Smart Mode'}
+                  {source === 'gemini' ? 'DentAssist AI' : 'Smart Mode'}
                 </span>
               )}
               <button onClick={() => setOpen(false)} className="p-1 hover:bg-[#003782] rounded transition-colors">

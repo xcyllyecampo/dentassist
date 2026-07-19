@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { useToast } from '../context/ToastContext';
-import { Upload, Brain, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Upload, Brain, AlertTriangle, CheckCircle, Loader } from 'lucide-react';
 
 export default function XrayAnalysis() {
   const toast = useToast();
@@ -13,6 +13,7 @@ export default function XrayAnalysis() {
   const [uploading, setUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(null);
   const [directAnalysis, setDirectAnalysis] = useState(null);
+  const [directPreview, setDirectPreview] = useState(null);
 
   useEffect(() => { api.get('/patients').then(res => setPatients(res.data)).catch(() => {}); }, []);
 
@@ -41,6 +42,8 @@ export default function XrayAnalysis() {
   const handleDirectAnalyze = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (directPreview) URL.revokeObjectURL(directPreview);
+    setDirectPreview(URL.createObjectURL(file));
     setAnalyzing('direct');
     setDirectAnalysis(null);
     const formData = new FormData();
@@ -96,14 +99,38 @@ export default function XrayAnalysis() {
           </div>
         </div>
 
-        {directAnalysis && (
+        {analyzing === 'direct' && directPreview && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900">AI Analysis Result — {directAnalysis.fileName}</h3>
-              <span className={`text-xs px-3 py-1 rounded-full ${directAnalysis.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                {directAnalysis.source === 'gemini' ? 'Gemini Vision' : 'Demo Mode'}
-              </span>
+            <div className="flex items-center gap-4 mb-4">
+              <Loader size={20} className="animate-spin text-[#004aad]" />
+              <h3 className="font-bold text-slate-900">Analyzing X-Ray...</h3>
             </div>
+            <div className="relative">
+              <img src={directPreview} alt="X-Ray" className="w-full max-h-80 object-contain rounded-lg border border-slate-200" />
+              <div className="absolute inset-0 bg-white/60 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <Brain size={40} className="text-[#004aad] mx-auto mb-2 animate-pulse" />
+                  <p className="text-sm font-medium text-slate-700">AI is examining your X-ray...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {directAnalysis && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <h3 className="font-bold text-slate-900 mb-4">Uploaded X-Ray — {directAnalysis.fileName}</h3>
+              <img src={directPreview} alt="X-Ray" className="w-full rounded-lg border border-slate-200" />
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-900">AI Analysis Result</h3>
+                <span className={`text-xs px-3 py-1 rounded-full ${directAnalysis.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {directAnalysis.source === 'gemini' ? 'DentAssist AI Vision' : 'Demo Mode'}
+                </span>
+              </div>
 
             {directAnalysis.overall_assessment && (
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm text-[#002d6b] mb-4">
@@ -152,6 +179,7 @@ export default function XrayAnalysis() {
               <AlertTriangle size={14} className="mt-0.5 shrink-0" />
               {directAnalysis.disclaimer || "This is an AI-generated analysis and should NOT be considered a definitive diagnosis. All findings must be verified by a licensed dentist."}
             </div>
+          </div>
           </div>
         )}
 

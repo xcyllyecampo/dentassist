@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { playSuccess } from '../../lib/sounds';
+import { playSuccess, playClick, playError } from '../../lib/sounds';
 import { TREATMENTS } from '../../lib/treatments';
-import { ArrowLeft, ArrowRight, CheckCircle, Clock, DollarSign, Loader } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Clock, Loader } from 'lucide-react';
 
 const STEPS = ['Choose Treatment', 'Confirm', 'Done'];
 
@@ -33,6 +33,7 @@ export default function KioskCheckIn() {
     } catch (err) {
       const msg = err.response?.data?.error || 'Error checking in. Please try again.';
       toast.error(msg);
+      playError();
     }
     setChecking(false);
   };
@@ -87,7 +88,7 @@ export default function KioskCheckIn() {
                 </div>
               </div>
             </div>
-            <button onClick={() => navigate('/kiosk')} className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors">
+            <button onClick={() => { playClick(); navigate('/kiosk'); }} className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors">
               Back to Home
             </button>
           </div>
@@ -103,7 +104,7 @@ export default function KioskCheckIn() {
               {TREATMENTS.map((t, i) => (
                 <button
                   key={i}
-                  onClick={() => setSelectedTreatment(t)}
+                  onClick={() => { playClick(); setSelectedTreatment(t); }}
                   className={`p-3 rounded-xl border-2 text-center transition-all active:scale-[0.97] ${
                     selectedTreatment?.name === t.name
                       ? 'border-blue-400 bg-blue-500/20 scale-[1.03] shadow-lg shadow-blue-500/20'
@@ -118,7 +119,7 @@ export default function KioskCheckIn() {
             </div>
 
             <button
-              onClick={() => setStep(2)}
+              onClick={() => { playClick(); setStep(2); }}
               disabled={!selectedTreatment}
               className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
                 selectedTreatment
@@ -147,7 +148,7 @@ export default function KioskCheckIn() {
               <div className="grid grid-cols-2 gap-3 text-left border-t border-white/10 pt-3">
                 <div>
                   <div className="text-white/40 text-[10px] mb-0.5">Estimated Cost</div>
-                  <div className="text-green-400 font-bold text-sm flex items-center gap-1"><DollarSign size={12} />{selectedTreatment.cost}</div>
+                  <div className="text-green-400 font-bold text-sm flex items-center gap-1">{selectedTreatment.cost}</div>
                 </div>
                 <div>
                   <div className="text-white/40 text-[10px] mb-0.5">Duration</div>
@@ -161,13 +162,13 @@ export default function KioskCheckIn() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => setStep(1)}
+                onClick={() => { playClick(); setStep(1); }}
                 className="px-4 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors flex items-center gap-1.5"
               >
                 <ArrowLeft size={16} /> Back
               </button>
               <button
-                onClick={handleCheckIn}
+                onClick={() => { playClick(); handleCheckIn(); }}
                 disabled={checking}
                 className="flex-1 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold text-lg hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-green-500/30 transition-all hover:scale-[1.01] active:scale-[0.99]"
               >
@@ -217,7 +218,7 @@ export default function KioskCheckIn() {
                 <Clock size={14} /> Queue Status
               </button>
               <button
-                onClick={() => navigate('/kiosk')}
+                onClick={() => { playClick(); navigate('/kiosk'); }}
                 className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors"
               >
                 Home

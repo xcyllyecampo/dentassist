@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
+import { playClick, playCallPatient } from '../../lib/sounds';
 import { io } from 'socket.io-client';
 import { Clock, Users, Loader, AlertTriangle } from 'lucide-react';
 
@@ -12,6 +13,8 @@ export default function KioskQueueStatus() {
   const [error, setError] = useState(null);
   const socketRef = useRef(null);
 
+  const prevStatusRef = useRef(null);
+
   const fetchMyEntry = () => {
     setLoading(true);
     setError(null);
@@ -19,7 +22,12 @@ export default function KioskQueueStatus() {
       api.get('/queue/my-entry'),
       api.get('/queue'),
     ]).then(([myRes, queueRes]) => {
-      setMyEntry(myRes.data || null);
+      const newEntry = myRes.data || null;
+      if (prevStatusRef.current === 'WAITING' && newEntry?.status === 'IN_PROGRESS') {
+        playCallPatient();
+      }
+      prevStatusRef.current = newEntry?.status || null;
+      setMyEntry(newEntry);
       const entries = queueRes.data || [];
       setWaitingCount(entries.filter(e => e.status === 'WAITING').length);
       setServingCount(entries.filter(e => e.status === 'IN_PROGRESS').length);
@@ -59,7 +67,7 @@ export default function KioskQueueStatus() {
           <div className="text-center">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <p className="text-red-400 mb-4">{error}</p>
-            <button onClick={fetchMyEntry} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors">
+            <button onClick={() => { playClick(); fetchMyEntry(); }} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors">
               Retry
             </button>
           </div>
@@ -72,7 +80,7 @@ export default function KioskQueueStatus() {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">Not in Queue</h2>
             <p className="text-white/60 text-lg mb-8">You haven't checked in yet.</p>
-            <a href="/kiosk/check-in" className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30">
+            <a href="/kiosk/check-in" onClick={() => playClick()} className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30">
               Check In Now
             </a>
           </div>

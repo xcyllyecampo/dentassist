@@ -4,12 +4,14 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
 import { Plus, Search, Eye, Trash2, Users, AlertTriangle } from 'lucide-react';
 
 export default function Patients() {
   const toast = useToast();
+  const { user } = useAuth();
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -113,9 +115,11 @@ export default function Patients() {
                     <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-[#004aad] hover:text-[#002d6b] text-sm mr-3">
                       <Eye size={14} /> View
                     </Link>
+                  {user?.role === 'ADMIN' && (
                     <button onClick={() => handleDelete(p.id)} className="inline-flex items-center gap-1 text-red-500 hover:text-red-700 text-sm">
                       <Trash2 size={14} /> Delete
                     </button>
+                  )}
                   </td>
                 </tr>
               ))}

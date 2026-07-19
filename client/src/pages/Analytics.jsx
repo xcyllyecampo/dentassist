@@ -54,7 +54,7 @@ export default function Analytics() {
           <StatCard icon={Users} label="Total Patients" value={daily?.patientCount || 0} color="bg-[#1a5fb4]" />
           <StatCard icon={Calendar} label="Today's Appointments" value={daily?.appointmentCount || 0} color="bg-[#1a5fb4]" />
           <StatCard icon={TrendingUp} label="Completed Today" value={daily?.completedCount || 0} color="bg-emerald-500" />
-          <StatCard icon={DollarSign} label="Today's Revenue" value={`$${daily?.revenue || 0}`} color="bg-amber-500" />
+          <StatCard icon={DollarSign} label="Today's Revenue" value={`₱${daily?.revenue || 0}`} color="bg-amber-500" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

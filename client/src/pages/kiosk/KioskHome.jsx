@@ -1,13 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { playClick } from '../../lib/sounds';
 import KioskLayout from './KioskLayout';
 import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight } from 'lucide-react';
 
 const SIDE_CARDS = [
-  { id: 'oral', path: '/kiosk/oral-screening', icon: ScanFace, label: 'Oral Health', subtitle: 'AI photo analysis', gradient: 'from-emerald-500 to-emerald-600' },
-  { id: 'queue', path: '/kiosk/queue', icon: Clock, label: 'View Queue', subtitle: 'Your position & wait', gradient: 'from-amber-500 to-amber-600' },
+  { id: 'queue', path: '/kiosk/queue', icon: Clock, label: 'Queue Status', subtitle: 'Your position & wait', gradient: 'from-amber-500 to-amber-600' },
+  { id: 'oral', path: '/kiosk/oral-screening', icon: ScanFace, label: 'AI Oral Check', subtitle: 'Scan your mouth with AI', gradient: 'from-emerald-500 to-emerald-600' },
+  { id: 'smile', path: '/kiosk/smile', icon: Sparkles, label: 'Smile Analysis', subtitle: 'See what AI finds', gradient: 'from-rose-500 to-rose-600' },
   { id: 'records', path: '/kiosk/records', icon: FolderOpen, label: 'My Records', subtitle: 'Appointments & history', gradient: 'from-violet-500 to-violet-600' },
-  { id: 'smile', path: '/kiosk/smile', icon: Sparkles, label: 'Smile Gallery', subtitle: 'Preview your makeover', gradient: 'from-rose-500 to-rose-600' },
 ];
 
 export default function KioskHome() {
@@ -30,7 +31,7 @@ export default function KioskHome() {
         <div className="grid grid-cols-2 gap-4 flex-1">
           {/* LEFT: Big Walk-In card */}
           <button
-            onClick={() => navigate('/kiosk/check-in')}
+            onClick={() => { playClick(); navigate('/kiosk/check-in'); }}
             className="group bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl border-2 border-blue-400/30 p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/30 hover:border-blue-400/50 active:scale-[0.98] flex flex-col items-center justify-center text-center relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
@@ -56,7 +57,7 @@ export default function KioskHome() {
               return (
                 <button
                   key={card.id}
-                  onClick={() => navigate(card.path)}
+                  onClick={() => { playClick(); navigate(card.path); }}
                   className="group flex-1 bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-4 text-left transition-all duration-300 hover:scale-[1.03] hover:bg-white/15 hover:shadow-xl hover:border-white/30 active:scale-[0.98] flex items-center gap-3"
                 >
                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${card.gradient} flex items-center justify-center shrink-0 shadow-lg group-hover:scale-110 transition-transform`}>

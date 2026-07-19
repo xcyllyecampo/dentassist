@@ -34,6 +34,14 @@ export default function OralScreening() {
     setAnalyzing(false);
   };
 
+  const handleReset = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setSelectedFile(null);
+    setPreview(null);
+    setResult(null);
+    setAnalyzing(false);
+  };
+
   return (
     <Layout>
       <Header title="AI Oral Screening" />
@@ -69,7 +77,7 @@ export default function OralScreening() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-slate-900">Analysis Results</h3>
                   <span className={`text-xs px-3 py-1 rounded-full ${result.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {result.source === 'gemini' ? 'Gemini Vision' : 'Demo Mode'}
+                    {result.source === 'gemini' ? 'DentAssist AI Vision' : 'Demo Mode'}
                   </span>
                 </div>
 
@@ -118,6 +126,10 @@ export default function OralScreening() {
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                   {result.disclaimer || "This is an AI-generated screening and is NOT a medical diagnosis. Please consult a licensed dentist for professional evaluation."}
                 </div>
+
+                <button onClick={handleReset} className="w-full mt-4 bg-white border border-slate-200 text-slate-700 py-3 rounded-lg font-medium hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                  <Camera size={16} /> Upload Another Photo
+                </button>
               </div>
             )}
           </div>

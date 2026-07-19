@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { useToast } from '../context/ToastContext';
-import { Sparkles, Camera, Brain, AlertTriangle, CheckCircle, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { Sparkles, Camera, Brain, AlertTriangle, CheckCircle, TrendingUp, Clock, ArrowRight } from 'lucide-react';
 
 const TREATMENT_TYPES = [
   { value: 'whitening', label: 'Teeth Whitening', icon: '✨', desc: 'Brighten your smile by several shades' },
@@ -58,6 +58,14 @@ export default function SmileSimulation() {
     } catch (err) {
       toast.error('Error running simulation. Make sure the AI service is running.');
     }
+    setSimulating(false);
+  };
+
+  const handleReset = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setSelectedFile(null);
+    setPreview(null);
+    setResult(null);
     setSimulating(false);
   };
 
@@ -180,7 +188,7 @@ export default function SmileSimulation() {
                           <div className="font-medium text-slate-900 text-sm">{proc.name}</div>
                           <p className="text-xs text-gray-600 mt-0.5">{proc.description}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                            <span className="flex items-center gap-1"><DollarSign size={12} />{proc.cost}</span>
+                            <span className="flex items-center gap-1">{proc.cost}</span>
                             <span className="flex items-center gap-1"><Clock size={12} />{proc.duration}</span>
                           </div>
                         </div>
@@ -210,6 +218,10 @@ export default function SmileSimulation() {
                   <AlertTriangle size={14} className="mt-0.5 shrink-0" />
                   {result.disclaimer || "This is an AI-generated simulation for informational purposes only. Actual results may vary. A licensed dentist must evaluate before any treatment."}
                 </div>
+
+                <button onClick={handleReset} className="w-full mt-4 bg-white border border-slate-200 text-slate-700 py-3 rounded-lg font-medium hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                  <Camera size={16} /> Upload Another Photo
+                </button>
               </div>
             )}
           </div>

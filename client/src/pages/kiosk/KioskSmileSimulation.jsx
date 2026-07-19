@@ -2,7 +2,8 @@ import { useState } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { Sparkles, Camera, Brain, AlertTriangle, CheckCircle, TrendingUp, Clock, DollarSign, Loader } from 'lucide-react';
+import { playClick, playSuccess, playError } from '../../lib/sounds';
+import { Sparkles, Camera, Brain, AlertTriangle, CheckCircle, TrendingUp, Clock, Loader } from 'lucide-react';
 
 const TREATMENT_TYPES = [
   { value: 'whitening', label: 'Teeth Whitening', icon: '✨', desc: 'Brighten your smile', gradient: 'from-amber-400 to-amber-500' },
@@ -35,9 +36,19 @@ export default function KioskSmileSimulation() {
       formData.append('treatment_type', treatmentType);
       const res = await api.post('/ai/smile/simulate', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
+      playSuccess();
     } catch (err) {
       toast.error('Error running simulation. Please try again.');
+      playError();
     }
+    setSimulating(false);
+  };
+
+  const handleReset = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setSelectedFile(null);
+    setPreview(null);
+    setResult(null);
     setSimulating(false);
   };
 
@@ -49,7 +60,7 @@ export default function KioskSmileSimulation() {
           <div className="w-16 h-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-5 border border-white/20">
             <Sparkles size={32} className="text-rose-400" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 text-center">Smile Simulation</h2>
+          <h2 className="text-xl font-bold text-white mb-2 text-center">Smile Analysis</h2>
           <p className="text-white/60 text-sm mb-6 text-center px-4">
             Upload a smile photo and see how different treatments could transform your smile.
           </p>
@@ -59,7 +70,7 @@ export default function KioskSmileSimulation() {
             {TREATMENT_TYPES.map((t) => (
               <button
                 key={t.value}
-                onClick={() => setTreatmentType(t.value)}
+                onClick={() => { playClick(); setTreatmentType(t.value); }}
                 className={`p-3 rounded-xl border-2 text-center transition-all ${
                   treatmentType === t.value
                     ? 'border-white/50 bg-white/15 scale-[1.03]'
@@ -73,7 +84,7 @@ export default function KioskSmileSimulation() {
             ))}
           </div>
 
-          <label className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white px-6 py-4 rounded-2xl hover:from-rose-600 hover:to-rose-700 cursor-pointer font-bold text-lg shadow-xl shadow-rose-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
+          <label className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white px-6 py-4 rounded-2xl hover:from-rose-600 hover:to-rose-700 cursor-pointer font-bold text-lg shadow-xl shadow-rose-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]" onClick={() => playClick()}>
             <Camera size={20} /> Choose Smile Photo
             <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
           </label>
@@ -86,7 +97,7 @@ export default function KioskSmileSimulation() {
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
             <h3 className="text-white font-bold mb-3 text-sm">Your Smile Photo</h3>
             <img src={preview} alt="Smile" className="w-full rounded-xl" />
-            <button onClick={handleSimulate} disabled={simulating}
+            <button onClick={() => { playClick(); handleSimulate(); }} disabled={simulating}
               className="w-full mt-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 rounded-xl font-bold text-base hover:from-rose-600 hover:to-rose-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 transition-all">
               {simulating ? <><Loader size={18} className="animate-spin" /> Simulating...</> : <><Sparkles size={18} /> Simulate {TREATMENT_TYPES.find(t => t.value === treatmentType)?.label}</>}
             </button>
@@ -144,7 +155,7 @@ export default function KioskSmileSimulation() {
                     <div key={i} className="p-2.5 bg-white/5 rounded-xl border border-white/10 mb-1.5">
                       <div className="text-white font-medium text-xs">{proc.name}</div>
                       <div className="flex gap-3 mt-1 text-[10px] text-white/50">
-                        <span className="flex items-center gap-1"><DollarSign size={10} />{proc.cost}</span>
+                        <span className="flex items-center gap-1">{proc.cost}</span>
                         <span className="flex items-center gap-1"><Clock size={10} />{proc.duration}</span>
                       </div>
                     </div>
@@ -156,6 +167,10 @@ export default function KioskSmileSimulation() {
                 <AlertTriangle size={12} className="mt-0.5 shrink-0" />
                 {result.disclaimer || 'This is an AI-generated simulation for informational purposes. A licensed dentist must evaluate before any treatment.'}
               </div>
+
+              <button onClick={handleReset} className="w-full mt-3 bg-white/10 border border-white/20 text-white py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+                <Camera size={16} /> Upload Another Photo
+              </button>
             </div>
           )}
         </div>

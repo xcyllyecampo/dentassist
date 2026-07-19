@@ -2,6 +2,7 @@ import { useState } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
+import { playClick, playSuccess, playError } from '../../lib/sounds';
 import { Camera, AlertTriangle, CheckCircle, Brain, Loader } from 'lucide-react';
 
 export default function KioskOralScreening() {
@@ -27,9 +28,19 @@ export default function KioskOralScreening() {
       formData.append('file', selectedFile);
       const res = await api.post('/ai/oral/screen', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
+      playSuccess();
     } catch (err) {
       toast.error('Error analyzing image. Please try again.');
+      playError();
     }
+    setAnalyzing(false);
+  };
+
+  const handleReset = () => {
+    if (preview) URL.revokeObjectURL(preview);
+    setSelectedFile(null);
+    setPreview(null);
+    setResult(null);
     setAnalyzing(false);
   };
 
@@ -41,11 +52,11 @@ export default function KioskOralScreening() {
           <div className="w-16 h-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-5 border border-white/20">
             <Camera size={32} className="text-emerald-400" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 text-center">AI Oral Screening</h2>
+          <h2 className="text-xl font-bold text-white mb-2 text-center">AI Oral Check</h2>
           <p className="text-white/60 text-sm mb-8 text-center px-4">
             Take a clear photo of the inside of your mouth. Our AI will analyze it and highlight any areas of concern.
           </p>
-          <label className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 cursor-pointer font-bold text-lg shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
+          <label className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 cursor-pointer font-bold text-lg shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]" onClick={() => playClick()}>
             <Camera size={20} /> Choose Photo
             <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
           </label>
@@ -60,7 +71,7 @@ export default function KioskOralScreening() {
             <h3 className="text-white font-bold mb-3 text-sm">Your Photo</h3>
             <img src={preview} alt="Oral" className="w-full rounded-xl" />
             <button
-              onClick={handleAnalyze}
+              onClick={() => { playClick(); handleAnalyze(); }}
               disabled={analyzing}
               className="w-full mt-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
             >
@@ -136,6 +147,10 @@ export default function KioskOralScreening() {
                 <AlertTriangle size={12} className="mt-0.5 shrink-0" />
                 {result.disclaimer || 'This is an AI-generated screening for demonstration purposes. Please consult a licensed dentist for professional evaluation.'}
               </div>
+
+              <button onClick={handleReset} className="w-full mt-3 bg-white/10 border border-white/20 text-white py-3 rounded-xl font-bold text-sm hover:bg-white/20 transition-all flex items-center justify-center gap-2">
+                <Camera size={16} /> Upload Another Photo
+              </button>
             </div>
           )}
         </div>
