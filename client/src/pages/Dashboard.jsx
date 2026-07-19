@@ -49,7 +49,7 @@ export default function Dashboard() {
           <StatCard icon={Users} label="Total Patients" value={data.totalPatients} gradient="from-[#1a5fb4] to-[#004aad]" delay="0" />
           <StatCard icon={Calendar} label="Today's Appointments" value={data.todayAppointments.length} gradient="from-[#1a5fb4] to-[#003782]" delay="0.05" />
           <StatCard icon={Clock} label="In Queue" value={data.queueCount} gradient="from-amber-500 to-orange-500" delay="0.1" />
-          <StatCard icon={TrendingUp} label="Today's Revenue" value={`$${data.totalRevenue}`} gradient="from-emerald-500 to-teal-500" delay="0.15" />
+          <StatCard icon={TrendingUp} label="Today's Revenue" value={`₱${data.totalRevenue}`} gradient="from-emerald-500 to-teal-500" delay="0.15" />
         </div>
 
         {/* Main content */}

@@ -162,7 +162,7 @@ export default function PatientDetail() {
                   <div key={t.id} className="p-3 bg-slate-50 rounded-lg">
                     <div className="text-sm font-medium text-slate-900">{t.procedure}</div>
                     <div className="text-xs text-gray-500">{t.description} · by {t.dentist?.name}</div>
-                    {t.cost && <div className="text-xs text-green-600 mt-1">${t.cost}</div>}
+                    {t.cost && <div className="text-xs text-green-600 mt-1">₱{t.cost}</div>}
                   </div>
                 ))
               }
