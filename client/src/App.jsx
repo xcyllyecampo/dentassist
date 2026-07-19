@@ -15,6 +15,7 @@ import Analytics from './pages/Analytics';
 import DigitalTwin from './pages/DigitalTwin';
 import TreatmentSupport from './pages/TreatmentSupport';
 import SmileSimulation from './pages/SmileSimulation';
+import DentistSchedules from './pages/DentistSchedules';
 import KioskHome from './pages/kiosk/KioskHome';
 import KioskCheckIn from './pages/kiosk/KioskCheckIn';
 import KioskQueueStatus from './pages/kiosk/KioskQueueStatus';
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/digital-twin" element={<ProtectedRoute roles={STAFF_ROLES}><DigitalTwin /></ProtectedRoute>} />
           <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
           <Route path="/smile-simulation" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><SmileSimulation /></ProtectedRoute>} />
+          <Route path="/schedules" element={<ProtectedRoute roles={STAFF_ROLES}><DentistSchedules /></ProtectedRoute>} />
 
           {/* Patient kiosk routes */}
           <Route path="/kiosk" element={<ProtectedRoute roles={["PATIENT"]}><KioskHome /></ProtectedRoute>} />

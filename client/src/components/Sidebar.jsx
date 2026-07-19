@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
-  Stethoscope, Image, BarChart3, Box,
+  Stethoscope, Image, BarChart3, Box, CalendarClock,
   Settings, LogOut, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
 import { playClick, playWhoosh } from '../lib/sounds';
@@ -19,6 +19,7 @@ const navItems = [
   { to: '/treatment-support', icon: Settings, label: 'Treatment Support', roles: ['ADMIN', 'DENTIST'] },
   { to: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['ADMIN', 'DENTIST'] },
   { to: '/digital-twin', icon: Box, label: 'Digital Twin', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
+  { to: '/schedules', icon: CalendarClock, label: 'Dentist Schedules', roles: ['ADMIN'] },
 ];
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
