@@ -5,7 +5,7 @@ import api from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { playSuccess, playClick, playError } from '../../lib/sounds';
 import { TREATMENTS } from '../../lib/treatments';
-import { ArrowLeft, ArrowRight, CheckCircle, Clock, Loader } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Clock, Loader, CalendarCheck } from 'lucide-react';
 
 const STEPS = ['Choose Treatment', 'Confirm', 'Done'];
 
@@ -16,10 +16,19 @@ export default function KioskCheckIn() {
   const [selectedTreatment, setSelectedTreatment] = useState(null);
   const [checking, setChecking] = useState(false);
   const [entry, setEntry] = useState(null);
+  const [todayAppt, setTodayAppt] = useState(null);
+  const [checkingAppt, setCheckingAppt] = useState(false);
 
   useEffect(() => {
     api.get('/queue/my-entry').then(res => {
       if (res.data) setEntry(res.data);
+    }).catch(() => {});
+    const today = new Date().toISOString().split('T')[0];
+    api.get(`/appointments?date=${today}`).then(res => {
+      const myAppt = res.data.find(a =>
+        (a.status === 'SCHEDULED' || a.status === 'CONFIRMED') && a.patient?.userId
+      );
+      if (myAppt) setTodayAppt(myAppt);
     }).catch(() => {});
   }, []);
 
@@ -36,6 +45,21 @@ export default function KioskCheckIn() {
       playError();
     }
     setChecking(false);
+  };
+
+  const handleAppointmentCheckIn = async () => {
+    setCheckingAppt(true);
+    try {
+      await api.put(`/appointments/${todayAppt.id}`, { status: 'IN_PROGRESS' });
+      const res = await api.post('/queue/self-check-in');
+      setEntry(res.data);
+      playSuccess();
+      setStep(3);
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Error checking in for appointment');
+      playError();
+    }
+    setCheckingAppt(false);
   };
 
   const progress = entry ? 100 : step === 1 ? 33 : step === 2 ? 66 : 100;
@@ -91,6 +115,51 @@ export default function KioskCheckIn() {
             <button onClick={() => { playClick(); navigate('/kiosk'); }} className="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-colors">
               Back to Home
             </button>
+          </div>
+        )}
+
+        {/* Has an appointment today */}
+        {!entry && todayAppt && step === 1 && (
+          <div className="w-full mb-4">
+            <div className="bg-gradient-to-br from-purple-600/30 to-purple-700/30 backdrop-blur-lg rounded-2xl border border-purple-400/40 p-5 mb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-purple-500/30 rounded-xl flex items-center justify-center">
+                  <CalendarCheck size={20} className="text-purple-300" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-sm">You Have an Appointment Today!</h3>
+                  <p className="text-purple-200/60 text-xs">Skip the queue — check in for your appointment</p>
+                </div>
+              </div>
+              <div className="bg-white/10 rounded-xl p-3 mb-3">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-white/40 text-[10px]">Time</div>
+                    <div className="text-white font-bold text-sm">{todayAppt.time}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/40 text-[10px]">Dentist</div>
+                    <div className="text-white font-bold text-sm">{todayAppt.dentist?.name || 'TBD'}</div>
+                  </div>
+                  <div>
+                    <div className="text-white/40 text-[10px]">Reason</div>
+                    <div className="text-white font-bold text-sm truncate">{todayAppt.reason || 'Checkup'}</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => { playClick(); handleAppointmentCheckIn(); }}
+                disabled={checkingAppt}
+                className="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-500/30 hover:from-purple-600 hover:to-purple-700 transition-all disabled:opacity-50"
+              >
+                {checkingAppt ? <><Loader size={18} className="animate-spin" /> Checking In...</> : <><CalendarCheck size={18} /> Check In for Appointment</>}
+              </button>
+            </div>
+            <div className="flex items-center gap-3 my-4">
+              <div className="flex-1 h-px bg-white/10" />
+              <span className="text-white/30 text-xs">or do a walk-in</span>
+              <div className="flex-1 h-px bg-white/10" />
+            </div>
           </div>
         )}
 

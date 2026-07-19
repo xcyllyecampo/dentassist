@@ -21,6 +21,7 @@ import KioskQueueStatus from './pages/kiosk/KioskQueueStatus';
 import KioskRecords from './pages/kiosk/KioskRecords';
 import KioskOralScreening from './pages/kiosk/KioskOralScreening';
 import KioskSmileSimulation from './pages/kiosk/KioskSmileSimulation';
+import KioskBookAppointment from './pages/kiosk/KioskBookAppointment';
 import Spinner from './components/Spinner';
 
 const STAFF_ROLES = ["ADMIN", "DENTIST", "ASSISTANT"];
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/kiosk/records" element={<ProtectedRoute roles={["PATIENT"]}><KioskRecords /></ProtectedRoute>} />
           <Route path="/kiosk/oral-screening" element={<ProtectedRoute roles={["PATIENT"]}><KioskOralScreening /></ProtectedRoute>} />
           <Route path="/kiosk/smile" element={<ProtectedRoute roles={["PATIENT"]}><KioskSmileSimulation /></ProtectedRoute>} />
+          <Route path="/kiosk/book" element={<ProtectedRoute roles={["PATIENT"]}><KioskBookAppointment /></ProtectedRoute>} />
 
           <Route path="*" element={<DefaultRedirect />} />
         </Routes>

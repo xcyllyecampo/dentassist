@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { playClick } from '../../lib/sounds';
 import KioskLayout from './KioskLayout';
-import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight } from 'lucide-react';
+import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight, CalendarPlus } from 'lucide-react';
 
 const SIDE_CARDS = [
   { id: 'queue', path: '/kiosk/queue', icon: Clock, label: 'Queue Status', subtitle: 'Your position & wait', gradient: 'from-amber-500 to-amber-600' },
@@ -27,28 +27,46 @@ export default function KioskHome() {
           <p className="text-white/50 text-sm">What would you like to do today?</p>
         </div>
 
-        {/* Split: Left Walk-In hero | Right 4 cards stacked */}
+        {/* Split: Left Walk-In + Book | Right 4 cards stacked */}
         <div className="grid grid-cols-2 gap-4 flex-1">
-          {/* LEFT: Big Walk-In card */}
-          <button
-            onClick={() => { playClick(); navigate('/kiosk/check-in'); }}
-            className="group bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl border-2 border-blue-400/30 p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/30 hover:border-blue-400/50 active:scale-[0.98] flex flex-col items-center justify-center text-center relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-            <div className="relative z-10">
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-4 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
-                <ClipboardCheck size={40} className="text-white" />
+          {/* LEFT: Two big cards stacked */}
+          <div className="flex flex-col gap-4">
+            <button
+              onClick={() => { playClick(); navigate('/kiosk/check-in'); }}
+              className="group bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl border-2 border-blue-400/30 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/30 hover:border-blue-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-3 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
+                  <ClipboardCheck size={32} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white leading-tight">WALK-IN</h3>
+                <h3 className="text-2xl font-bold text-blue-200 leading-tight mb-2">CHECK-IN</h3>
+                <p className="text-blue-200/70 text-xs mb-3">Tap here to join the queue</p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl text-white font-bold text-xs backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                  Get Started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-              <h3 className="text-3xl font-bold text-white leading-tight">WALK-IN</h3>
-              <h3 className="text-3xl font-bold text-blue-200 leading-tight mb-3">CHECK-IN</h3>
-              <p className="text-blue-200/70 text-sm mb-4">
-                Tap here to join the queue
-              </p>
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/20 rounded-xl text-white font-bold text-sm backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                Get Started <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </button>
+
+            <button
+              onClick={() => { playClick(); navigate('/kiosk/book'); }}
+              className="group bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl border-2 border-purple-400/30 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/30 hover:border-purple-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-3 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
+                  <CalendarPlus size={32} className="text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white leading-tight">BOOK AN</h3>
+                <h3 className="text-2xl font-bold text-purple-200 leading-tight mb-2">APPOINTMENT</h3>
+                <p className="text-purple-200/70 text-xs mb-3">Schedule a visit in advance</p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-xl text-white font-bold text-xs backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                  Book Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
+          </div>
 
           {/* RIGHT: 4 cards stacked vertically */}
           <div className="flex flex-col gap-3">
