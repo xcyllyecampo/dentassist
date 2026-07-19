@@ -45,4 +45,35 @@ router.post("/", auth, roleGuard("DENTIST"), async (req, res) => {
   }
 });
 
+router.put("/:id", auth, roleGuard("DENTIST"), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const { procedure, description, notes, cost, toothId } = req.body;
+    const treatment = await prisma.treatment.update({
+      where: { id: req.params.id },
+      data: {
+        ...(procedure !== undefined && { procedure }),
+        ...(description !== undefined && { description }),
+        ...(notes !== undefined && { notes }),
+        ...(cost !== undefined && { cost }),
+        ...(toothId !== undefined && { toothId }),
+      },
+      include: { dentist: { select: { name: true } }, tooth: true, prescriptions: true },
+    });
+    res.json(treatment);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.delete("/:id", auth, roleGuard("DENTIST", "ADMIN"), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    await prisma.treatment.delete({ where: { id: req.params.id } });
+    res.json({ message: "Treatment deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

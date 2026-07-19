@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 const { auth } = require("../middleware/auth");
-const prisma = new PrismaClient();
 
 router.get("/", auth, async (req, res) => {
   try {
+    const prisma = req.app.get("prisma");
     const { patientId } = req.query;
     const where = patientId ? { patientId } : {};
     const points = await prisma.loyaltyPoints.findMany({
@@ -23,6 +22,7 @@ router.get("/", auth, async (req, res) => {
 
 router.get("/patient/:patientId", auth, async (req, res) => {
   try {
+    const prisma = req.app.get("prisma");
     let points = await prisma.loyaltyPoints.findUnique({
       where: { patientId: req.params.patientId },
       include: {
@@ -43,6 +43,7 @@ router.get("/patient/:patientId", auth, async (req, res) => {
 
 router.post("/earn", auth, async (req, res) => {
   try {
+    const prisma = req.app.get("prisma");
     const { patientId, amount, description } = req.body;
     let loyalty = await prisma.loyaltyPoints.findUnique({ where: { patientId } });
     if (!loyalty) {

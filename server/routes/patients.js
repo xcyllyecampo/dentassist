@@ -127,4 +127,19 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
   }
 });
 
+router.put("/:patientId/teeth/:toothNumber", auth, roleGuard("DENTIST", "ADMIN"), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const { status, notes } = req.body;
+    const tooth = await prisma.tooth.upsert({
+      where: { patientId_toothNumber: { patientId: req.params.patientId, toothNumber: parseInt(req.params.toothNumber) } },
+      update: { ...(status !== undefined && { status }), ...(notes !== undefined && { notes }) },
+      create: { patientId: req.params.patientId, toothNumber: parseInt(req.params.toothNumber), status: status || "HEALTHY", notes },
+    });
+    res.json(tooth);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

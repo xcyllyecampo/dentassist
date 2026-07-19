@@ -129,8 +129,40 @@ router.post("/", auth, async (req, res) => {
     const io = req.app.get("io");
     const { patientId, dentistId, roomId, date, time, duration, reason, notes } = req.body;
 
+    const apptDuration = duration || 30;
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+
+    const existing = await prisma.appointment.findMany({
+      where: {
+        date: { gte: start, lt: end },
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        OR: [
+          { dentistId },
+          ...(roomId ? [{ roomId }] : []),
+        ],
+      },
+      select: { time: true, duration: true, dentistId: true, roomId: true },
+    });
+
+    const timeToMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+    const newStart = timeToMin(time);
+    const newEnd = newStart + apptDuration;
+
+    const conflict = existing.find((a) => {
+      const existStart = timeToMin(a.time);
+      const existEnd = existStart + (a.duration || 30);
+      return newStart < existEnd && newEnd > existStart;
+    });
+
+    if (conflict) {
+      return res.status(409).json({ error: "Time slot conflict — dentist or room is already booked at this time" });
+    }
+
     const appointment = await prisma.appointment.create({
-      data: { patientId, dentistId, roomId, date: new Date(date), time, duration: duration || 30, reason, notes },
+      data: { patientId, dentistId, roomId, date: new Date(date), time, duration: apptDuration, reason, notes },
       include: {
         patient: { include: { user: { select: { name: true } } } },
         dentist: { select: { name: true } },
@@ -165,6 +197,45 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req,
     if (time !== undefined) updateData.time = time;
     if (duration !== undefined) updateData.duration = duration;
     if (reason !== undefined) updateData.reason = reason;
+
+    if (time !== undefined || date !== undefined || roomId !== undefined) {
+      const current = await prisma.appointment.findUnique({ where: { id: req.params.id } });
+      const checkDate = date ? new Date(date) : current.date;
+      checkDate.setHours(0, 0, 0, 0);
+      const checkEnd = new Date(checkDate);
+      checkEnd.setDate(checkEnd.getDate() + 1);
+      const checkTime = time || current.time;
+      const checkDuration = duration || current.duration || 30;
+      const checkDentistId = current.dentistId;
+      const checkRoomId = roomId !== undefined ? roomId : current.roomId;
+
+      const timeToMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+      const newStart = timeToMin(checkTime);
+      const newEnd = newStart + checkDuration;
+
+      const existing = await prisma.appointment.findMany({
+        where: {
+          id: { not: req.params.id },
+          date: { gte: checkDate, lt: checkEnd },
+          status: { notIn: ["CANCELLED", "NO_SHOW"] },
+          OR: [
+            { dentistId: checkDentistId },
+            ...(checkRoomId ? [{ roomId: checkRoomId }] : []),
+          ],
+        },
+        select: { time: true, duration: true },
+      });
+
+      const conflict = existing.find((a) => {
+        const existStart = timeToMin(a.time);
+        const existEnd = existStart + (a.duration || 30);
+        return newStart < existEnd && newEnd > existStart;
+      });
+
+      if (conflict) {
+        return res.status(409).json({ error: "Time slot conflict — dentist or room is already booked at this time" });
+      }
+    }
 
     const appointment = await prisma.appointment.update({
       where: { id: req.params.id },

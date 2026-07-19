@@ -13,6 +13,7 @@ export default function Analytics() {
   const [procedures, setProcedures] = useState([]);
   const [returning, setReturning] = useState([]);
   const [daily, setDaily] = useState(null);
+  const [peakHours, setPeakHours] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -24,11 +25,13 @@ export default function Analytics() {
       api.get('/analytics/procedures'),
       api.get('/analytics/returning-patients'),
       api.get('/analytics/daily'),
-    ]).then(([rev, proc, ret, day]) => {
+      api.get('/analytics/peak-hours'),
+    ]).then(([rev, proc, ret, day, peak]) => {
       setRevenue(rev.data);
       setProcedures(proc.data);
       setReturning(ret.data);
       setDaily(day.data);
+      setPeakHours(peak.data);
     }).catch(() => setError('Failed to load analytics')).finally(() => setLoading(false));
   };
 
@@ -102,19 +105,15 @@ export default function Analytics() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="font-bold text-slate-900 mb-4">Peak Hours (Simulated)</h3>
+            <h3 className="font-bold text-slate-900 mb-4">Peak Hours (Last 30 Days)</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={[
-                { hour: '9 AM', patients: 4 }, { hour: '10 AM', patients: 8 }, { hour: '11 AM', patients: 12 },
-                { hour: '12 PM', patients: 6 }, { hour: '1 PM', patients: 5 }, { hour: '2 PM', patients: 10 },
-                { hour: '3 PM', patients: 9 }, { hour: '4 PM', patients: 7 }, { hour: '5 PM', patients: 3 },
-              ]}>
+              <BarChart data={peakHours}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
                 <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Bar dataKey="patients" radius={[4, 4, 0, 0]}>
-                  {[4,8,12,6,5,10,9,7,3].map((v, i) => <Cell key={i} fill={v >= 10 ? '#ef4444' : v >= 7 ? '#f59e0b' : '#10b981'} />)}
+                  {peakHours.map((entry, i) => <Cell key={i} fill={entry.patients >= 10 ? '#ef4444' : entry.patients >= 7 ? '#f59e0b' : '#10b981'} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

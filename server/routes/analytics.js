@@ -86,4 +86,39 @@ router.get("/returning-patients", auth, async (req, res) => {
   }
 });
 
+router.get("/peak-hours", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const days = parseInt(req.query.days) || 30;
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    since.setHours(0, 0, 0, 0);
+
+    const appointments = await prisma.appointment.findMany({
+      where: { createdAt: { gte: since }, status: { notIn: ["CANCELLED", "NO_SHOW"] } },
+      select: { time: true },
+    });
+
+    const hourCounts = {};
+    for (let h = 9; h <= 17; h++) {
+      hourCounts[h] = 0;
+    }
+
+    appointments.forEach(a => {
+      const hour = parseInt(a.time.split(":")[0]);
+      if (hourCounts[hour] !== undefined) hourCounts[hour]++;
+    });
+
+    const labels = ['9 AM','10 AM','11 AM','12 PM','1 PM','2 PM','3 PM','4 PM','5 PM'];
+    const result = labels.map((label, i) => ({
+      hour: label,
+      patients: hourCounts[9 + i] || 0,
+    }));
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

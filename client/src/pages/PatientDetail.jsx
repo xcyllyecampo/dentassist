@@ -4,9 +4,24 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import Spinner from '../components/Spinner';
-import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
+import { playClick, playSuccess, playError } from '../lib/sounds';
+
+const TOOTH_STATUSES = ['HEALTHY', 'FILLING', 'CROWN', 'DECAYED', 'MISSING', 'IMPLANT', 'BRIDGE', 'TREATED'];
+const STATUS_COLORS = {
+  HEALTHY: 'bg-green-100 text-green-700 border-green-200',
+  FILLING: 'bg-blue-100 text-blue-700 border-blue-200',
+  CROWN: 'bg-purple-100 text-purple-700 border-purple-200',
+  DECAYED: 'bg-red-100 text-red-700 border-red-200',
+  MISSING: 'bg-gray-200 text-gray-500 border-gray-300',
+  IMPLANT: 'bg-amber-100 text-amber-700 border-amber-200',
+  BRIDGE: 'bg-pink-100 text-pink-700 border-pink-200',
+  TREATED: 'bg-teal-100 text-teal-700 border-teal-200',
+};
+
+const PRESCRIPTION_FREQUENCY = ['Once daily', 'Twice daily', 'Three times daily', 'Every 4 hours', 'As needed', 'Before meals', 'After meals'];
 
 export default function PatientDetail() {
   const { id } = useParams();
@@ -20,6 +35,17 @@ export default function PatientDetail() {
   const [awarding, setAwarding] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
+
+  const [showTreatmentForm, setShowTreatmentForm] = useState(false);
+  const [editTreatment, setEditTreatment] = useState(null);
+  const [treatmentForm, setTreatmentForm] = useState({ procedure: '', description: '', notes: '', cost: '', toothId: '' });
+
+  const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+  const [editPrescription, setEditPrescription] = useState(null);
+  const [prescriptionForm, setPrescriptionForm] = useState({ medication: '', dosage: '', frequency: 'Once daily', duration: '', notes: '', treatmentId: '' });
+
+  const [selectedTooth, setSelectedTooth] = useState(null);
+  const [toothNote, setToothNote] = useState('');
 
   const fetchPatient = () => {
     setLoading(true);
@@ -57,6 +83,90 @@ export default function PatientDetail() {
     setAwarding(null);
   };
 
+  const updateToothStatus = async (toothNumber, status) => {
+    playClick();
+    try {
+      await api.put(`/patients/${id}/teeth/${toothNumber}`, { status, notes: toothNote });
+      toast.success(`Tooth #${toothNumber} updated to ${status}`);
+      playSuccess();
+      fetchPatient();
+      setSelectedTooth(null);
+      setToothNote('');
+    } catch (e) {
+      toast.error('Failed to update tooth');
+      playError();
+    }
+  };
+
+  const submitTreatment = async () => {
+    playClick();
+    try {
+      const data = {
+        ...treatmentForm,
+        cost: treatmentForm.cost ? parseFloat(treatmentForm.cost) : null,
+        toothId: treatmentForm.toothId || null,
+      };
+      if (editTreatment) {
+        await api.put(`/treatments/${editTreatment.id}`, data);
+        toast.success('Treatment updated');
+      } else {
+        await api.post('/treatments', { ...data, patientId: id });
+        toast.success('Treatment added');
+      }
+      playSuccess();
+      setShowTreatmentForm(false);
+      setEditTreatment(null);
+      setTreatmentForm({ procedure: '', description: '', notes: '', cost: '', toothId: '' });
+      fetchPatient();
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Failed to save treatment');
+      playError();
+    }
+  };
+
+  const deleteTreatment = async (treatmentId) => {
+    if (!confirm('Delete this treatment?')) return;
+    try {
+      await api.delete(`/treatments/${treatmentId}`);
+      toast.success('Treatment deleted');
+      fetchPatient();
+    } catch (e) {
+      toast.error('Failed to delete treatment');
+    }
+  };
+
+  const submitPrescription = async () => {
+    playClick();
+    try {
+      if (editPrescription) {
+        await api.put(`/prescriptions/${editPrescription.id}`, prescriptionForm);
+        toast.success('Prescription updated');
+      } else {
+        await api.post('/prescriptions', { ...prescriptionForm, patientId: id });
+        toast.success('Prescription added');
+      }
+      playSuccess();
+      setShowPrescriptionForm(false);
+      setEditPrescription(null);
+      setPrescriptionForm({ medication: '', dosage: '', frequency: 'Once daily', duration: '', notes: '', treatmentId: '' });
+      fetchPatient();
+    } catch (e) {
+      toast.error(e.response?.data?.error || 'Failed to save prescription');
+      playError();
+    }
+  };
+
+  const deletePrescription = async (prescriptionId) => {
+    if (!confirm('Delete this prescription?')) return;
+    try {
+      await api.delete(`/prescriptions/${prescriptionId}`);
+      toast.success('Prescription deleted');
+      fetchPatient();
+    } catch (e) {
+      toast.error('Failed to delete prescription');
+    }
+  };
+
   if (loading) return <Layout><Header title="Patient Detail" /><Spinner className="py-20" /></Layout>;
   if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-[#004aad] hover:text-[#002d6b] font-medium">Retry</button></div></Layout>;
 
@@ -87,10 +197,10 @@ export default function PatientDetail() {
           </div>
         </div>
 
-        <div className="flex gap-1 mb-6 border-b border-slate-200">
+        <div className="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors ${activeTab === tab ? 'bg-slate-50 text-[#003782] border-b-2 border-[#004aad]' : 'text-gray-500 hover:text-[#004aad]'}`}>
+              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab ? 'bg-slate-50 text-[#003782] border-b-2 border-[#004aad]' : 'text-gray-500 hover:text-[#004aad]'}`}>
               {tab}
             </button>
           ))}
@@ -108,30 +218,56 @@ export default function PatientDetail() {
 
           {activeTab === 'teeth' && (
             <div>
-              <h3 className="font-bold text-slate-900 mb-4">Interactive Tooth Chart</h3>
-              <div className="grid grid-cols-8 gap-2">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-900">Interactive Tooth Chart</h3>
+                {selectedTooth && (
+                  <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+                    <X size={14} /> Clear selection
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mb-3">Click a tooth to update its status</p>
+              <div className="grid grid-cols-8 gap-2 mb-4">
                 {patient.teeth?.map(tooth => (
                   <div key={tooth.id}
-                    className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold cursor-pointer transition-transform hover:scale-110 ${
-                      tooth.status === 'HEALTHY' ? 'bg-green-100 text-green-700 border border-green-200' :
-                      tooth.status === 'FILLING' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
-                      tooth.status === 'CROWN' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
-                      tooth.status === 'DECAYED' ? 'bg-red-100 text-red-700 border border-red-200' :
-                      tooth.status === 'MISSING' ? 'bg-gray-200 text-gray-500 border border-gray-300' :
-                      'bg-[#e6efff] text-[#003782] border border-slate-200'
-                    }`}>
+                    onClick={() => { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); }}
+                    className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold cursor-pointer transition-all hover:scale-110 ${
+                      selectedTooth?.id === tooth.id ? 'ring-2 ring-[#004aad] ring-offset-2 scale-110' : ''
+                    } ${STATUS_COLORS[tooth.status] || 'bg-[#e6efff] text-[#003782] border border-slate-200'}`}>
                     <span>#{tooth.toothNumber}</span>
                     <span className="text-[10px] font-normal">{tooth.status}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex gap-4 mt-4 text-xs">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-200 rounded" /> Healthy</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-200 rounded" /> Filling</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-purple-200 rounded" /> Crown</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-200 rounded" /> Decayed</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-300 rounded" /> Missing</span>
+              <div className="flex flex-wrap gap-3 text-xs mb-4">
+                {TOOTH_STATUSES.map(s => (
+                  <span key={s} className="flex items-center gap-1">
+                    <span className={`w-3 h-3 rounded border ${STATUS_COLORS[s]?.split(' ')[0]}`} /> {s}
+                  </span>
+                ))}
               </div>
+
+              {selectedTooth && (
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-4">
+                  <h4 className="font-bold text-slate-900 mb-3">Tooth #{selectedTooth.toothNumber} — Current: {selectedTooth.status}</h4>
+                  <textarea value={toothNote} onChange={(e) => setToothNote(e.target.value)}
+                    placeholder="Notes (optional)" rows={2}
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-[#004aad]" />
+                  <div className="flex flex-wrap gap-2">
+                    {TOOTH_STATUSES.map(s => (
+                      <button key={s} onClick={() => updateToothStatus(selectedTooth.toothNumber, s)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                          selectedTooth.status === s
+                            ? 'bg-[#004aad] text-white border-[#004aad]'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-[#004aad] hover:text-[#004aad]'
+                        }`}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -156,29 +292,179 @@ export default function PatientDetail() {
           )}
 
           {activeTab === 'treatments' && (
-            <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-900">Treatments</h3>
+                <button onClick={() => { setShowTreatmentForm(true); setEditTreatment(null); setTreatmentForm({ procedure: '', description: '', notes: '', cost: '', toothId: '' }); }}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#004aad] text-white text-sm rounded-lg hover:bg-[#003782] transition-colors">
+                  <Plus size={14} /> Add Treatment
+                </button>
+              </div>
               {patient.treatments?.length === 0 ? <p className="text-gray-400">No treatments yet</p> :
-                patient.treatments?.map(t => (
-                  <div key={t.id} className="p-3 bg-slate-50 rounded-lg">
-                    <div className="text-sm font-medium text-slate-900">{t.procedure}</div>
-                    <div className="text-xs text-gray-500">{t.description} · by {t.dentist?.name}</div>
-                    {t.cost && <div className="text-xs text-green-600 mt-1">₱{t.cost}</div>}
-                  </div>
-                ))
+                <div className="space-y-3">
+                  {patient.treatments?.map(t => (
+                    <div key={t.id} className="p-3 bg-slate-50 rounded-lg flex items-start justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">{t.procedure}</div>
+                        <div className="text-xs text-gray-500">{t.description} · by {t.dentist?.name}</div>
+                        {t.tooth && <div className="text-xs text-gray-400 mt-1">Tooth #{t.tooth.toothNumber}</div>}
+                        {t.notes && <div className="text-xs text-gray-500 mt-1 italic">{t.notes}</div>}
+                        {t.cost && <div className="text-xs text-green-600 mt-1 font-medium">₱{t.cost}</div>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => {
+                          setEditTreatment(t);
+                          setTreatmentForm({ procedure: t.procedure, description: t.description || '', notes: t.notes || '', cost: t.cost || '', toothId: t.toothId || '' });
+                          setShowTreatmentForm(true);
+                        }} className="p-1.5 text-gray-400 hover:text-[#004aad] rounded-lg hover:bg-white transition-colors">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => deleteTreatment(t.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               }
+
+              {showTreatmentForm && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowTreatmentForm(false)}>
+                  <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-lg text-slate-900">{editTreatment ? 'Edit Treatment' : 'Add Treatment'}</h3>
+                      <button onClick={() => setShowTreatmentForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Procedure *</label>
+                        <select value={treatmentForm.procedure} onChange={(e) => setTreatmentForm({ ...treatmentForm, procedure: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]">
+                          <option value="">Select procedure</option>
+                          <option value="Dental Cleaning">Dental Cleaning</option>
+                          <option value="Filling">Filling</option>
+                          <option value="Root Canal">Root Canal</option>
+                          <option value="Extraction">Extraction</option>
+                          <option value="Crown">Crown</option>
+                          <option value="Bridge">Bridge</option>
+                          <option value="Implant">Implant</option>
+                          <option value="Whitening">Whitening</option>
+                          <option value="Veneer">Veneer</option>
+                          <option value="Braces/Orthodontics">Braces/Orthodontics</option>
+                          <option value="Dentures">Dentures</option>
+                          <option value="Sealant">Sealant</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                        <input type="text" value={treatmentForm.description} onChange={(e) => setTreatmentForm({ ...treatmentForm, description: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="Brief description" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Cost (₱)</label>
+                        <input type="number" value={treatmentForm.cost} onChange={(e) => setTreatmentForm({ ...treatmentForm, cost: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="0.00" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                        <textarea value={treatmentForm.notes} onChange={(e) => setTreatmentForm({ ...treatmentForm, notes: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" rows={2} placeholder="Additional notes" />
+                      </div>
+                      <button onClick={submitTreatment}
+                        disabled={!treatmentForm.procedure}
+                        className="w-full py-2 bg-[#004aad] text-white text-sm font-medium rounded-lg hover:bg-[#003782] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                        <Save size={14} /> {editTreatment ? 'Update Treatment' : 'Add Treatment'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'prescriptions' && (
-            <div className="space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-slate-900">Prescriptions</h3>
+                <button onClick={() => { setShowPrescriptionForm(true); setEditPrescription(null); setPrescriptionForm({ medication: '', dosage: '', frequency: 'Once daily', duration: '', notes: '', treatmentId: '' }); }}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#004aad] text-white text-sm rounded-lg hover:bg-[#003782] transition-colors">
+                  <Plus size={14} /> Add Prescription
+                </button>
+              </div>
               {patient.prescriptions?.length === 0 ? <p className="text-gray-400">No prescriptions yet</p> :
-                patient.prescriptions?.map(p => (
-                  <div key={p.id} className="p-3 bg-slate-50 rounded-lg">
-                    <div className="text-sm font-medium text-slate-900">{p.medication}</div>
-                    <div className="text-xs text-gray-500">{p.dosage} · {p.frequency} · {p.duration}</div>
-                  </div>
-                ))
+                <div className="space-y-3">
+                  {patient.prescriptions?.map(p => (
+                    <div key={p.id} className="p-3 bg-slate-50 rounded-lg flex items-start justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">{p.medication}</div>
+                        <div className="text-xs text-gray-500">{p.dosage} · {p.frequency} · {p.duration}</div>
+                        {p.treatment && <div className="text-xs text-gray-400 mt-1">Linked to: {p.treatment.procedure}</div>}
+                        {p.notes && <div className="text-xs text-gray-500 mt-1 italic">{p.notes}</div>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => {
+                          setEditPrescription(p);
+                          setPrescriptionForm({ medication: p.medication, dosage: p.dosage, frequency: p.frequency, duration: p.duration, notes: p.notes || '', treatmentId: p.treatmentId || '' });
+                          setShowPrescriptionForm(true);
+                        }} className="p-1.5 text-gray-400 hover:text-[#004aad] rounded-lg hover:bg-white transition-colors">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => deletePrescription(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               }
+
+              {showPrescriptionForm && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setShowPrescriptionForm(false)}>
+                  <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-lg text-slate-900">{editPrescription ? 'Edit Prescription' : 'Add Prescription'}</h3>
+                      <button onClick={() => setShowPrescriptionForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Medication *</label>
+                        <input type="text" value={prescriptionForm.medication} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medication: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="e.g. Amoxicillin 500mg" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Dosage *</label>
+                          <input type="text" value={prescriptionForm.dosage} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, dosage: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="e.g. 1 tablet" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Duration *</label>
+                          <input type="text" value={prescriptionForm.duration} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, duration: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="e.g. 7 days" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Frequency *</label>
+                        <select value={prescriptionForm.frequency} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, frequency: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]">
+                          {PRESCRIPTION_FREQUENCY.map(f => <option key={f} value={f}>{f}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                        <textarea value={prescriptionForm.notes} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, notes: e.target.value })}
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" rows={2} placeholder="Special instructions" />
+                      </div>
+                      <button onClick={submitPrescription}
+                        disabled={!prescriptionForm.medication || !prescriptionForm.dosage || !prescriptionForm.duration}
+                        className="w-full py-2 bg-[#004aad] text-white text-sm font-medium rounded-lg hover:bg-[#003782] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                        <Save size={14} /> {editPrescription ? 'Update Prescription' : 'Add Prescription'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

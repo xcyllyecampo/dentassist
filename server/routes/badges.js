@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const { PrismaClient } = require("@prisma/client");
 const { auth } = require("../middleware/auth");
-const prisma = new PrismaClient();
 
 router.get("/", auth, async (req, res) => {
   try {
+    const prisma = req.app.get("prisma");
     const badges = await prisma.badge.findMany({ orderBy: { name: "asc" } });
     res.json(badges);
   } catch (e) {
@@ -15,6 +14,7 @@ router.get("/", auth, async (req, res) => {
 
 router.get("/patient/:patientId", auth, async (req, res) => {
   try {
+    const prisma = req.app.get("prisma");
     const earned = await prisma.patientBadge.findMany({
       where: { patientId: req.params.patientId },
       include: { badge: true },
@@ -28,6 +28,7 @@ router.get("/patient/:patientId", auth, async (req, res) => {
 
 router.post("/award", auth, async (req, res) => {
   try {
+    const prisma = req.app.get("prisma");
     const { patientId, badgeId } = req.body;
     const existing = await prisma.patientBadge.findUnique({
       where: { patientId_badgeId: { patientId, badgeId } },

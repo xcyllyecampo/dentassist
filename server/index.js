@@ -33,6 +33,7 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/ai", require("./routes/ai"));
 app.use("/api/loyalty", require("./routes/loyalty"));
 app.use("/api/badges", require("./routes/badges"));
+app.use("/api/dentist-schedules", require("./routes/dentist-schedules"));
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
