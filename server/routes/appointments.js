@@ -127,7 +127,22 @@ router.post("/", auth, async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
-    const { patientId, dentistId, roomId, date, time, duration, reason, notes } = req.body;
+    let { patientId, dentistId, roomId, date, time, duration, reason, notes } = req.body;
+
+    if (req.user.role === "PATIENT") {
+      const patient = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+      if (!patient) return res.status(400).json({ error: "Patient profile not found" });
+      patientId = patient.id;
+
+      if (!dentistId) {
+        const availableDentist = await prisma.user.findFirst({ where: { role: "DENTIST" }, select: { id: true } });
+        if (availableDentist) dentistId = availableDentist.id;
+      }
+    }
+
+    if (!patientId || !dentistId || !date || !time) {
+      return res.status(400).json({ error: "Missing required fields: patientId, dentistId, date, time" });
+    }
 
     const apptDuration = duration || 30;
     const start = new Date(date);

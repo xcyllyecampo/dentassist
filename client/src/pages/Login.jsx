@@ -142,8 +142,8 @@ export default function Login() {
         {/* QR Code Section */}
         <div className="mt-4 glass-card rounded-3xl shadow-2xl shadow-black/30 p-6 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
-            <QrCode size={16} className="text-white/60" />
-            <span className="text-white/60 text-xs font-semibold uppercase tracking-wider">or scan to access on your phone</span>
+            <QrCode size={16} className="text-slate-500" />
+            <span className="text-slate-700 text-xs font-semibold uppercase tracking-wider">or scan to access on your phone</span>
           </div>
           <div className="inline-block bg-white p-3 rounded-2xl mb-3">
             <QRCodeSVG
@@ -155,7 +155,7 @@ export default function Login() {
               includeMargin={false}
             />
           </div>
-          <p className="text-white/40 text-xs">Scan with your phone camera to open the kiosk</p>
+          <p className="text-slate-500 text-xs">Scan with your phone camera to open</p>
         </div>
       </div>
     </div>

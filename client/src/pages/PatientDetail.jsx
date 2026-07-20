@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import Spinner from '../components/Spinner';
-import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save } from 'lucide-react';
+import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, HelpCircle } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { playClick, playSuccess, playError } from '../lib/sounds';
@@ -46,6 +46,7 @@ export default function PatientDetail() {
 
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [toothNote, setToothNote] = useState('');
+  const [showToothGuide, setShowToothGuide] = useState(false);
 
   const fetchPatient = () => {
     setLoading(true);
@@ -220,12 +221,18 @@ export default function PatientDetail() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-900">Interactive Tooth Chart</h3>
-                {selectedTooth && (
-                  <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
-                    <X size={14} /> Clear selection
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { playClick(); setShowToothGuide(true); }}
+                    className="flex items-center gap-1 text-xs text-[#004aad] hover:text-[#003782] font-medium">
+                    <HelpCircle size={14} /> Tooth Guide
                   </button>
-                )}
+                  {selectedTooth && (
+                    <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
+                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+                      <X size={14} /> Clear selection
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="text-xs text-gray-500 mb-3">Click a tooth to update its status</p>
               <div className="grid grid-cols-8 gap-2 mb-4">
@@ -586,6 +593,22 @@ export default function PatientDetail() {
           )}
         </div>
       </div>
+
+      {showToothGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowToothGuide(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h3 className="font-bold text-slate-900">Tooth Numbering Guide</h3>
+              <button onClick={() => setShowToothGuide(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4">
+              <img src="/images/tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto rounded-lg" />
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

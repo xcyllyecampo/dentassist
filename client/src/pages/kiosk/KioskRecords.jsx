@@ -3,7 +3,7 @@ import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { playClick } from '../../lib/sounds';
 import Spinner from '../../components/Spinner';
-import { AlertTriangle, Calendar, Stethoscope, Pill, X as XRayIcon, Circle } from 'lucide-react';
+import { AlertTriangle, Calendar, Stethoscope, Pill, X as XRayIcon, Circle, HelpCircle } from 'lucide-react';
 
 const TABS = [
   { id: 'appointments', label: 'Appointments', icon: Calendar },
@@ -17,6 +17,7 @@ export default function KioskRecords() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('appointments');
+  const [showToothGuide, setShowToothGuide] = useState(false);
 
   const fetchPatient = () => {
     setLoading(true);
@@ -130,7 +131,13 @@ export default function KioskRecords() {
 
         {activeTab === 'teeth' && (
           <div>
-            <h3 className="text-white font-bold mb-4">Interactive Tooth Chart</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold">Interactive Tooth Chart</h3>
+              <button onClick={() => { playClick(); setShowToothGuide(true); }}
+                className="flex items-center gap-1 text-xs text-white/60 hover:text-white font-medium">
+                <HelpCircle size={14} /> Tooth Guide
+              </button>
+            </div>
             <div className="grid grid-cols-8 gap-2">
               {patient.teeth?.map(tooth => (
                 <div key={tooth.id}
@@ -157,6 +164,22 @@ export default function KioskRecords() {
           </div>
         )}
       </div>
+
+      {showToothGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowToothGuide(false)}>
+          <div className="bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-white/20" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="font-bold text-white">Tooth Numbering Guide</h3>
+              <button onClick={() => setShowToothGuide(false)} className="text-white/40 hover:text-white transition-colors">
+                <XRayIcon size={20} />
+              </button>
+            </div>
+            <div className="p-4">
+              <img src="/images/tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto rounded-lg" />
+            </div>
+          </div>
+        </div>
+      )}
     </KioskLayout>
   );
 }

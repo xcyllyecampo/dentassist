@@ -26,11 +26,17 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+const VALID_STATUSES = ["AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE"];
+
 router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
     const { status } = req.body;
+
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: `Invalid status. Allowed: ${VALID_STATUSES.join(", ")}` });
+    }
 
     const room = await prisma.room.update({
       where: { id: req.params.id },

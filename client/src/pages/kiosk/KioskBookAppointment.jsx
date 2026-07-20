@@ -16,9 +16,7 @@ export default function KioskBookAppointment() {
   const [treatment, setTreatment] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
-  const [selectedDentist, setSelectedDentist] = useState('');
   const [availableSlots, setAvailableSlots] = useState([]);
-  const [dentists, setDentists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,8 +27,8 @@ export default function KioskBookAppointment() {
     if (selectedDate) {
       setLoading(true);
       api.get(`/appointments/available-slots?date=${selectedDate}`)
-        .then(res => { setAvailableSlots(res.data.availableSlots); setDentists(res.data.dentists); })
-        .catch(() => { setAvailableSlots([]); setDentists([]); })
+        .then(res => { setAvailableSlots(res.data.availableSlots); })
+        .catch(() => { setAvailableSlots([]); })
         .finally(() => setLoading(false));
     }
   }, [selectedDate]);
@@ -39,8 +37,6 @@ export default function KioskBookAppointment() {
     setSubmitting(true);
     try {
       await api.post('/appointments', {
-        patientId: user.patientId || user.id,
-        dentistId: selectedDentist || undefined,
         date: selectedDate,
         time: selectedTime,
         duration: treatment?.duration || 30,
