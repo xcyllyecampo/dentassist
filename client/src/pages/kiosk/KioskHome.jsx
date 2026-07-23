@@ -44,36 +44,36 @@ export default function KioskHome() {
           <div className="flex flex-col gap-4">
             <button
               onClick={() => { playClick(); navigate('/kiosk/check-in'); }}
-              className="group bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl border-2 border-teal-400/30 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-teal-500/30 hover:border-teal-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
+              className="group bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl border-2 border-teal-400/30 p-3 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-teal-500/30 hover:border-teal-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-4 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
-                  <ClipboardCheck size={40} className="text-white" />
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-3 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
+                  <ClipboardCheck size={32} className="text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-white leading-tight">WALK-IN</h3>
-                <h3 className="text-3xl font-bold text-teal-200 leading-tight mb-2">CHECK-IN</h3>
-                <p className="text-teal-200/70 text-sm mb-3">Tap here to join the queue</p>
-                <div className="inline-flex items-center gap-2 px-5 py-3 bg-white/20 rounded-xl text-white font-bold text-sm backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  Get Started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                <h3 className="text-xl font-bold text-white leading-tight">WALK-IN</h3>
+                <h3 className="text-xl font-bold text-teal-200 leading-tight mb-2">CHECK-IN</h3>
+                <p className="text-teal-200/70 text-xs mb-3">Tap here to join the queue</p>
+                <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/20 rounded-xl text-white font-bold text-xs backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                  Get Started <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </button>
 
             <button
               onClick={() => { playClick(); navigate('/kiosk/book'); }}
-              className="group bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl border-2 border-purple-400/30 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/30 hover:border-purple-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
+              className="group bg-gradient-to-br from-purple-600 to-purple-700 rounded-2xl border-2 border-purple-400/30 p-3 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/30 hover:border-purple-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
               <div className="relative z-10">
-                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-4 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
-                  <CalendarPlus size={40} className="text-white" />
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-3 mx-auto backdrop-blur-sm group-hover:scale-110 transition-transform shadow-xl">
+                  <CalendarPlus size={32} className="text-white" />
                 </div>
-                <h3 className="text-3xl font-bold text-white leading-tight">BOOK AN</h3>
-                <h3 className="text-3xl font-bold text-purple-200 leading-tight mb-2">APPOINTMENT</h3>
-                <p className="text-purple-200/70 text-sm mb-3">Schedule a visit in advance</p>
-                <div className="inline-flex items-center gap-2 px-5 py-3 bg-white/20 rounded-xl text-white font-bold text-sm backdrop-blur-sm group-hover:bg-white/30 transition-colors">
-                  Book Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                <h3 className="text-xl font-bold text-white leading-tight">BOOK AN</h3>
+                <h3 className="text-xl font-bold text-purple-200 leading-tight mb-2">APPOINTMENT</h3>
+                <p className="text-purple-200/70 text-xs mb-3">Schedule a visit in advance</p>
+                <div className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/20 rounded-xl text-white font-bold text-xs backdrop-blur-sm group-hover:bg-white/30 transition-colors">
+                  Book Now <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </button>

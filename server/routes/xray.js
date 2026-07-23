@@ -2,6 +2,7 @@ const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
@@ -64,10 +65,17 @@ router.post("/analyze/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), as
 
     const aiServiceUrl = process.env.AI_SERVICE_URL || "http://localhost:8000";
     try {
+      const fileBuffer = fs.readFileSync(image.filePath);
+      const ext = path.extname(image.filePath).toLowerCase();
+      const mimeMap = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp" };
+      const blob = new Blob([fileBuffer], { type: mimeMap[ext] || "image/jpeg" });
+
+      const formData = new FormData();
+      formData.append("file", blob, path.basename(image.filePath));
+
       const response = await fetch(`${aiServiceUrl}/analyze/xray`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imagePath: image.filePath }),
+        body: formData,
       });
       const analysis = await response.json();
 

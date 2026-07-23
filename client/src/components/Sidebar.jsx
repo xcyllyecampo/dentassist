@@ -33,7 +33,6 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
   const filteredNav = navItems.filter(item => item.roles.includes(user?.role));
 
   const handleNavClick = () => {
-    playClick();
     if (mobileOpen) setMobileOpen(false);
   };
 

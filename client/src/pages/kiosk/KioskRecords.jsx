@@ -208,25 +208,27 @@ export default function KioskRecords() {
           };
           return (
           <div>
-            <h3 className="text-white font-bold mb-4">Interactive Tooth Chart</h3>
-            <div className="grid grid-cols-8 gap-2">
-              {allTeeth.map(tooth => (
-                <div key={tooth.id}
-                  className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
-                  <span>#{tooth.toothNumber}</span>
-                  <span className="text-[9px] font-normal opacity-70">{tooth.status}</span>
-                </div>
-              ))}
+            <h3 className="text-white font-bold mb-3 text-sm">Interactive Tooth Chart</h3>
+            <div className="flex gap-3 mb-3">
+              <div className="grid grid-cols-8 gap-1 flex-1">
+                {allTeeth.map(tooth => (
+                  <div key={tooth.id}
+                    className={`aspect-square rounded flex flex-col items-center justify-center text-[8px] font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
+                    <span className="text-[9px]">#{tooth.toothNumber}</span>
+                    <span className="text-[6px] font-normal opacity-70 leading-tight">{tooth.status}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="w-1/3 rounded-lg overflow-hidden border border-white/10 shrink-0 self-start">
+                <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
+              </div>
             </div>
-            <div className="mt-4 rounded-xl overflow-hidden border border-white/10">
-              <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
-            </div>
-            <div className="flex flex-wrap gap-3 mt-4 text-xs text-white/60">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-500/40 rounded" /> Healthy</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-teal-500/40 rounded" /> Filling</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-purple-500/40 rounded" /> Crown</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-500/40 rounded" /> Decayed</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-white/10 rounded" /> Missing</span>
+            <div className="flex flex-wrap gap-2 text-[10px] text-white/60">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-green-500/40 rounded" /> Healthy</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-teal-500/40 rounded" /> Filling</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-purple-500/40 rounded" /> Crown</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500/40 rounded" /> Decayed</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-white/10 rounded" /> Missing</span>
             </div>
           </div>
           );

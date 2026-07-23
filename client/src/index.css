@@ -188,6 +188,12 @@ body {
 .stagger-4 { animation-delay: 0.2s; }
 .stagger-5 { animation-delay: 0.25s; }
 
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 .kiosk-scrollbar::-webkit-scrollbar { width: 4px; }
 .kiosk-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .kiosk-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
