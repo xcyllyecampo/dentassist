@@ -82,7 +82,7 @@ export default function KioskQueueStatus() {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">Not in Queue</h2>
             <p className="text-white/60 text-lg mb-8">You haven't checked in yet.</p>
-            <a href="/kiosk/check-in" onClick={() => playClick()} className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl font-bold text-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg shadow-blue-500/30">
+            <a href="/kiosk/check-in" onClick={() => playClick()} className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-2xl font-bold text-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-lg shadow-teal-500/30">
               Check In Now
             </a>
           </div>

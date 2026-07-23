@@ -91,7 +91,7 @@ export default function KioskCheckIn() {
             ))}
           </div>
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
@@ -182,7 +182,7 @@ export default function KioskCheckIn() {
                   onClick={() => { playClick(); setSelectedTreatment(t); }}
                   className={`p-3 rounded-xl border-2 text-center transition-all active:scale-[0.97] ${
                     selectedTreatment?.name === t.name
-                      ? 'border-blue-400 bg-blue-500/20 scale-[1.03] shadow-lg shadow-blue-500/20'
+                      ? 'border-teal-400 bg-teal-500/20 scale-[1.03] shadow-lg shadow-teal-500/20'
                       : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                   }`}
                 >
@@ -198,7 +198,7 @@ export default function KioskCheckIn() {
               disabled={!selectedTreatment}
               className={`w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all ${
                 selectedTreatment
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30'
+                  ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white hover:from-teal-600 hover:to-teal-700 shadow-lg shadow-teal-500/30'
                   : 'bg-white/10 text-white/30 cursor-not-allowed'
               }`}
             >
@@ -218,7 +218,7 @@ export default function KioskCheckIn() {
                 onClick={() => { playClick(); setSelectedDentist(null); }}
                 className={`w-full p-3 rounded-xl border-2 text-center transition-all ${
                   !selectedDentist
-                    ? 'border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/20'
+                    ? 'border-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20'
                     : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
@@ -231,14 +231,14 @@ export default function KioskCheckIn() {
                   onClick={() => { playClick(); setSelectedDentist(d); }}
                   className={`w-full p-3 rounded-xl border-2 flex items-center gap-3 text-left transition-all ${
                     selectedDentist?.id === d.id
-                      ? 'border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/20'
+                      ? 'border-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20'
                       : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                   }`}
                 >
                   {d.avatar ? (
                     <img src={d.avatar} alt={d.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-white/20" />
                   ) : (
-                    <div className="w-10 h-10 bg-blue-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20">
+                    <div className="w-10 h-10 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20">
                       <Stethoscope size={18} />
                     </div>
                   )}
@@ -248,7 +248,7 @@ export default function KioskCheckIn() {
                   </div>
                   {selectedDentist?.id === d.id && (
                     <div className="ml-auto">
-                      <CheckCircle size={18} className="text-blue-400" />
+                      <CheckCircle size={18} className="text-teal-400" />
                     </div>
                   )}
                 </button>
@@ -264,7 +264,7 @@ export default function KioskCheckIn() {
               </button>
               <button
                 onClick={() => { playClick(); setStep(3); }}
-                className="flex-1 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-base hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all"
+                className="flex-1 py-3.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-bold text-base hover:from-teal-600 hover:to-teal-700 shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 transition-all"
               >
                 Next <ArrowRight size={18} />
               </button>
@@ -290,7 +290,7 @@ export default function KioskCheckIn() {
                   {selectedDentist.avatar ? (
                     <img src={selectedDentist.avatar} alt={selectedDentist.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20" />
                   ) : (
-                    <div className="w-8 h-8 bg-blue-500/30 text-white rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white/20">
+                    <div className="w-8 h-8 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white/20">
                       <Stethoscope size={14} />
                     </div>
                   )}

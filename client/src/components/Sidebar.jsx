@@ -53,7 +53,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             </div>
             {!isMobile && (
               <button onClick={handleCollapse}
-                className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-[#8bb4f8] hover:text-white absolute right-3 top-3">
+                className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-teal-200/60 hover:text-white absolute right-3 top-3">
                 {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </button>
             )}
@@ -62,7 +62,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
           <div className="relative flex items-center justify-center h-14">
             {!isMobile && (
               <button onClick={handleCollapse}
-                className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-[#8bb4f8] hover:text-white">
+                className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-teal-200/60 hover:text-white">
                 {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </button>
             )}
@@ -81,15 +81,15 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
               onClick={handleNavClick}
               className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#1a5fb4]/20 to-[#1a5fb4]/10 text-white'
-                  : 'text-[#6b9ae8]/60 hover:text-white hover:bg-white/5'
+                  ? 'bg-white/[0.1] text-white'
+                  : 'text-teal-200/50 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
               {isActive && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-[#4a85d6] to-[#1a5fb4] rounded-r-full" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-[#14B8A6] to-[#0F766E] rounded-r-full" />
               )}
               <div className="relative">
-                <Icon size={18} className={isActive ? 'text-[#4a85d6]' : 'text-[#4a85d6]/40 group-hover:text-[#6b9ae8]'} />
+                <Icon size={18} className={isActive ? 'text-teal-200' : 'text-teal-300/40 group-hover:text-teal-200/70'} />
                 {badgeCount > 0 && !collapsed && (
                   <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] bg-rose-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-0.5">
                     {badgeCount > 99 ? '99+' : badgeCount}
@@ -111,12 +111,12 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
         {(!collapsed || isMobile) && (
           <div className="px-3 py-2 mb-2">
             <div className="text-sm font-semibold text-white truncate">{user?.name}</div>
-            <div className="text-[11px] text-[#6b9ae8]/50 uppercase tracking-wider font-medium">{user?.role}</div>
+            <div className="text-[11px] text-teal-300/40 uppercase tracking-wider font-medium">{user?.role}</div>
           </div>
         )}
         <button
           onClick={() => { playClick(); logout(); }}
-          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-[#6b9ae8]/50 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-teal-300/40 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors"
         >
           <LogOut size={17} />
           {(!collapsed || isMobile) && <span className="font-medium">Logout</span>}
@@ -128,14 +128,14 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
   return (
     <>
       {/* Desktop */}
-      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex-col ${collapsed ? 'w-16' : 'w-[264px]'}`}
-        style={{ borderRight: '1px solid rgba(0, 74, 173, 0.08)' }}>
+      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-gradient-to-b from-[#134E4A] via-[#0F766E] to-[#115E59] text-white transition-all duration-300 ease-out z-50 flex-col ${collapsed ? 'w-16' : 'w-[264px]'}`}
+        style={{ borderRight: '1px solid rgba(20, 184, 166, 0.08)' }}>
         {sidebarContent()}
       </aside>
 
       {/* Mobile */}
-      <aside className={`md:hidden fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex flex-col ${mobileOpen ? 'w-[264px]' : 'w-0'} overflow-hidden`}
-        style={{ borderRight: '1px solid rgba(0, 74, 173, 0.08)' }}>
+      <aside className={`md:hidden fixed left-0 top-0 h-full bg-gradient-to-b from-[#134E4A] via-[#0F766E] to-[#115E59] text-white transition-all duration-300 ease-out z-50 flex flex-col ${mobileOpen ? 'w-[264px]' : 'w-0'} overflow-hidden`}
+        style={{ borderRight: '1px solid rgba(20, 184, 166, 0.08)' }}>
         <div className="min-w-[264px] flex flex-col h-full">
           {sidebarContent(true)}
         </div>

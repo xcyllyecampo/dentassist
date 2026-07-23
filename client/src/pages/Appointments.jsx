@@ -10,7 +10,7 @@ import { playClick } from '../lib/sounds';
 import { Plus, ChevronLeft, ChevronRight, Calendar, AlertTriangle, X, CheckCircle, Clock, Play, Ban, Trash2, Edit3, UserX, CalendarDays, LayoutList } from 'lucide-react';
 
 const STATUS_CONFIG = {
-  SCHEDULED:     { label: 'Scheduled',     color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  SCHEDULED:     { label: 'Scheduled',     color: 'bg-teal-100 text-teal-700 border-teal-200' },
   CONFIRMED:     { label: 'Confirmed',     color: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
   IN_PROGRESS:   { label: 'In Progress',   color: 'bg-amber-100 text-amber-700 border-amber-200' },
   COMPLETED:     { label: 'Completed',     color: 'bg-green-100 text-green-700 border-green-200' },
@@ -155,7 +155,7 @@ export default function Appointments() {
           <div className="text-center py-20">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <h3 className="text-sm font-medium text-gray-700 mb-2">{error}</h3>
-            <button onClick={fetchData} className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] text-sm font-medium">Retry</button>
+            <button onClick={fetchData} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Retry</button>
           </div>
         ) : (
         <>
@@ -174,15 +174,15 @@ export default function Appointments() {
           <div className="flex items-center gap-3">
             <div className="flex bg-slate-100 rounded-lg p-1">
               <button onClick={() => setViewMode('day')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === 'day' ? 'bg-white text-[#004aad] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === 'day' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 <LayoutList size={14} /> Day
               </button>
               <button onClick={() => setViewMode('month')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === 'month' ? 'bg-white text-[#004aad] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === 'month' ? 'bg-white text-[#0F766E] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 <CalendarDays size={14} /> Month
               </button>
             </div>
-            <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 bg-[#004aad] text-white px-4 py-2 rounded-lg hover:bg-[#003782] text-sm font-medium">
+            <button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2 bg-[#0F766E] text-white px-4 py-2 rounded-lg hover:bg-[#0D6D65] text-sm font-medium">
               <Plus size={16} /> New Appointment
             </button>
           </div>
@@ -202,10 +202,10 @@ export default function Appointments() {
                 return (
                   <div key={i}
                     onClick={() => { if (day) { playClick(); setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day)); setViewMode('day'); }}}
-                    className={`min-h-[90px] border-b border-r border-slate-100 p-2 ${day ? 'cursor-pointer hover:bg-slate-50' : 'bg-slate-50/50'} ${isToday ? 'bg-blue-50/50' : ''}`}>
+                    className={`min-h-[90px] border-b border-r border-slate-100 p-2 ${day ? 'cursor-pointer hover:bg-slate-50' : 'bg-slate-50/50'} ${isToday ? 'bg-teal-50/50' : ''}`}>
                     {day && (
                       <>
-                        <div className={`text-xs font-bold mb-1 ${isToday ? 'text-[#004aad] bg-blue-100 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-700'}`}>{day}</div>
+                        <div className={`text-xs font-bold mb-1 ${isToday ? 'text-[#0F766E] bg-teal-100 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-700'}`}>{day}</div>
                         <div className="space-y-0.5">
                           {dayAppts.slice(0, 3).map(a => (
                             <div key={a.id} onClick={e => { e.stopPropagation(); openDetail(a); }}
@@ -213,7 +213,7 @@ export default function Appointments() {
                                 a.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                                 a.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
                                 a.status === 'CANCELLED' ? 'bg-red-50 text-red-500 line-through' :
-                                'bg-blue-100 text-blue-700'
+                                'bg-teal-100 text-teal-700'
                               }`}>
                               {a.time} {a.patient?.user?.name?.split(' ')[0]}
                             </div>
@@ -236,7 +236,7 @@ export default function Appointments() {
             <div className="grid grid-cols-[80px_1fr] divide-x divide-slate-200">
               <div className="bg-slate-50">
                 {timeSlots.map(time => (
-                  <div key={time} className="h-16 flex items-center justify-center text-xs text-[#004aad] font-medium border-b border-slate-200">
+                  <div key={time} className="h-16 flex items-center justify-center text-xs text-[#0F766E] font-medium border-b border-slate-200">
                     {time}
                   </div>
                 ))}
@@ -256,7 +256,7 @@ export default function Appointments() {
                         appt.status === 'COMPLETED' ? 'bg-green-100 border border-green-300' :
                         appt.status === 'IN_PROGRESS' ? 'bg-amber-100 border border-amber-300' :
                         appt.status === 'CANCELLED' ? 'bg-red-50 border border-red-200 opacity-60' :
-                        'bg-[#e6efff] border border-[#6b9ae8]'
+                        'bg-[#F0FDFA] border border-[#14B8A6]'
                       }`}
                       style={{ top: `${top}px`, height: `${height - 4}px` }}>
                       <div className="font-bold text-slate-900 truncate">{appt.patient?.user?.name}</div>
@@ -279,7 +279,7 @@ export default function Appointments() {
                 <div key={appt.id} onClick={() => openDetail(appt)}
                   className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow">
                   <div className="w-14 text-center shrink-0">
-                    <div className="text-sm font-bold text-[#004aad]">{appt.time}</div>
+                    <div className="text-sm font-bold text-[#0F766E]">{appt.time}</div>
                     <div className="text-[10px] text-gray-500">{appt.duration}m</div>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -320,7 +320,7 @@ export default function Appointments() {
                 <div className="flex items-center gap-2">
                   {canEdit && !editMode && (
                     <button onClick={() => { setEditMode(true); setEditForm({ date: selected.date?.split('T')[0], time: selected.time, duration: selected.duration, reason: selected.reason, notes: selected.notes || '', dentistId: selected.dentistId, roomId: selected.roomId }); }}
-                      className="p-2 text-[#004aad] hover:bg-[#f0f5ff] rounded-lg"><Edit3 size={16} /></button>
+                      className="p-2 text-[#0F766E] hover:bg-[#F0FDFA] rounded-lg"><Edit3 size={16} /></button>
                   )}
                   {canDelete && selected.status !== 'COMPLETED' && (
                     <button onClick={() => handleDelete(selected.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
@@ -336,12 +336,12 @@ export default function Appointments() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                         <input type="date" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                         <select value={editForm.time || ''} onChange={e => setEditForm({...editForm, time: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                           <option value="">Select Time</option>
                           {['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'].map(t => (
                             <option key={t} value={t}>{t}</option>
@@ -355,18 +355,18 @@ export default function Appointments() {
                             <button key={d.id} type="button" onClick={() => setEditForm({...editForm, dentistId: d.id})}
                               className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border text-sm text-left transition-all ${
                                 editForm.dentistId === d.id
-                                  ? 'border-[#004aad] bg-[#e6efff] ring-1 ring-[#004aad]'
+                                  ? 'border-[#0F766E] bg-[#F0FDFA] ring-1 ring-[#0F766E]'
                                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                               }`}>
                               {d.avatar ? (
                                 <img src={d.avatar} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
                               ) : (
-                                <div className="w-7 h-7 bg-[#004aad] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                                <div className="w-7 h-7 bg-[#0F766E] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
                                   {d.name?.charAt(0)?.toUpperCase()}
                                 </div>
                               )}
                               <span className="font-medium text-slate-900 truncate">{d.name}</span>
-                              {editForm.dentistId === d.id && <div className="ml-auto w-2 h-2 rounded-full bg-[#004aad]" />}
+                              {editForm.dentistId === d.id && <div className="ml-auto w-2 h-2 rounded-full bg-[#0F766E]" />}
                             </button>
                           ))}
                         </div>
@@ -374,7 +374,7 @@ export default function Appointments() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
                         <select value={editForm.roomId || ''} onChange={e => setEditForm({...editForm, roomId: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                           <option value="">Select Room</option>
                           {rooms.filter(r => r.status === 'AVAILABLE' || r.id === selected.roomId).map(r => (
                             <option key={r.id} value={r.id}>Room {r.number} - {r.name}</option>
@@ -384,7 +384,7 @@ export default function Appointments() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
                         <select value={editForm.duration || 30} onChange={e => setEditForm({...editForm, duration: parseInt(e.target.value)})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                           <option value={15}>15 min</option><option value={30}>30 min</option>
                           <option value={45}>45 min</option><option value={60}>60 min</option>
                         </select>
@@ -392,7 +392,7 @@ export default function Appointments() {
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select value={editForm.status || selected.status} onChange={e => setEditForm({...editForm, status: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                           {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                         </select>
                       </div>
@@ -400,22 +400,22 @@ export default function Appointments() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
                       <input type="text" value={editForm.reason || ''} onChange={e => setEditForm({...editForm, reason: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                       <textarea value={editForm.notes || ''} onChange={e => setEditForm({...editForm, notes: e.target.value})} rows={2}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
                       <button onClick={() => setEditMode(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                      <button onClick={handleEditSave} className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] text-sm font-medium">Save Changes</button>
+                      <button onClick={handleEditSave} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Save Changes</button>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-[#004aad] text-white rounded-full flex items-center justify-center font-bold text-lg">
+                      <div className="w-12 h-12 bg-[#0F766E] text-white rounded-full flex items-center justify-center font-bold text-lg">
                         {selected.patient?.user?.name?.charAt(0)}
                       </div>
                       <div>
@@ -502,7 +502,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
                     <select required value={form.patientId} onChange={e => setForm({...form, patientId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                       <option value="">Select Patient</option>
                       {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
                     </select>
@@ -514,18 +514,18 @@ export default function Appointments() {
                         <button key={d.id} type="button" onClick={() => setForm({...form, dentistId: d.id})}
                           className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border text-sm text-left transition-all ${
                             form.dentistId === d.id
-                              ? 'border-[#004aad] bg-[#e6efff] ring-1 ring-[#004aad]'
+                              ? 'border-[#0F766E] bg-[#F0FDFA] ring-1 ring-[#0F766E]'
                               : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                           }`}>
                           {d.avatar ? (
                             <img src={d.avatar} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
                           ) : (
-                            <div className="w-7 h-7 bg-[#004aad] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                            <div className="w-7 h-7 bg-[#0F766E] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
                               {d.name?.charAt(0)?.toUpperCase()}
                             </div>
                           )}
                           <span className="font-medium text-slate-900 truncate">{d.name}</span>
-                          {form.dentistId === d.id && <div className="ml-auto w-2 h-2 rounded-full bg-[#004aad]" />}
+                          {form.dentistId === d.id && <div className="ml-auto w-2 h-2 rounded-full bg-[#0F766E]" />}
                         </button>
                       ))}
                     </div>
@@ -533,7 +533,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
                     <select value={form.roomId} onChange={e => setForm({...form, roomId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                       <option value="">Select Room</option>
                       {rooms.filter(r => r.status === 'AVAILABLE').map(r => <option key={r.id} value={r.id}>Room {r.number} - {r.name}</option>)}
                     </select>
@@ -541,7 +541,7 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                     <select required value={form.time} onChange={e => setForm({...form, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                       <option value="">Select Time</option>
                       {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
@@ -549,12 +549,12 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                     <input type="date" value={form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0]} onChange={e => setForm({...form, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
                     <select value={form.duration} onChange={e => setForm({...form, duration: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                       <option value={15}>15 min</option><option value={30}>30 min</option>
                       <option value={45}>45 min</option><option value={60}>60 min</option>
                     </select>
@@ -563,12 +563,12 @@ export default function Appointments() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
                   <input type="text" value={form.reason} onChange={e => setForm({...form, reason: e.target.value})}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none"
                     placeholder="Regular checkup, tooth pain, etc." />
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] text-sm font-medium">Book Appointment</button>
+                  <button type="submit" className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Book Appointment</button>
                 </div>
               </form>
             </div>

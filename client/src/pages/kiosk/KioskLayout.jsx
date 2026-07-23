@@ -15,7 +15,7 @@ export default function KioskLayout({ children, showBack = true, title }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-[#003782] flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-[#0D6D65] flex flex-col items-center">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-3 shrink-0 w-full max-w-2xl">
         <div className="flex items-center gap-3">

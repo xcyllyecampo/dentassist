@@ -73,7 +73,7 @@ export default function Dashboard() {
       <Header title="Dashboard" />
       <div className="p-4 md:p-6 space-y-4 md:space-y-6 animate-fade-in">
         {/* Welcome banner */}
-        <div className="bg-gradient-to-r from-[#1a5fb4] via-[#1a5fb4] to-[#003782] rounded-2xl p-5 md:p-6 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#0F766E] via-[#0F766E] to-[#0D6D65] rounded-2xl p-5 md:p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="relative">
             <div className="flex items-center gap-2 mb-1">
@@ -88,8 +88,8 @@ export default function Dashboard() {
         {/* Stat cards */}
         {dashData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            <StatCard icon={Users} label="Total Patients" value={dashData.totalPatients} gradient="from-[#1a5fb4] to-[#004aad]" delay="0" />
-            <StatCard icon={Calendar} label="Today's Appointments" value={dashData.todayAppointments.length} gradient="from-[#1a5fb4] to-[#003782]" delay="0.05" />
+            <StatCard icon={Users} label="Total Patients" value={dashData.totalPatients} gradient="from-[#0F766E] to-[#0F766E]" delay="0" />
+            <StatCard icon={Calendar} label="Today's Appointments" value={dashData.todayAppointments.length} gradient="from-[#0F766E] to-[#0D6D65]" delay="0.05" />
             <StatCard icon={Clock} label="In Queue" value={dashData.queueCount} gradient="from-amber-500 to-orange-500" delay="0.1" />
             <StatCard icon={TrendingUp} label="Today's Revenue" value={`₱${Number(dashData.totalRevenue).toLocaleString()}`} gradient="from-emerald-500 to-teal-500" delay="0.15" />
           </div>
@@ -106,7 +106,7 @@ export default function Dashboard() {
                 </div>
                 <span className="text-[10px] text-gray-400">Last update: {lastUpdate.toLocaleTimeString()}</span>
               </div>
-              <div className="h-[280px] md:h-[400px] lg:h-[480px] bg-gradient-to-b from-[#f0f5ff] to-[#f0f5ff]">
+              <div className="h-[280px] md:h-[400px] lg:h-[480px] bg-gradient-to-b from-[#F0FDFA] to-[#F0FDFA]">
                 <ClinicScene3D rooms={rooms} queue={queue} selectedRoom={selectedRoom} onSelectRoom={setSelectedRoom} />
               </div>
               <div className="flex items-center gap-6 px-4 py-3 border-t border-slate-200 bg-gray-50">
@@ -163,7 +163,7 @@ export default function Dashboard() {
                   </div>
                 ) : inProgress.map((entry) => (
                   <div key={entry.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
-                    <div className="w-6 h-6 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-xs font-bold">{entry.position}</div>
+                    <div className="w-6 h-6 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-xs font-bold">{entry.position}</div>
                     <div className="text-xs font-medium text-slate-900 truncate">{entry.patient?.user?.name}</div>
                   </div>
                 ))}
@@ -205,8 +205,8 @@ export default function Dashboard() {
                   <div className="text-[10px] text-amber-600">Waiting</div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3 text-center">
-                  <div className="text-lg font-bold text-[#003782]">{inProgress.length}</div>
-                  <div className="text-[10px] text-[#004aad]">In Service</div>
+                  <div className="text-lg font-bold text-[#0D6D65]">{inProgress.length}</div>
+                  <div className="text-[10px] text-[#0F766E]">In Service</div>
                 </div>
               </div>
             </div>
@@ -218,8 +218,8 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
             <div className="bg-white rounded-2xl shadow-sm p-4 md:p-6 card-premium animate-slide-up stagger-1">
               <h3 className="font-bold text-slate-900 mb-3 md:mb-4 flex items-center gap-2">
-                <div className="w-7 h-7 md:w-8 md:h-8 bg-[#e6efff] rounded-lg flex items-center justify-center">
-                  <Calendar size={14} className="text-[#004aad]" />
+                <div className="w-7 h-7 md:w-8 md:h-8 bg-[#F0FDFA] rounded-lg flex items-center justify-center">
+                  <Calendar size={14} className="text-[#0F766E]" />
                 </div>
                 Today's Appointments
               </h3>
@@ -233,9 +233,9 @@ export default function Dashboard() {
                     <p className="text-slate-300 text-xs mt-1">Enjoy your free day!</p>
                   </div>
                 ) : dashData.todayAppointments.map((appt) => (
-                  <div key={appt.id} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-[#f0f5ff]/50 rounded-xl transition-colors group">
+                  <div key={appt.id} className="flex items-center justify-between p-3 bg-slate-50 hover:bg-[#F0FDFA]/50 rounded-xl transition-colors group">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 bg-gradient-to-br from-[#1a5fb4] to-[#1a5fb4] text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-md shadow-[#c2d5f7]">
+                      <div className="w-11 h-11 bg-gradient-to-br from-[#0F766E] to-[#0F766E] text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-md shadow-[#99F6E4]">
                         {appt.time}
                       </div>
                       <div>
@@ -264,7 +264,7 @@ export default function Dashboard() {
                   <Bar dataKey="appointments" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
                   <defs>
                     <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#004aad" />
+                      <stop offset="0%" stopColor="#0F766E" />
                       <stop offset="100%" stopColor="#8b5cf6" />
                     </linearGradient>
                   </defs>
@@ -326,7 +326,7 @@ export default function Dashboard() {
                   </>
                 )}
               </div>
-              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-[#004aad] text-white py-2 rounded-lg text-sm hover:bg-[#003782] transition-colors">Close</button>
+              <button onClick={() => setSelectedRoom(null)} className="w-full mt-6 bg-[#0F766E] text-white py-2 rounded-lg text-sm hover:bg-[#0D6D65] transition-colors">Close</button>
             </div>
           </div>
         )}
@@ -354,8 +354,8 @@ function StatCard({ icon: Icon, label, value, gradient }) {
 
 function StatusBadge({ status }) {
   const colors = {
-    SCHEDULED: 'bg-[#e6efff] text-[#003782]',
-    CONFIRMED: 'bg-blue-100 text-blue-700',
+    SCHEDULED: 'bg-[#F0FDFA] text-[#0D6D65]',
+    CONFIRMED: 'bg-teal-100 text-teal-700',
     IN_PROGRESS: 'bg-amber-100 text-amber-700',
     COMPLETED: 'bg-emerald-100 text-emerald-700',
     CANCELLED: 'bg-rose-100 text-rose-700',
@@ -371,11 +371,11 @@ function StatusBadge({ status }) {
 function QuickAction({ to, icon: Icon, label }) {
   return (
     <Link to={to} onClick={() => playClick()}
-      className="flex items-center gap-3 p-3 md:p-3.5 bg-slate-50 hover:bg-[#f0f5ff] rounded-xl transition-all duration-200 group hover:shadow-md hover:shadow-[#e6efff]/50">
-      <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-[#1a5fb4] to-[#1a5fb4] text-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-[#c2d5f7]">
+      className="flex items-center gap-3 p-3 md:p-3.5 bg-slate-50 hover:bg-[#F0FDFA] rounded-xl transition-all duration-200 group hover:shadow-md hover:shadow-[#F0FDFA]/50">
+      <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-[#0F766E] to-[#0F766E] text-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shadow-[#99F6E4]">
         <Icon size={15} className="md:size-[17px]" />
       </div>
-      <span className="text-xs md:text-sm font-semibold text-slate-700 group-hover:text-[#003782] transition-colors">{label}</span>
+      <span className="text-xs md:text-sm font-semibold text-slate-700 group-hover:text-[#0D6D65] transition-colors">{label}</span>
     </Link>
   );
 }

@@ -20,7 +20,7 @@ function ScoreBar({ current, simulated, label }) {
       </div>
       <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
         <div className="absolute h-full bg-gray-400 rounded-full" style={{ width: `${current}%` }} />
-        <div className="absolute h-full bg-gradient-to-r from-[#4a85d6] to-green-400 rounded-full opacity-70" style={{ width: `${simulated}%` }} />
+        <div className="absolute h-full bg-gradient-to-r from-[#14B8A6] to-green-400 rounded-full opacity-70" style={{ width: `${simulated}%` }} />
       </div>
       <div className="flex justify-between text-xs text-gray-400 mt-0.5">
         <span>Current</span>
@@ -81,7 +81,7 @@ export default function SmileSimulation() {
       <div className="p-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-6">
           <div className="text-center mb-6">
-            <Sparkles size={48} className="text-[#6b9ae8] mx-auto mb-4" />
+            <Sparkles size={48} className="text-[#14B8A6] mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-900 mb-2">Virtual Smile Makeover</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
               Upload a smile photo and see how different treatments could transform your smile. Choose a treatment type below to get started.
@@ -93,8 +93,8 @@ export default function SmileSimulation() {
               <button key={t.value} onClick={() => setTreatmentType(t.value)}
                 className={`p-4 rounded-xl border-2 text-left transition-all ${
                   treatmentType === t.value
-                    ? 'border-[#1a5fb4] bg-slate-50 shadow-sm'
-                    : 'border-gray-200 hover:border-[#6b9ae8] hover:bg-gray-50'
+                    ? 'border-[#0F766E] bg-slate-50 shadow-sm'
+                    : 'border-gray-200 hover:border-[#14B8A6] hover:bg-gray-50'
                 }`}>
                 <div className="text-2xl mb-1">{t.icon}</div>
                 <div className="font-medium text-slate-900 text-sm">{t.label}</div>
@@ -104,7 +104,7 @@ export default function SmileSimulation() {
           </div>
 
           <div className="text-center">
-            <label className="inline-flex items-center gap-2 bg-[#004aad] text-white px-6 py-3 rounded-lg hover:bg-[#003782] cursor-pointer font-medium">
+            <label className="inline-flex items-center gap-2 bg-[#0F766E] text-white px-6 py-3 rounded-lg hover:bg-[#0D6D65] cursor-pointer font-medium">
               <Camera size={18} /> Choose Smile Photo
               <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             </label>
@@ -117,7 +117,7 @@ export default function SmileSimulation() {
               <h3 className="font-bold text-slate-900 mb-4">Your Smile Photo</h3>
               <img src={preview} alt="Smile" className="w-full rounded-lg" />
               <button onClick={handleSimulate} disabled={simulating}
-                className="w-full mt-4 bg-gradient-to-r from-[#004aad] to-[#004aad] text-white py-3 rounded-lg font-medium hover:from-[#003782] hover:to-[#003782] disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full mt-4 bg-gradient-to-r from-[#0F766E] to-[#0F766E] text-white py-3 rounded-lg font-medium hover:from-[#0D6D65] hover:to-[#0D6D65] disabled:opacity-50 flex items-center justify-center gap-2">
                 <Sparkles size={18} />
                 {simulating ? 'Simulating...' : `Simulate ${TREATMENT_TYPES.find(t => t.value === treatmentType)?.label}`}
               </button>
@@ -141,14 +141,14 @@ export default function SmileSimulation() {
                 )}
 
                 {result.simulated_result?.description && (
-                  <div className="p-4 bg-gradient-to-r from-[#f0f5ff] to-[#f0f5ff] rounded-lg border border-slate-200 mb-4">
+                  <div className="p-4 bg-gradient-to-r from-[#F0FDFA] to-[#F0FDFA] rounded-lg border border-slate-200 mb-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp size={16} className="text-[#004aad]" />
+                      <TrendingUp size={16} className="text-[#0F766E]" />
                       <span className="text-sm font-bold text-slate-900">Expected Outcome</span>
                     </div>
                     <p className="text-sm text-gray-700">{result.simulated_result.description}</p>
                     {result.simulated_result.estimated_shade_change && (
-                      <p className="text-xs text-[#004aad] mt-1 font-medium">{result.simulated_result.estimated_shade_change}</p>
+                      <p className="text-xs text-[#0F766E] mt-1 font-medium">{result.simulated_result.estimated_shade_change}</p>
                     )}
                   </div>
                 )}
@@ -204,9 +204,9 @@ export default function SmileSimulation() {
                 )}
 
                 {result.timeline && (
-                  <div className="p-3 bg-[#f0f5ff] rounded-lg border border-[#c2d5f7] mb-4">
+                  <div className="p-3 bg-[#F0FDFA] rounded-lg border border-[#99F6E4] mb-4">
                     <div className="flex items-center gap-2 mb-1">
-                      <Clock size={14} className="text-[#004aad]" />
+                      <Clock size={14} className="text-[#0F766E]" />
                       <span className="text-sm font-bold text-[#001d4e]">Timeline</span>
                     </div>
                     <p className="text-sm text-gray-700">{result.timeline}</p>
@@ -235,7 +235,7 @@ export default function SmileSimulation() {
 
         {!preview && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-            <Sparkles size={48} className="text-[#6b9ae8] mx-auto mb-4" />
+            <Sparkles size={48} className="text-[#14B8A6] mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-900 mb-2">See Your Smile Transformation</h3>
             <p className="text-gray-500 text-sm max-w-md mx-auto">
               Upload a clear photo of your smile, choose a treatment type, and let our AI show you what your new smile could look like.

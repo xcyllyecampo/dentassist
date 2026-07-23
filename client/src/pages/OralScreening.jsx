@@ -54,12 +54,12 @@ export default function OralScreening() {
       <div className="p-6">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 mb-6">
           <div className="text-center">
-            <Camera size={48} className="text-[#6b9ae8] mx-auto mb-4" />
+            <Camera size={48} className="text-[#14B8A6] mx-auto mb-4" />
             <h3 className="text-lg font-bold text-slate-900 mb-2">Upload Mouth Photo for Screening</h3>
             <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               Take a clear photo of the inside of your mouth. The AI will analyze it and highlight any areas of concern.
             </p>
-            <label className="inline-flex items-center gap-2 bg-[#004aad] text-white px-6 py-3 rounded-lg hover:bg-[#003782] cursor-pointer font-medium">
+            <label className="inline-flex items-center gap-2 bg-[#0F766E] text-white px-6 py-3 rounded-lg hover:bg-[#0D6D65] cursor-pointer font-medium">
               <Camera size={18} /> Choose Photo
               <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             </label>
@@ -72,7 +72,7 @@ export default function OralScreening() {
               <h3 className="font-bold text-slate-900 mb-4">Uploaded Photo</h3>
               <img src={preview} alt="Oral photo" className="w-full rounded-lg" />
               <button onClick={handleAnalyze} disabled={analyzing}
-                className="w-full mt-4 bg-[#004aad] text-white py-3 rounded-lg font-medium hover:bg-[#003782] disabled:opacity-50 flex items-center justify-center gap-2">
+                className="w-full mt-4 bg-[#0F766E] text-white py-3 rounded-lg font-medium hover:bg-[#0D6D65] disabled:opacity-50 flex items-center justify-center gap-2">
                 <Brain size={18} />
                 {analyzing ? 'Analyzing with AI...' : 'Run AI Analysis'}
               </button>

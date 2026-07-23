@@ -143,7 +143,7 @@ export default function KioskRecords() {
                       a.status === 'COMPLETED' ? 'bg-green-500/20 text-green-300 border border-green-500/40' :
                       a.status === 'IN_PROGRESS' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
                       a.status === 'CANCELLED' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
-                      'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                      'bg-teal-500/20 text-teal-300 border border-teal-500/40'
                     }`}>{a.status}</span>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function KioskRecords() {
           const getStatusStyle = (status) => {
             switch (status) {
               case 'HEALTHY': return 'bg-green-500/20 text-green-300 border border-green-500/40';
-              case 'FILLING': return 'bg-blue-500/20 text-blue-300 border border-blue-500/40';
+              case 'FILLING': return 'bg-teal-500/20 text-teal-300 border border-teal-500/40';
               case 'CROWN': return 'bg-purple-500/20 text-purple-300 border border-purple-500/40';
               case 'DECAYED': return 'bg-red-500/20 text-red-300 border border-red-500/40';
               case 'MISSING': return 'bg-white/5 text-white/30 border border-white/10';
@@ -223,7 +223,7 @@ export default function KioskRecords() {
             </div>
             <div className="flex flex-wrap gap-3 mt-4 text-xs text-white/60">
               <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-500/40 rounded" /> Healthy</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500/40 rounded" /> Filling</span>
+              <span className="flex items-center gap-1"><span className="w-3 h-3 bg-teal-500/40 rounded" /> Filling</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 bg-purple-500/40 rounded" /> Crown</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-500/40 rounded" /> Decayed</span>
               <span className="flex items-center gap-1"><span className="w-3 h-3 bg-white/10 rounded" /> Missing</span>

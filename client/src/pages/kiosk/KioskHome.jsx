@@ -44,7 +44,7 @@ export default function KioskHome() {
           <div className="flex flex-col gap-4">
             <button
               onClick={() => { playClick(); navigate('/kiosk/check-in'); }}
-              className="group bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl border-2 border-blue-400/30 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/30 hover:border-blue-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
+              className="group bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl border-2 border-teal-400/30 p-5 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-teal-500/30 hover:border-teal-400/50 active:scale-[0.98] flex-1 flex flex-col items-center justify-center text-center relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
               <div className="relative z-10">
@@ -52,8 +52,8 @@ export default function KioskHome() {
                   <ClipboardCheck size={40} className="text-white" />
                 </div>
                 <h3 className="text-3xl font-bold text-white leading-tight">WALK-IN</h3>
-                <h3 className="text-3xl font-bold text-blue-200 leading-tight mb-2">CHECK-IN</h3>
-                <p className="text-blue-200/70 text-sm mb-3">Tap here to join the queue</p>
+                <h3 className="text-3xl font-bold text-teal-200 leading-tight mb-2">CHECK-IN</h3>
+                <p className="text-teal-200/70 text-sm mb-3">Tap here to join the queue</p>
                 <div className="inline-flex items-center gap-2 px-5 py-3 bg-white/20 rounded-xl text-white font-bold text-sm backdrop-blur-sm group-hover:bg-white/30 transition-colors">
                   Get Started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                 </div>

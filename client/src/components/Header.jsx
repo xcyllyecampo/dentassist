@@ -6,7 +6,7 @@ import { Menu, Bell, User, ChevronDown, Calendar, Clock, Users, Home, CheckCircl
 import { playClick } from '../lib/sounds';
 
 const typeIcons = { appointment: Calendar, queue: Clock, patient: Users, room: Home };
-const typeColors = { appointment: 'text-emerald-500 bg-emerald-50', queue: 'text-amber-500 bg-amber-50', patient: 'text-blue-500 bg-blue-50', room: 'text-rose-500 bg-rose-50' };
+const typeColors = { appointment: 'text-emerald-500 bg-emerald-50', queue: 'text-amber-500 bg-amber-50', patient: 'text-[#0F766E] bg-teal-50', room: 'text-rose-500 bg-rose-50' };
 const typeRoutes = { appointment: '/appointments', queue: '/queue', patient: '/patients', room: '/dashboard' };
 
 function timeAgo(date) {
@@ -94,8 +94,8 @@ export default function Header({ title, onMenuClick }) {
   }, [filteredNotifs]);
 
   const roleColors = {
-    ADMIN: 'bg-[#e6efff] text-[#003782]',
-    DENTIST: 'bg-[#e6efff] text-[#003782]',
+    ADMIN: 'bg-teal-50 text-[#0F766E]',
+    DENTIST: 'bg-teal-50 text-[#0F766E]',
     ASSISTANT: 'bg-emerald-100 text-emerald-700',
     PATIENT: 'bg-amber-100 text-amber-700',
   };
@@ -113,13 +113,13 @@ export default function Header({ title, onMenuClick }) {
         background: 'rgba(255,255,255,0.72)',
         backdropFilter: 'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
-        borderBottom: '2px solid rgba(0,0,0,0.12)',
-        boxShadow: '0 8px 24px rgba(15,23,42,0.05)',
+        borderBottom: '2px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 8px 24px rgba(15,23,42,0.04)',
       }}>
       <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-4 min-w-0">
             <button onClick={() => { playClick(); onMenuClick?.(); }}
-              className="md:hidden p-2 hover:bg-[rgba(37,99,235,0.08)] rounded-xl text-[#374151] hover:text-[#2563eb] transition-all duration-200 shrink-0">
+              className="md:hidden p-2 hover:bg-teal-50 rounded-xl text-[#374151] hover:text-[#0F766E] transition-all duration-200 shrink-0">
               <Menu size={20} />
             </button>
             <div className="min-w-0">
@@ -131,11 +131,11 @@ export default function Header({ title, onMenuClick }) {
           {user?.role !== 'PATIENT' && (
           <div className="relative" ref={notifRef}>
             <button onClick={() => { playClick(); setNotifOpen(!notifOpen); }}
-              className="relative p-2.5 hover:bg-[rgba(37,99,235,0.08)] rounded-xl transition-all duration-200 text-[#374151] hover:text-[#2563eb] group active:scale-95">
-              <Bell size={20} className={`transition-all duration-200 ${notifOpen ? 'rotate-12 scale-110 text-[#2563eb]' : ''}`} />
+              className="relative p-2.5 hover:bg-teal-50 rounded-xl transition-all duration-200 text-[#374151] hover:text-[#0F766E] group active:scale-95">
+              <Bell size={20} className={`transition-all duration-200 ${notifOpen ? 'rotate-12 scale-110 text-[#0F766E]' : ''}`} />
               {unreadCount > 0 && (
                 <>
-                  <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-[#EF4444]/40 rounded-full animate-ring-expand" />
+                  <span className="absolute -top-1.5 -right-1.5 w-[26px] h-[26px] bg-[#EF4444]/50 rounded-full animate-ring-expand" />
                   <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#EF4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white px-1">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
@@ -158,16 +158,16 @@ export default function Header({ title, onMenuClick }) {
                     </div>
                     {unreadCount > 0 && (
                       <button onClick={() => { playClick(); markAllAsRead(); }}
-                        className="text-xs text-[#2563eb] hover:text-[#1d4ed8] font-medium flex items-center gap-1 transition-colors">
+                        className="text-xs text-[#0F766E] hover:text-[#0D6D65] font-medium flex items-center gap-1 transition-colors">
                         <CheckCircle2 size={12} />
                         Mark all read
                       </button>
                     )}
                   </div>
                   {/* Filter tabs */}
-                  <div ref={tabContainerRef} className="relative flex gap-1 bg-[#2563eb]/10 rounded-lg p-0.5">
+                  <div ref={tabContainerRef} className="relative flex gap-1 bg-teal-50 rounded-lg p-0.5">
                     <div
-                      className="absolute top-0.5 bottom-0.5 bg-[#2563eb] rounded-md shadow-sm transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                      className="absolute top-0.5 bottom-0.5 bg-[#0F766E] rounded-md shadow-sm transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
                       style={{ left: `${sliderStyle.left}px`, width: `${sliderStyle.width}px` }}
                     />
                     {filterTabs.map(tab => (
@@ -181,7 +181,7 @@ export default function Header({ title, onMenuClick }) {
                         {tab.label}
                         {tab.count > 0 && (
                           <span className={`min-w-[14px] h-[14px] text-[8px] font-bold rounded-full flex items-center justify-center px-0.5 transition-colors duration-300 ${
-                            notifFilter === tab.key ? 'bg-white text-[#2563eb]' : 'bg-slate-300 text-slate-700'
+                            notifFilter === tab.key ? 'bg-white text-[#0F766E]' : 'bg-slate-300 text-slate-700'
                           }`}>
                             {tab.count > 9 ? '9+' : tab.count}
                           </span>
@@ -220,7 +220,7 @@ export default function Header({ title, onMenuClick }) {
                           return (
                             <div key={n.id} onClick={() => handleNotifClick(n)}
                               className={`flex items-start gap-3 px-4 py-3 border-b border-slate-50 cursor-pointer transition-all duration-150 hover:bg-slate-50 active:bg-slate-100 ${
-                                !n.read ? 'bg-[#2563eb]/[0.04]' : ''
+                                !n.read ? 'bg-[#0F766E]/[0.04]' : ''
                               }`}>
                               <div className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[n.type] || 'text-slate-400 bg-slate-50'}`}>
                                 <Icon size={15} />
@@ -231,7 +231,7 @@ export default function Header({ title, onMenuClick }) {
                                 </p>
                                 <p className="text-[11px] text-slate-400 mt-1">{timeAgo(n.timestamp)}</p>
                               </div>
-                              {!n.read && <div className="w-2 h-2 bg-[#2563eb] rounded-full mt-2 shrink-0" />}
+                              {!n.read && <div className="w-2 h-2 bg-[#0F766E] rounded-full mt-2 shrink-0" />}
                             </div>
                           );
                         })}
@@ -247,15 +247,15 @@ export default function Header({ title, onMenuClick }) {
           {/* User dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button onClick={() => { playClick(); setDropdownOpen(!dropdownOpen); }}
-              className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-[rgba(37,99,235,0.08)] transition-all duration-200 group active:scale-95">
-              <div className="w-9 h-9 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg shadow-[#2563eb]/20 group-hover:shadow-[#2563eb]/30 transition-shadow">
+              className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-teal-50 transition-all duration-200 group active:scale-95">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#0F766E] to-[#0D6D65] text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg shadow-[#0F766E]/20 group-hover:shadow-[#0F766E]/30 transition-shadow">
                 {user?.name?.charAt(0)}
               </div>
               <div className="hidden sm:block text-left">
                 <div className="text-sm font-semibold text-[#111827] leading-tight">{user?.name}</div>
                 <div className="text-[11px] text-[#6B7280] leading-tight">{user?.role}</div>
               </div>
-              <ChevronDown size={14} className={`text-[#6B7280] transition-all duration-200 ${dropdownOpen ? 'rotate-180 text-[#2563eb]' : ''}`} />
+              <ChevronDown size={14} className={`text-[#6B7280] transition-all duration-200 ${dropdownOpen ? 'rotate-180 text-[#0F766E]' : ''}`} />
             </button>
 
             {dropdownOpen && (

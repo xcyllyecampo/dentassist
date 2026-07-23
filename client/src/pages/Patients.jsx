@@ -50,14 +50,14 @@ export default function Patients() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a85d6]" size={16} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#14B8A6]" size={16} />
             <input
               type="text" placeholder="Search patients..."
               value={search} onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none w-80"
+              className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none w-80"
             />
           </div>
-          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-[#004aad] text-white px-4 py-2 rounded-lg hover:bg-[#003782] transition-colors text-sm font-medium">
+          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-[#0F766E] text-white px-4 py-2 rounded-lg hover:bg-[#0D6D65] transition-colors text-sm font-medium">
             <Plus size={16} /> Add Patient
           </button>
         </div>
@@ -69,7 +69,7 @@ export default function Patients() {
             <div className="py-12 text-center">
               <AlertTriangle size={36} className="mx-auto mb-3 text-red-400" />
               <p className="text-sm text-red-600 mb-3">{error}</p>
-              <button onClick={fetchPatients} className="text-sm text-[#004aad] hover:text-[#002d6b] font-medium">Retry</button>
+              <button onClick={fetchPatients} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button>
             </div>
           ) : (
           <table className="w-full min-w-[640px]">
@@ -93,7 +93,7 @@ export default function Patients() {
                       {p.user?.avatar ? (
                         <img src={p.user.avatar} alt={p.user.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100" />
                       ) : (
-                        <div className="w-8 h-8 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-sm font-bold">
+                        <div className="w-8 h-8 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-sm font-bold">
                           {p.user?.name?.charAt(0)?.toUpperCase()}
                         </div>
                       )}
@@ -108,7 +108,7 @@ export default function Patients() {
                   <td className="px-6 py-4 text-sm text-gray-600">{p.gender || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{p.bloodType || 'N/A'}</td>
                   <td className="px-6 py-4 text-right">
-                    <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-[#004aad] hover:text-[#002d6b] text-sm">
+                    <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-[#0F766E] hover:text-[#064E3B] text-sm">
                       <Eye size={14} /> View
                     </Link>
                   </td>
@@ -136,7 +136,7 @@ export default function Patients() {
                 <TextArea label="Medical History" value={form.medicalHistory} onChange={v => setForm({...form, medicalHistory: v})} />
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-[#004aad] text-white rounded-lg hover:bg-[#003782] text-sm font-medium">Create Patient</button>
+                  <button type="submit" className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Create Patient</button>
                 </div>
               </form>
             </div>
@@ -152,7 +152,7 @@ function Input({ label, type = 'text', required, value, onChange }) {
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <input type={type} required={required} value={value} onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
+        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
     </div>
   );
 }
@@ -162,7 +162,7 @@ function Select({ label, value, onChange, options }) {
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
         <option value="">Select</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -175,7 +175,7 @@ function TextArea({ label, value, onChange }) {
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <textarea value={value} onChange={e => onChange(e.target.value)} rows={2}
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
+        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
     </div>
   );
 }

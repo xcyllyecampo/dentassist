@@ -14,18 +14,18 @@ const ROLE_TABS = [
 
 const ROLES = [
   { value: 'ADMIN', label: 'Admin', color: 'bg-rose-100 text-rose-700' },
-  { value: 'DENTIST', label: 'Dentist', color: 'bg-[#e6efff] text-[#003782]' },
+  { value: 'DENTIST', label: 'Dentist', color: 'bg-[#F0FDFA] text-[#0D6D65]' },
   { value: 'ASSISTANT', label: 'Assistant', color: 'bg-emerald-100 text-emerald-700' },
   { value: 'PATIENT', label: 'Patient', color: 'bg-amber-100 text-amber-700' },
 ];
 
 const AVATAR_COLORS = [
-  'from-[#1a5fb4] to-[#003782]',
+  'from-[#0F766E] to-[#0D6D65]',
   'from-emerald-500 to-teal-600',
   'from-amber-500 to-orange-500',
   'from-rose-500 to-pink-600',
   'from-violet-500 to-purple-600',
-  'from-cyan-500 to-blue-600',
+  'from-teal-500 to-teal-600',
 ];
 
 function getAvatarColor(name) {
@@ -124,7 +124,7 @@ export default function AdminManagement() {
             <p className="text-sm text-slate-500 mt-0.5">{users.length} total users · {counts.STAFF} staff · {counts.PATIENT} patients</p>
           </div>
           <button onClick={() => { playClick(); setEditUser(null); setModalOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#1a5fb4] to-[#003782] text-white rounded-xl text-sm font-semibold shadow-lg shadow-[#c2d5f7]/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#0F766E] to-[#0D6D65] text-white rounded-xl text-sm font-semibold shadow-lg shadow-[#99F6E4]/50 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
             <UserPlus size={16} /> Add User
           </button>
         </div>
@@ -135,13 +135,13 @@ export default function AdminManagement() {
             <button key={tab.key} onClick={() => { playClick(); setActiveTab(tab.key); }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.key
-                  ? 'bg-white text-[#004aad] shadow-sm'
+                  ? 'bg-white text-[#0F766E] shadow-sm'
                   : 'text-slate-500 hover:text-slate-700'
               }`}>
               <tab.icon size={15} />
               {tab.label}
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                activeTab === tab.key ? 'bg-[#004aad] text-white' : 'bg-slate-200 text-slate-500'
+                activeTab === tab.key ? 'bg-[#0F766E] text-white' : 'bg-slate-200 text-slate-500'
               }`}>{counts[tab.key]}</span>
             </button>
           ))}
@@ -152,7 +152,7 @@ export default function AdminManagement() {
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search by name or email..."
-            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all" />
+            className="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all" />
         </div>
 
         {/* Table */}
@@ -232,7 +232,7 @@ export default function AdminManagement() {
                               </button>
                             )}
                             <button onClick={() => { playClick(); setEditUser(user); setModalOpen(true); }}
-                              className="p-2 hover:bg-[#f0f5ff] rounded-lg text-slate-400 hover:text-[#004aad] transition-colors"
+                              className="p-2 hover:bg-[#F0FDFA] rounded-lg text-slate-400 hover:text-[#0F766E] transition-colors"
                               title="Edit user">
                               <Edit2 size={15} />
                             </button>
@@ -418,7 +418,7 @@ function UserModal({ user, onClose, onSave }) {
             </div>
             <div>
               <button type="button" onClick={() => fileInputRef.current?.click()}
-                className="text-sm font-semibold text-[#004aad] hover:text-[#003782] transition-colors">
+                className="text-sm font-semibold text-[#0F766E] hover:text-[#0D6D65] transition-colors">
                 {avatarPreview ? 'Change Photo' : 'Upload Photo'}
               </button>
               <p className="text-[11px] text-slate-400 mt-0.5">JPG, PNG · Max 5MB</p>
@@ -445,7 +445,7 @@ function UserModal({ user, onClose, onSave }) {
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all">
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all">
               <option value="PATIENT">Patient</option>
               <option value="DENTIST">Dentist</option>
               <option value="ASSISTANT">Assistant</option>
@@ -462,7 +462,7 @@ function UserModal({ user, onClose, onSave }) {
               <input type={showPassword ? 'text' : 'password'} value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
                 required={!isEdit}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all pr-10"
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all pr-10"
                 placeholder={isEdit ? '••••••••' : 'Default: password123'} />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
@@ -477,12 +477,12 @@ function UserModal({ user, onClose, onSave }) {
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Birthday</label>
                 <input type="date" value={form.dob} onChange={e => setForm({ ...form, dob: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all" />
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Gender</label>
                 <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all">
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all">
                   <option value="">Select</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -492,7 +492,7 @@ function UserModal({ user, onClose, onSave }) {
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Blood Type</label>
                 <select value={form.bloodType} onChange={e => setForm({ ...form, bloodType: e.target.value })}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all">
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all">
                   <option value="">Select</option>
                   {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -523,7 +523,7 @@ function UserModal({ user, onClose, onSave }) {
               Cancel
             </button>
             <button type="submit" disabled={saving || (isEdit && !consentChecked)}
-              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#1a5fb4] to-[#003782] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#0F766E] to-[#0D6D65] text-white rounded-xl text-sm font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create User'}
             </button>
           </div>
@@ -537,7 +537,7 @@ function Input({ label, ...props }) {
   return (
     <div>
       <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">{label}</label>
-      <input {...props} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#004aad]/20 focus:border-[#4a85d6] outline-none transition-all" />
+      <input {...props} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all" />
     </div>
   );
 }

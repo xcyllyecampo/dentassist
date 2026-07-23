@@ -34,13 +34,13 @@ export function ToastProvider({ children }) {
   const icons = {
     success: <CheckCircle size={18} className="text-emerald-500 shrink-0" />,
     error: <AlertTriangle size={18} className="text-rose-500 shrink-0" />,
-    info: <Info size={18} className="text-[#1a5fb4] shrink-0" />,
+    info: <Info size={18} className="text-[#0F766E] shrink-0" />,
   };
 
   const styles = {
     success: 'bg-emerald-50 border-emerald-200/60 text-emerald-800',
     error: 'bg-rose-50 border-rose-200/60 text-rose-800',
-    info: 'bg-[#f0f5ff] border-[#c2d5f7]/60 text-[#002d6b]',
+    info: 'bg-[#F0FDFA] border-[#99F6E4]/60 text-[#064E3B]',
   };
 
   return (

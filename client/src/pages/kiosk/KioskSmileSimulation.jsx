@@ -7,7 +7,7 @@ import { Sparkles, Camera, Brain, AlertTriangle, CheckCircle, TrendingUp, Clock,
 
 const TREATMENT_TYPES = [
   { value: 'whitening', label: 'Teeth Whitening', icon: '✨', desc: 'Brighten your smile', gradient: 'from-amber-400 to-amber-500' },
-  { value: 'veneers', label: 'Porcelain Veneers', icon: '🦷', desc: 'Perfect shape & color', gradient: 'from-blue-400 to-blue-500' },
+  { value: 'veneers', label: 'Porcelain Veneers', icon: '🦷', desc: 'Perfect shape & color', gradient: 'from-teal-400 to-teal-500' },
   { value: 'alignment', label: 'Teeth Alignment', icon: '📐', desc: 'Straighter teeth', gradient: 'from-purple-400 to-purple-500' },
 ];
 

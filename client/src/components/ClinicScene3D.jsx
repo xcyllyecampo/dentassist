@@ -288,7 +288,7 @@ function ConsultationRoom() {
       {/* Room floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
         <planeGeometry args={[4.5, 4]} />
-        <meshStandardMaterial color="#f0f5ff" roughness={0.4} />
+        <meshStandardMaterial color="#F0FDFA" roughness={0.4} />
       </mesh>
       {/* Room label */}
       <Text position={[0, 2.2, -1.8]} fontSize={0.28} color="#0369a1" fontWeight="bold">
@@ -405,7 +405,7 @@ function TreatmentRoom({ room, position, onClick, isSelected }) {
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
         <planeGeometry args={[5, 4.5]} />
-        <meshStandardMaterial color={isSelected ? '#dbeafe' : '#f0f5ff'} roughness={0.3} />
+        <meshStandardMaterial color={isSelected ? '#dbeafe' : '#F0FDFA'} roughness={0.3} />
       </mesh>
 
       {/* Room label */}
@@ -888,7 +888,7 @@ export default function ClinicScene({ rooms, queue, selectedRoom, onSelectRoom }
       <pointLight position={[-8, 5, -5]} intensity={0.3} color="#bfdbfe" />
       <pointLight position={[8, 5, 5]} intensity={0.3} color="#bfdbfe" />
       <pointLight position={[0, 3, 0]} intensity={0.2} color="#fef3c7" />
-      <fog attach="fog" args={['#f0f5ff', 30, 55]} />
+      <fog attach="fog" args={['#F0FDFA', 30, 55]} />
 
       <Floor />
       <Walls />

@@ -62,13 +62,13 @@ export default function TreatmentSupport() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Patient Age</label>
                 <input type="number" value={patientAge} onChange={e => setPatientAge(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none"
                   placeholder="e.g. 35" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
                 <select value={patientGender} onChange={e => setPatientGender(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                   <option value="">Select</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -80,7 +80,7 @@ export default function TreatmentSupport() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Medical History</label>
               <input type="text" value={medicalHistory} onChange={e => setMedicalHistory(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none"
                 placeholder="e.g. Diabetes, allergies, current medications" />
             </div>
 
@@ -90,7 +90,7 @@ export default function TreatmentSupport() {
                 <button key={id} onClick={() => toggleSymptom(id)}
                   className={`p-3 rounded-lg border text-left text-sm transition-all ${
                     symptoms.includes(id)
-                      ? 'bg-[#e6efff] border-[#4a85d6] text-[#002d6b]'
+                      ? 'bg-[#F0FDFA] border-[#14B8A6] text-[#064E3B]'
                       : 'bg-white border-slate-200 text-gray-600 hover:bg-slate-50'
                   }`}>
                   <div className="flex items-center justify-between">
@@ -106,12 +106,12 @@ export default function TreatmentSupport() {
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Additional Examination Findings</label>
               <textarea value={examination} onChange={e => setExamination(e.target.value)} rows={4}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none"
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none"
                 placeholder="e.g., Visible cavity on tooth #19, gum inflammation, etc." />
             </div>
 
             <button onClick={handleAnalyze} disabled={symptoms.length === 0 || loading}
-              className="w-full bg-[#004aad] text-white py-3 rounded-lg font-medium hover:bg-[#003782] disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full bg-[#0F766E] text-white py-3 rounded-lg font-medium hover:bg-[#0D6D65] disabled:opacity-50 flex items-center justify-center gap-2">
               <Brain size={18} />
               {loading ? 'Analyzing...' : 'Analyze & Suggest Treatments'}
             </button>

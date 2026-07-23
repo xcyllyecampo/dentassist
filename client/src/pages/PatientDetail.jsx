@@ -12,7 +12,7 @@ import { playClick, playSuccess, playError } from '../lib/sounds';
 const TOOTH_STATUSES = ['HEALTHY', 'FILLING', 'CROWN', 'DECAYED', 'MISSING', 'IMPLANT', 'BRIDGE', 'TREATED'];
 const STATUS_COLORS = {
   HEALTHY: 'bg-green-100 text-green-700 border-green-200',
-  FILLING: 'bg-blue-100 text-blue-700 border-blue-200',
+  FILLING: 'bg-teal-100 text-teal-700 border-teal-200',
   CROWN: 'bg-purple-100 text-purple-700 border-purple-200',
   DECAYED: 'bg-red-100 text-red-700 border-red-200',
   MISSING: 'bg-gray-200 text-gray-500 border-gray-300',
@@ -168,7 +168,7 @@ export default function PatientDetail() {
   };
 
   if (loading) return <Layout><Header title="Patient Detail" /><Spinner className="py-20" /></Layout>;
-  if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-[#004aad] hover:text-[#002d6b] font-medium">Retry</button></div></Layout>;
+  if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button></div></Layout>;
 
   const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays', 'rewards'];
 
@@ -182,7 +182,7 @@ export default function PatientDetail() {
         </button>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-2xl font-bold">
+            <div className="w-16 h-16 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-2xl font-bold">
               {patient.user?.name?.charAt(0)}
             </div>
             <div>
@@ -200,7 +200,7 @@ export default function PatientDetail() {
         <div className="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
           {tabs.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab ? 'bg-slate-50 text-[#003782] border-b-2 border-[#004aad]' : 'text-gray-500 hover:text-[#004aad]'}`}>
+              className={`px-4 py-2 text-sm font-medium capitalize rounded-t-lg transition-colors whitespace-nowrap ${activeTab === tab ? 'bg-slate-50 text-[#0D6D65] border-b-2 border-[#0F766E]' : 'text-gray-500 hover:text-[#0F766E]'}`}>
               {tab}
             </button>
           ))}
@@ -238,8 +238,8 @@ export default function PatientDetail() {
                   <div key={tooth.id}
                     onClick={() => { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); }}
                     className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold cursor-pointer transition-all hover:scale-110 ${
-                      selectedTooth?.toothNumber === tooth.toothNumber ? 'ring-2 ring-[#004aad] ring-offset-2 scale-110' : ''
-                    } ${STATUS_COLORS[tooth.status] || 'bg-[#e6efff] text-[#003782] border border-slate-200'}`}>
+                      selectedTooth?.toothNumber === tooth.toothNumber ? 'ring-2 ring-[#0F766E] ring-offset-2 scale-110' : ''
+                    } ${STATUS_COLORS[tooth.status] || 'bg-[#F0FDFA] text-[#0D6D65] border border-slate-200'}`}>
                     <span>#{tooth.toothNumber}</span>
                     <span className="text-[10px] font-normal">{tooth.status}</span>
                   </div>
@@ -261,14 +261,14 @@ export default function PatientDetail() {
                   <h4 className="font-bold text-slate-900 mb-3">Tooth #{selectedTooth.toothNumber} — Current: {selectedTooth.status}</h4>
                   <textarea value={toothNote} onChange={(e) => setToothNote(e.target.value)}
                     placeholder="Notes (optional)" rows={2}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-[#004aad]" />
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-[#0F766E]" />
                   <div className="flex flex-wrap gap-2">
                     {TOOTH_STATUSES.map(s => (
                       <button key={s} onClick={() => updateToothStatus(selectedTooth.toothNumber, s)}
                         className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                           selectedTooth.status === s
-                            ? 'bg-[#004aad] text-white border-[#004aad]'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-[#004aad] hover:text-[#004aad]'
+                            ? 'bg-[#0F766E] text-white border-[#0F766E]'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-[#0F766E] hover:text-[#0F766E]'
                         }`}>
                         {s}
                       </button>
@@ -300,7 +300,7 @@ export default function PatientDetail() {
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       a.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                       a.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
-                      'bg-[#e6efff] text-[#003782]'
+                      'bg-[#F0FDFA] text-[#0D6D65]'
                     }`}>{a.status}</span>
                   </div>
                 ))
@@ -313,7 +313,7 @@ export default function PatientDetail() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-900">Treatments</h3>
                 <button onClick={() => { setShowTreatmentForm(true); setEditTreatment(null); setTreatmentForm({ procedure: '', description: '', notes: '', cost: '', toothId: '' }); }}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#004aad] text-white text-sm rounded-lg hover:bg-[#003782] transition-colors">
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#0F766E] text-white text-sm rounded-lg hover:bg-[#0D6D65] transition-colors">
                   <Plus size={14} /> Add Treatment
                 </button>
               </div>
@@ -341,7 +341,7 @@ export default function PatientDetail() {
                           setEditTreatment(t);
                           setTreatmentForm({ procedure: t.procedure, description: t.description || '', notes: t.notes || '', cost: t.cost || '', toothId: t.toothId || '' });
                           setShowTreatmentForm(true);
-                        }} className="p-1.5 text-gray-400 hover:text-[#004aad] rounded-lg hover:bg-white transition-colors">
+                        }} className="p-1.5 text-gray-400 hover:text-[#0F766E] rounded-lg hover:bg-white transition-colors">
                           <Pencil size={14} />
                         </button>
                         <button onClick={() => deleteTreatment(t.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
@@ -364,7 +364,7 @@ export default function PatientDetail() {
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Procedure *</label>
                         <select value={treatmentForm.procedure} onChange={(e) => setTreatmentForm({ ...treatmentForm, procedure: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]">
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]">
                           <option value="">Select procedure</option>
                           <option value="Dental Cleaning">Dental Cleaning</option>
                           <option value="Filling">Filling</option>
@@ -384,21 +384,21 @@ export default function PatientDetail() {
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
                         <input type="text" value={treatmentForm.description} onChange={(e) => setTreatmentForm({ ...treatmentForm, description: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="Brief description" />
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" placeholder="Brief description" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Cost (₱)</label>
                         <input type="number" value={treatmentForm.cost} onChange={(e) => setTreatmentForm({ ...treatmentForm, cost: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="0.00" />
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" placeholder="0.00" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
                         <textarea value={treatmentForm.notes} onChange={(e) => setTreatmentForm({ ...treatmentForm, notes: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" rows={2} placeholder="Additional notes" />
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" rows={2} placeholder="Additional notes" />
                       </div>
                       <button onClick={submitTreatment}
                         disabled={!treatmentForm.procedure}
-                        className="w-full py-2 bg-[#004aad] text-white text-sm font-medium rounded-lg hover:bg-[#003782] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                        className="w-full py-2 bg-[#0F766E] text-white text-sm font-medium rounded-lg hover:bg-[#0D6D65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
                         <Save size={14} /> {editTreatment ? 'Update Treatment' : 'Add Treatment'}
                       </button>
                     </div>
@@ -413,7 +413,7 @@ export default function PatientDetail() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-900">Prescriptions</h3>
                 <button onClick={() => { setShowPrescriptionForm(true); setEditPrescription(null); setPrescriptionForm({ medication: '', dosage: '', frequency: 'Once daily', duration: '', notes: '', treatmentId: '' }); }}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#004aad] text-white text-sm rounded-lg hover:bg-[#003782] transition-colors">
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#0F766E] text-white text-sm rounded-lg hover:bg-[#0D6D65] transition-colors">
                   <Plus size={14} /> Add Prescription
                 </button>
               </div>
@@ -440,7 +440,7 @@ export default function PatientDetail() {
                           setEditPrescription(p);
                           setPrescriptionForm({ medication: p.medication, dosage: p.dosage, frequency: p.frequency, duration: p.duration, notes: p.notes || '', treatmentId: p.treatmentId || '' });
                           setShowPrescriptionForm(true);
-                        }} className="p-1.5 text-gray-400 hover:text-[#004aad] rounded-lg hover:bg-white transition-colors">
+                        }} className="p-1.5 text-gray-400 hover:text-[#0F766E] rounded-lg hover:bg-white transition-colors">
                           <Pencil size={14} />
                         </button>
                         <button onClick={() => deletePrescription(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
@@ -463,35 +463,35 @@ export default function PatientDetail() {
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Medication *</label>
                         <input type="text" value={prescriptionForm.medication} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, medication: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="e.g. Amoxicillin 500mg" />
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" placeholder="e.g. Amoxicillin 500mg" />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Dosage *</label>
                           <input type="text" value={prescriptionForm.dosage} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, dosage: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="e.g. 1 tablet" />
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" placeholder="e.g. 1 tablet" />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Duration *</label>
                           <input type="text" value={prescriptionForm.duration} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, duration: e.target.value })}
-                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" placeholder="e.g. 7 days" />
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" placeholder="e.g. 7 days" />
                         </div>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Frequency *</label>
                         <select value={prescriptionForm.frequency} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, frequency: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]">
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]">
                           {PRESCRIPTION_FREQUENCY.map(f => <option key={f} value={f}>{f}</option>)}
                         </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
                         <textarea value={prescriptionForm.notes} onChange={(e) => setPrescriptionForm({ ...prescriptionForm, notes: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#004aad]" rows={2} placeholder="Special instructions" />
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" rows={2} placeholder="Special instructions" />
                       </div>
                       <button onClick={submitPrescription}
                         disabled={!prescriptionForm.medication || !prescriptionForm.dosage || !prescriptionForm.duration}
-                        className="w-full py-2 bg-[#004aad] text-white text-sm font-medium rounded-lg hover:bg-[#003782] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                        className="w-full py-2 bg-[#0F766E] text-white text-sm font-medium rounded-lg hover:bg-[#0D6D65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
                         <Save size={14} /> {editPrescription ? 'Update Prescription' : 'Add Prescription'}
                       </button>
                     </div>
@@ -521,7 +521,7 @@ export default function PatientDetail() {
                       <div className="p-3">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs text-gray-500">{new Date(img.createdAt).toLocaleDateString()}</span>
-                          <span className="text-xs px-2 py-0.5 bg-[#e6efff] text-[#003782] rounded-full">{img.fileType}</span>
+                          <span className="text-xs px-2 py-0.5 bg-[#F0FDFA] text-[#0D6D65] rounded-full">{img.fileType}</span>
                         </div>
                         {img.analysis?.findings?.length > 0 && (
                           <div className="mt-2 space-y-1">
@@ -544,10 +544,10 @@ export default function PatientDetail() {
           {activeTab === 'rewards' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-[#1a5fb4] to-[#004aad] rounded-xl p-5 text-white">
+                <div className="bg-gradient-to-br from-[#0F766E] to-[#0F766E] rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><Star size={20} /><span className="font-medium">Loyalty Points</span></div>
                   <div className="text-3xl font-bold">{loyalty?.points || 0}</div>
-                  <div className="text-[#e6efff] text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
+                  <div className="text-[#F0FDFA] text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
                 </div>
                 <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><Award size={20} /><span className="font-medium">Badges Earned</span></div>
@@ -596,14 +596,14 @@ export default function PatientDetail() {
                     const earned = badges.some(pb => pb.badgeId === b.id);
                     return (
                       <button key={b.id} onClick={() => !earned && awardBadge(b.id)} disabled={earned || awarding === b.id}
-                        className={`rounded-xl p-4 text-center transition-all ${earned ? 'bg-green-50 border-2 border-green-300 cursor-default' : 'bg-gray-50 border border-gray-200 hover:border-[#4a85d6] hover:bg-slate-50 cursor-pointer'}`}>
+                        className={`rounded-xl p-4 text-center transition-all ${earned ? 'bg-green-50 border-2 border-green-300 cursor-default' : 'bg-gray-50 border border-gray-200 hover:border-[#14B8A6] hover:bg-slate-50 cursor-pointer'}`}>
                         <div className="text-3xl mb-2">{b.icon}</div>
                         <div className="font-medium text-slate-900 text-sm">{b.name}</div>
                         <div className="text-xs text-gray-500 mt-1">{b.description}</div>
                         {earned ? (
                           <div className="flex items-center justify-center gap-1 text-green-600 text-xs mt-2"><Check size={12} /> Earned</div>
                         ) : (
-                          <div className="text-xs text-[#004aad] mt-2">{b.threshold} pts</div>
+                          <div className="text-xs text-[#0F766E] mt-2">{b.threshold} pts</div>
                         )}
                       </button>
                     );
@@ -618,7 +618,7 @@ export default function PatientDetail() {
                     {loyalty.transactions.map(t => (
                       <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <Gift size={14} className="text-[#004aad]" />
+                          <Gift size={14} className="text-[#0F766E]" />
                           <span className="text-sm text-slate-900">{t.description}</span>
                         </div>
                         <span className="text-sm font-medium text-green-600">+{t.amount}</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, Eye, EyeOff, QrCode } from 'lucide-react';
@@ -6,7 +6,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState('login');
+  const [phase, setPhase] = useState('idle');
   const [form, setForm] = useState({ email: '', password: '', name: '', role: 'PATIENT' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,37 @@ export default function Login() {
   const navigate = useNavigate();
   const emailRef = useRef(null);
   const nameRef = useRef(null);
+  const loginTabRef = useRef(null);
+  const registerTabRef = useRef(null);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const isLogin = mode === 'login';
+
+  const updateIndicator = useCallback(() => {
+    const activeRef = isLogin ? loginTabRef : registerTabRef;
+    if (activeRef.current) {
+      const parent = activeRef.current.parentElement;
+      const rect = activeRef.current.getBoundingClientRect();
+      const parentRect = parent.getBoundingClientRect();
+      setIndicator({ left: rect.left - parentRect.left, width: rect.width });
+    }
+  }, [isLogin]);
+
+  useEffect(() => { updateIndicator(); }, [updateIndicator]);
+
+  const switchTo = useCallback((target) => {
+    if (mode === target || phase !== 'idle') return;
+    playClick();
+    setError('');
+
+    const exitClass = target === 'login' ? 'login-form-exit-right' : 'login-form-exit-left';
+    setPhase(exitClass);
+
+    setTimeout(() => {
+      setMode(target);
+      setPhase('login-form-enter');
+      setTimeout(() => setPhase('idle'), 350);
+    }, 200);
+  }, [mode, phase]);
 
   useEffect(() => {
     fetch('/api/server-info')
@@ -37,19 +69,19 @@ export default function Login() {
   }, []);
 
   useEffect(() => {
-    if (isLogin) {
+    if (mode === 'login') {
       emailRef.current?.focus();
     } else {
       nameRef.current?.focus();
     }
-  }, [isLogin]);
+  }, [mode, phase]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      if (isLogin) {
+      if (mode === 'login') {
         await login(form.email, form.password);
       } else {
         await register(form);
@@ -66,129 +98,131 @@ export default function Login() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
-      {/* Video background */}
       <video autoPlay loop muted playsInline
         className="absolute inset-0 w-full h-full object-cover"
         poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%230f172a' width='1920' height='1080'/%3E%3C/svg%3E"
         src="/videos/DentASSISTadvertisementvideo.mp4" />
 
-      {/* Dark overlay for readability */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Login card */}
       <div className="relative z-10 w-full max-w-[403px] animate-slide-up">
-        {/* Logo above card */}
         <div className="mb-5 text-center">
           <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-[115px] mx-auto object-contain drop-shadow-lg" />
         </div>
         <div className="glass-card rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
           {/* Tabs */}
-          <div className="flex border-b border-slate-100 mx-6">
-            <button onClick={() => { playClick(); setIsLogin(true); setAgreedToTerms(false); }}
-              className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${
-                isLogin ? 'text-[#004aad] border-[#004aad]' : 'text-slate-400 border-transparent hover:text-slate-600'
-              }`}>
-              <LogIn size={15} className="inline mr-1.5" /> Sign In
-            </button>
-            <button onClick={() => { playClick(); setIsLogin(false); }}
-              className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${
-                !isLogin ? 'text-[#004aad] border-[#004aad]' : 'text-slate-400 border-transparent hover:text-slate-600'
-              }`}>
-              <UserPlus size={15} className="inline mr-1.5" /> Register
-            </button>
+          <div className="relative mx-6 border-b border-slate-100">
+            <div className="flex">
+              <button ref={loginTabRef} onClick={() => { setAgreedToTerms(false); switchTo('login'); }}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
+                  isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
+                }`}>
+                <LogIn size={15} className="inline mr-1.5" /> Sign In
+              </button>
+              <button ref={registerTabRef} onClick={() => switchTo('register')}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
+                  !isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
+                }`}>
+                <UserPlus size={15} className="inline mr-1.5" /> Register
+              </button>
+            </div>
+            <div className="absolute bottom-0 h-[2.5px] bg-[#0F766E] rounded-full transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+              style={{ left: indicator.left, width: indicator.width }} />
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {error && (
-              <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl border border-rose-100 animate-scale-in flex items-center gap-2">
-                <span className="text-rose-400">⚠</span> {error}
+          <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-hidden">
+            <div className={phase}>
+              {error && (
+                <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl border border-rose-100 animate-scale-in flex items-center gap-2 mb-4">
+                  <span className="text-rose-400">⚠</span> {error}
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="animate-slide-up">
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
+                  <input type="text" required value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    ref={nameRef}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                    placeholder="" />
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
+                  <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all">
+                    <option value="PATIENT">Patient</option>
+                    <option value="DENTIST">Dentist</option>
+                    <option value="ASSISTANT">Assistant</option>
+                  </select>
+                </div>
+              )}
+
+              {!isLogin && (
+                <div className="animate-slide-up" style={{ animationDelay: '0.07s' }}>
+                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
+                  <input type="tel" required value={form.phone || ''}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                    placeholder="XXX-XXX-XXXX" />
+                </div>
+              )}
+
+              <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
+                <input type="email" required value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  ref={emailRef}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                  placeholder="you@example.com" />
               </div>
-            )}
 
-            {!isLogin && (
-              <div className="animate-slide-up">
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
-                <input type="text" required value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  ref={nameRef}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
-                  placeholder="" />
+              <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
+                <div className="relative">
+                  <input type={showPassword ? 'text' : 'password'} required value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all pr-10"
+                    placeholder="••••••••" />
+                  <button type="button" onClick={() => { playClick(); setShowPassword(!showPassword); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
-            )}
 
-            {!isLogin && (
-              <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
-                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all">
-                  <option value="PATIENT">Patient</option>
-                  <option value="DENTIST">Dentist</option>
-                  <option value="ASSISTANT">Assistant</option>
-                </select>
-              </div>
-            )}
+              {!isLogin && (
+                <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input type="checkbox" checked={agreedToTerms}
+                      onChange={(e) => { playClick(); setAgreedToTerms(e.target.checked); }}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0F766E] focus:ring-[#0F766E]/30 cursor-pointer" />
+                    <span className="text-[11px] text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
+                      I have read and agree to the DentAssist Terms and Agreement and Privacy Policy, and I consent to the collection and processing of my personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).
+                    </span>
+                  </label>
+                </div>
+              )}
 
-            {!isLogin && (
-              <div className="animate-slide-up" style={{ animationDelay: '0.07s' }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
-                <input type="tel" required value={form.phone || ''}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
-                  placeholder="XXX-XXX-XXXX" />
-              </div>
-            )}
-
-            <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
-              <input type="email" required value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                ref={emailRef}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
-                placeholder="you@example.com" />
-            </div>
-
-            <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
-              <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} required value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all pr-10"
-                  placeholder="••••••••" />
-                <button type="button" onClick={() => { playClick(); setShowPassword(!showPassword); }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {!isLogin && (
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input type="checkbox" checked={agreedToTerms}
-                    onChange={(e) => { playClick(); setAgreedToTerms(e.target.checked); }}
-                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#004aad] focus:ring-[#004aad]/30 cursor-pointer" />
-                  <span className="text-[11px] text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
-                    I have read and agree to the DentAssist Terms and Agreement and Privacy Policy, and I consent to the collection and processing of my personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).
+              <button type="submit" disabled={loading || (!isLogin && !agreedToTerms)}
+                className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Please wait...
                   </span>
-                </label>
-              </div>
-            )}
+                ) : isLogin ? 'Sign In' : 'Create Account'}
+              </button>
 
-            <button type="submit" disabled={loading || (!isLogin && !agreedToTerms)}
-              className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                  Please wait...
+              <div className="text-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
+                <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-mono text-[11px]">
+                  Demo: admin@dentassist.com / password123
                 </span>
-              ) : isLogin ? 'Sign In' : 'Create Account'}
-            </button>
-
-            <div className="text-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
-              <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-mono text-[11px]">
-                Demo: admin@dentassist.com / password123
-              </span>
+              </div>
             </div>
           </form>
         </div>
@@ -205,7 +239,7 @@ export default function Login() {
                 value={qrUrl}
                 size={qrSize - 24}
                 bgColor="#ffffff"
-                fgColor="#003782"
+                fgColor="#0D6D65"
                 level="M"
                 includeMargin={false}
               />

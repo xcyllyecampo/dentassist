@@ -194,7 +194,7 @@ export default function KioskBookAppointment() {
                 onClick={function() { playClick(); setSelectedDentist(null); }}
                 className={"w-full p-3 rounded-xl border-2 text-center transition-all " + (
                   !selectedDentist
-                    ? "border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/20"
+                    ? "border-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20"
                     : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
                 )}>
                 <div className="text-white font-bold text-sm">No Preference</div>
@@ -206,10 +206,10 @@ export default function KioskBookAppointment() {
                     onClick={function() { playClick(); setSelectedDentist(d); }}
                     className={"w-full p-3 rounded-xl border-2 flex items-center gap-3 text-left transition-all " + (
                       selectedDentist?.id === d.id
-                        ? "border-blue-400 bg-blue-500/20 shadow-lg shadow-blue-500/20"
+                        ? "border-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20"
                         : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
                     )}>
-                    <div className="w-10 h-10 bg-blue-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20">
+                    <div className="w-10 h-10 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20">
                       <Stethoscope size={18} />
                     </div>
                     <div>
@@ -218,7 +218,7 @@ export default function KioskBookAppointment() {
                     </div>
                     {selectedDentist?.id === d.id && (
                       <div className="ml-auto">
-                        <CheckCircle size={18} className="text-blue-400" />
+                        <CheckCircle size={18} className="text-teal-400" />
                       </div>
                     )}
                   </button>
@@ -234,7 +234,7 @@ export default function KioskBookAppointment() {
               </button>
               <button
                 onClick={function() { playClick(); setStep(3); }}
-                className="flex-1 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-base hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all">
+                className="flex-1 py-3.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl font-bold text-base hover:from-teal-600 hover:to-teal-700 shadow-lg shadow-teal-500/30 flex items-center justify-center gap-2 transition-all">
                 Next <ChevronRight size={16} />
               </button>
             </div>
@@ -291,7 +291,7 @@ export default function KioskBookAppointment() {
                           : disabled
                             ? "text-white/15 cursor-not-allowed"
                             : isSelected
-                              ? "bg-white text-[#004aad] font-bold"
+                              ? "bg-white text-[#0F766E] font-bold"
                               : "text-white/70 hover:bg-white/15 hover:text-white font-medium"
                       )}>
                       {cell.day}
@@ -321,7 +321,7 @@ export default function KioskBookAppointment() {
                           onClick={function() { playClick(); setSelectedTime(t); setStep(4); }}
                           className={"py-2.5 rounded-lg text-sm font-medium transition-all " + (
                             !available ? "bg-white/5 text-white/20 cursor-not-allowed line-through" :
-                            selectedTime === t ? "bg-white text-[#004aad]" :
+                            selectedTime === t ? "bg-white text-[#0F766E]" :
                             "bg-white/10 text-white hover:bg-white/20"
                           )}>{t}</button>
                       );
@@ -341,7 +341,7 @@ export default function KioskBookAppointment() {
             <h2 className="text-xl font-bold text-white mb-6 text-center">Confirm Booking</h2>
             <div className="bg-white/10 rounded-xl border border-white/20 p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/30 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-teal-500/30 rounded-lg flex items-center justify-center">
                   <User size={20} className="text-white" />
                 </div>
                 <div>
@@ -401,7 +401,7 @@ export default function KioskBookAppointment() {
               </div>
             </div>
             <button onClick={handleBook} disabled={submitting}
-              className="w-full mt-6 bg-white text-[#004aad] font-bold py-4 rounded-xl text-lg hover:bg-white/90 transition-all active:scale-[0.98] disabled:opacity-50">
+              className="w-full mt-6 bg-white text-[#0F766E] font-bold py-4 rounded-xl text-lg hover:bg-white/90 transition-all active:scale-[0.98] disabled:opacity-50">
               {submitting ? 'Booking...' : 'Confirm Appointment'}
             </button>
           </div>
