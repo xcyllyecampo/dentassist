@@ -135,7 +135,7 @@ export default function Header({ title, onMenuClick }) {
               <Bell size={20} className={`transition-all duration-200 ${notifOpen ? 'rotate-12 scale-110 text-[#2563eb]' : ''}`} />
               {unreadCount > 0 && (
                 <>
-                  <span className="absolute -top-1.5 -right-1.5 w-[26px] h-[26px] bg-[#EF4444]/50 rounded-full animate-ring-expand" />
+                  <span className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-[#EF4444]/40 rounded-full animate-ring-expand" />
                   <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#EF4444] text-white text-[10px] font-bold rounded-full flex items-center justify-center ring-2 ring-white px-1">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
