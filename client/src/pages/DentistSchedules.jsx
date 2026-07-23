@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Spinner from '../components/Spinner';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Calendar, Plus, Trash2, X, AlertTriangle, Clock, Stethoscope } from 'lucide-react';
@@ -171,7 +171,7 @@ export default function DentistSchedules() {
                   >
                     <div className="flex items-center gap-3">
                       {dent?.avatar ? (
-                        <img src={dent.avatar} alt={dentistName}
+                        <img src={authUrl(dent.avatar)} alt={dentistName}
                           className={`w-12 h-12 rounded-xl object-cover ring-2 transition-all ${
                             isActive ? 'ring-[#0F766E]/30' : 'ring-slate-200'
                           }`} />

@@ -5,6 +5,13 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+export function authUrl(path) {
+  if (!path) return path;
+  const token = localStorage.getItem('token');
+  if (!path.startsWith('/')) path = `/${path}`;
+  return `${path}?token=${encodeURIComponent(token || '')}`;
+}
+
 let isRefreshing = false;
 let failedQueue = [];
 

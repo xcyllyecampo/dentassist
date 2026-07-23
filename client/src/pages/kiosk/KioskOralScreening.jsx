@@ -36,7 +36,7 @@ export default function KioskOralScreening() {
       setResult(res.data);
       playSuccess();
     } catch (err) {
-      toast.error('Error analyzing image. Please try again.');
+      toast.error(err.response?.data?.error || 'Error analyzing image. Please try again.');
       playError();
     }
     setAnalyzing(false);
@@ -75,7 +75,7 @@ export default function KioskOralScreening() {
           {/* Photo panel */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
             <h3 className="text-white font-bold mb-3 text-sm">Your Photo</h3>
-            <img src={preview} alt="Oral" className="w-full rounded-xl" />
+            <img src={preview} alt="Oral" className="w-full max-h-[340px] object-contain rounded-xl" />
             <button
               onClick={() => { playClick(); handleAnalyze(); }}
               disabled={analyzing}

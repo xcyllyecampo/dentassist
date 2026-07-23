@@ -7,7 +7,6 @@ import { playClick, playSuccess, playError } from '../lib/sounds';
 
 export default function Login() {
   const [mode, setMode] = useState('login');
-  const [phase, setPhase] = useState('idle');
   const [form, setForm] = useState({ email: '', password: '', name: '', role: 'PATIENT' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,13 +14,14 @@ export default function Login() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
   const [qrSize, setQrSize] = useState(240);
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
   const navigate = useNavigate();
   const emailRef = useRef(null);
   const nameRef = useRef(null);
   const loginTabRef = useRef(null);
   const registerTabRef = useRef(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const [welcomeUser, setWelcomeUser] = useState(null);
   const isLogin = mode === 'login';
 
   const updateIndicator = useCallback(() => {
@@ -35,21 +35,6 @@ export default function Login() {
   }, [isLogin]);
 
   useEffect(() => { updateIndicator(); }, [updateIndicator]);
-
-  const switchTo = useCallback((target) => {
-    if (mode === target || phase !== 'idle') return;
-    playClick();
-    setError('');
-
-    const exitClass = target === 'login' ? 'login-form-exit-right' : 'login-form-exit-left';
-    setPhase(exitClass);
-
-    setTimeout(() => {
-      setMode(target);
-      setPhase('login-form-enter');
-      setTimeout(() => setPhase('idle'), 350);
-    }, 200);
-  }, [mode, phase]);
 
   useEffect(() => {
     fetch('/api/server-info')
@@ -74,20 +59,22 @@ export default function Login() {
     } else {
       nameRef.current?.focus();
     }
-  }, [mode, phase]);
+  }, [mode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
+      let res;
       if (mode === 'login') {
-        await login(form.email, form.password);
+        res = await login(form.email, form.password);
       } else {
-        await register(form);
+        res = await register(form);
       }
       playSuccess();
-      navigate('/dashboard');
+      setWelcomeUser(res.user);
+      setTimeout(() => navigate('/dashboard'), 2600);
     } catch (err) {
       playError();
       setError(err.response?.data?.error || 'Something went wrong');
@@ -110,16 +97,16 @@ export default function Login() {
           <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-[115px] mx-auto object-contain drop-shadow-lg" />
         </div>
         <div className="glass-card rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
-          {/* Tabs */}
+          {/* Tabs with sliding indicator */}
           <div className="relative mx-6 border-b border-slate-100">
             <div className="flex">
-              <button ref={loginTabRef} onClick={() => { setAgreedToTerms(false); switchTo('login'); }}
+              <button ref={loginTabRef} onClick={() => { playClick(); setAgreedToTerms(false); setError(''); setMode('login'); }}
                 className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
                   isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
                 }`}>
                 <LogIn size={15} className="inline mr-1.5" /> Sign In
               </button>
-              <button ref={registerTabRef} onClick={() => switchTo('register')}
+              <button ref={registerTabRef} onClick={() => { playClick(); setError(''); setMode('register'); }}
                 className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
                   !isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
                 }`}>
@@ -131,98 +118,96 @@ export default function Login() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-hidden">
-            <div className={phase}>
-              {error && (
-                <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl border border-rose-100 animate-scale-in flex items-center gap-2 mb-4">
-                  <span className="text-rose-400">⚠</span> {error}
-                </div>
-              )}
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {error && (
+              <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl border border-rose-100 animate-scale-in flex items-center gap-2 mb-4">
+                <span className="text-rose-400">⚠</span> {error}
+              </div>
+            )}
 
-              {!isLogin && (
-                <div className="animate-slide-up">
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
-                  <input type="text" required value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    ref={nameRef}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
-                    placeholder="" />
-                </div>
-              )}
-
-              {!isLogin && (
-                <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
-                  <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all">
-                    <option value="PATIENT">Patient</option>
-                    <option value="DENTIST">Dentist</option>
-                    <option value="ASSISTANT">Assistant</option>
-                  </select>
-                </div>
-              )}
-
-              {!isLogin && (
-                <div className="animate-slide-up" style={{ animationDelay: '0.07s' }}>
-                  <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
-                  <input type="tel" required value={form.phone || ''}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
-                    placeholder="XXX-XXX-XXXX" />
-                </div>
-              )}
-
-              <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
-                <input type="email" required value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  ref={emailRef}
+            {!isLogin && (
+              <div className="animate-slide-up">
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
+                <input type="text" required value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  ref={nameRef}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
-                  placeholder="you@example.com" />
+                  placeholder="" />
               </div>
+            )}
 
-              <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
-                <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} required value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all pr-10"
-                    placeholder="••••••••" />
-                  <button type="button" onClick={() => { playClick(); setShowPassword(!showPassword); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
+            {!isLogin && (
+              <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
+                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all">
+                  <option value="PATIENT">Patient</option>
+                  <option value="DENTIST">Dentist</option>
+                  <option value="ASSISTANT">Assistant</option>
+                </select>
               </div>
+            )}
 
-              {!isLogin && (
-                <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input type="checkbox" checked={agreedToTerms}
-                      onChange={(e) => { playClick(); setAgreedToTerms(e.target.checked); }}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0F766E] focus:ring-[#0F766E]/30 cursor-pointer" />
-                    <span className="text-[11px] text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
-                      I have read and agree to the DentAssist Terms and Agreement and Privacy Policy, and I consent to the collection and processing of my personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).
-                    </span>
-                  </label>
-                </div>
-              )}
+            {!isLogin && (
+              <div className="animate-slide-up" style={{ animationDelay: '0.07s' }}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
+                <input type="tel" required value={form.phone || ''}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                  placeholder="XXX-XXX-XXXX" />
+              </div>
+            )}
 
-              <button type="submit" disabled={loading || (!isLogin && !agreedToTerms)}
-                className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                    Please wait...
+            <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
+              <input type="email" required value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                ref={emailRef}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                placeholder="you@example.com" />
+            </div>
+
+            <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
+              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
+              <div className="relative">
+                <input type={showPassword ? 'text' : 'password'} required value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all pr-10"
+                  placeholder="••••••••" />
+                <button type="button" onClick={() => { playClick(); setShowPassword(!showPassword); }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {!isLogin && (
+              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input type="checkbox" checked={agreedToTerms}
+                    onChange={(e) => { playClick(); setAgreedToTerms(e.target.checked); }}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0F766E] focus:ring-[#0F766E]/30 cursor-pointer" />
+                  <span className="text-[11px] text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
+                    I have read and agree to the DentAssist Terms and Agreement and Privacy Policy, and I consent to the collection and processing of my personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).
                   </span>
-                ) : isLogin ? 'Sign In' : 'Create Account'}
-              </button>
-
-              <div className="text-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
-                <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-mono text-[11px]">
-                  Demo: admin@dentassist.com / password123
-                </span>
+                </label>
               </div>
+            )}
+
+            <button type="submit" disabled={loading || (!isLogin && !agreedToTerms)}
+              className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                  Please wait...
+                </span>
+              ) : isLogin ? 'Sign In' : 'Create Account'}
+            </button>
+
+            <div className="text-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
+              <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-mono text-[11px]">
+                Demo: admin@dentassist.com / password123
+              </span>
             </div>
           </form>
         </div>
@@ -248,6 +233,29 @@ export default function Login() {
           <p className="text-slate-500 text-xs">Scan with your phone camera to open</p>
         </div>
       </div>
+
+      {/* Welcome splash */}
+      {welcomeUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-[#0D6D65] via-[#0F766E] to-[#115E59]">
+          <div className="text-center animate-welcome-fade-in">
+            <img src="/images/DentASSISTlogo.png" alt="DentAssist"
+              className="h-20 mx-auto mb-6 animate-welcome-logo-in drop-shadow-2xl" />
+            <div className="animate-welcome-text-in" style={{ animationDelay: '0.4s', opacity: 0 }}>
+              <p className="text-white/60 text-sm font-medium tracking-wider uppercase mb-2">Welcome</p>
+            </div>
+            <div className="animate-welcome-text-in" style={{ animationDelay: '0.6s', opacity: 0 }}>
+              <h1 className="text-4xl font-bold text-white tracking-tight">
+                {welcomeUser.name?.split(' ')[0]}
+              </h1>
+            </div>
+            <div className="animate-welcome-text-in" style={{ animationDelay: '0.9s', opacity: 0 }}>
+              <span className="inline-block mt-4 px-4 py-1.5 bg-white/15 backdrop-blur-sm text-white/90 text-xs font-semibold rounded-full border border-white/20 tracking-wide">
+                {welcomeUser.role}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

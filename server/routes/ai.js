@@ -249,7 +249,7 @@ router.post("/xray/analyze", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), u
   }
 });
 
-router.post("/oral/screen", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.single("file"), async (req, res) => {
+router.post("/oral/screen", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", "PATIENT"), upload.single("file"), async (req, res) => {
   try {
     const formData = new FormData();
     const fileBuffer = fs.readFileSync(req.file.path);
@@ -284,7 +284,7 @@ router.post("/treatment/suggest", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT
   }
 });
 
-router.post("/smile/simulate", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.single("file"), async (req, res) => {
+router.post("/smile/simulate", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", "PATIENT"), upload.single("file"), async (req, res) => {
   try {
     const treatmentType = req.body.treatment_type || "whitening";
     const formData = new FormData();

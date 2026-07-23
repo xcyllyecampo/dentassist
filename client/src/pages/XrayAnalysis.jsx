@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { Upload, Brain, AlertTriangle, CheckCircle, Loader } from 'lucide-react';
 
@@ -112,7 +112,7 @@ export default function XrayAnalysis() {
               <h3 className="font-bold text-slate-900">Analyzing X-Ray...</h3>
             </div>
             <div className="relative">
-              <img src={directPreview} alt="X-Ray" className="w-full max-h-80 object-contain rounded-lg border border-slate-200" />
+              <img src={directPreview} alt="X-Ray" className="w-full max-h-[400px] object-contain rounded-lg border border-slate-200" />
               <div className="absolute inset-0 bg-white/60 rounded-lg flex items-center justify-center">
                 <div className="text-center">
                   <Brain size={40} className="text-[#0F766E] mx-auto mb-2 animate-pulse" />
@@ -127,7 +127,7 @@ export default function XrayAnalysis() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h3 className="font-bold text-slate-900 mb-4">Uploaded X-Ray — {directAnalysis.fileName}</h3>
-              <img src={directPreview} alt="X-Ray" className="w-full rounded-lg border border-slate-200" />
+              <img src={directPreview} alt="X-Ray" className="w-full max-h-[400px] object-contain rounded-lg border border-slate-200" />
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -204,7 +204,7 @@ export default function XrayAnalysis() {
           {images.map((img) => (
             <div key={img.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="aspect-square bg-gray-100 relative">
-                <img src={`/${img.filePath}`} alt="X-Ray" className="w-full h-full object-cover" />
+                <img src={authUrl(`/${img.filePath}`)} alt="X-Ray" className="w-full h-full object-cover" />
                 {img.analysis && (
                   <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
                     <Brain size={12} /> Analyzed

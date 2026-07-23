@@ -70,7 +70,7 @@ export default function OralScreening() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <h3 className="font-bold text-slate-900 mb-4">Uploaded Photo</h3>
-              <img src={preview} alt="Oral photo" className="w-full rounded-lg" />
+              <img src={preview} alt="Oral photo" className="w-full max-h-[400px] object-contain rounded-lg" />
               <button onClick={handleAnalyze} disabled={analyzing}
                 className="w-full mt-4 bg-[#0F766E] text-white py-3 rounded-lg font-medium hover:bg-[#0D6D65] disabled:opacity-50 flex items-center justify-center gap-2">
                 <Brain size={18} />

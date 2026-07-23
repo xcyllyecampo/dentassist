@@ -44,7 +44,7 @@ export default function KioskSmileSimulation() {
       setResult(res.data);
       playSuccess();
     } catch (err) {
-      toast.error('Error running simulation. Please try again.');
+      toast.error(err.response?.data?.error || 'Error running simulation. Please try again.');
       playError();
     }
     setSimulating(false);
@@ -102,7 +102,7 @@ export default function KioskSmileSimulation() {
         <div className="flex flex-col gap-4">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
             <h3 className="text-white font-bold mb-3 text-sm">Your Smile Photo</h3>
-            <img src={preview} alt="Smile" className="w-full rounded-xl" />
+            <img src={preview} alt="Smile" className="w-full max-h-[340px] object-contain rounded-xl" />
             <button onClick={() => { playClick(); handleSimulate(); }} disabled={simulating}
               className="w-full mt-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 rounded-xl font-bold text-base hover:from-rose-600 hover:to-rose-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 transition-all">
               {simulating ? <><Loader size={18} className="animate-spin" /> Simulating...</> : <><Sparkles size={18} /> Simulate {TREATMENT_TYPES.find(t => t.value === treatmentType)?.label}</>}

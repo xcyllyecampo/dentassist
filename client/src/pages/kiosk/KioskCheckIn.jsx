@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import KioskLayout from './KioskLayout';
-import api from '../../lib/api';
+import api, { authUrl } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { playSuccess, playClick, playError } from '../../lib/sounds';
@@ -236,7 +236,7 @@ export default function KioskCheckIn() {
                   }`}
                 >
                   {d.avatar ? (
-                    <img src={d.avatar} alt={d.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-white/20" />
+                    <img src={authUrl(d.avatar)} alt={d.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-white/20" />
                   ) : (
                     <div className="w-10 h-10 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20">
                       <Stethoscope size={18} />
@@ -288,7 +288,7 @@ export default function KioskCheckIn() {
               {selectedDentist && (
                 <div className="flex items-center gap-2.5 border-t border-white/10 pt-3 mb-3">
                   {selectedDentist.avatar ? (
-                    <img src={selectedDentist.avatar} alt={selectedDentist.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20" />
+                    <img src={authUrl(selectedDentist.avatar)} alt={selectedDentist.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20" />
                   ) : (
                     <div className="w-8 h-8 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white/20">
                       <Stethoscope size={14} />

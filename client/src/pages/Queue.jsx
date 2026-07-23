@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Spinner from '../components/Spinner';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { getSocket } from '../lib/socket';
@@ -130,7 +130,7 @@ export default function Queue() {
                     : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}>
                 {d.avatar ? (
-                  <img src={d.avatar} alt={d.name} className="w-4 h-4 rounded-full object-cover" />
+                  <img src={authUrl(d.avatar)} alt={d.name} className="w-4 h-4 rounded-full object-cover" />
                 ) : (
                   <Stethoscope size={13} />
                 )}
@@ -154,7 +154,7 @@ export default function Queue() {
                           {entry.position}
                         </div>
                         {entry.patient?.user?.avatar ? (
-                          <img src={entry.patient.user.avatar} alt={entry.patient.user.name} className="w-9 h-9 rounded-full object-cover ring-2 ring-amber-200" />
+                          <img src={authUrl(entry.patient.user.avatar)} alt={entry.patient.user.name} className="w-9 h-9 rounded-full object-cover ring-2 ring-amber-200" />
                         ) : (
                           <div className="w-9 h-9 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-sm font-bold">
                             {entry.patient?.user?.name?.charAt(0)?.toUpperCase()}
@@ -193,7 +193,7 @@ export default function Queue() {
                     <div key={entry.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                       <div className="flex items-center gap-3">
                         {entry.patient?.user?.avatar ? (
-                          <img src={entry.patient.user.avatar} alt={entry.patient.user.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200" />
+                          <img src={authUrl(entry.patient.user.avatar)} alt={entry.patient.user.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200" />
                         ) : (
                           <div className="w-10 h-10 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-sm font-bold">
                             {entry.patient?.user?.name?.charAt(0)?.toUpperCase()}

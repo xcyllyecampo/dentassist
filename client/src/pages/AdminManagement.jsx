@@ -1,8 +1,8 @@
-﻿import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Spinner from '../components/Spinner';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import { UserPlus, Search, Edit2, Trash2, X, Camera, Users, Shield, Stethoscope, ChevronDown, Eye, EyeOff, Image, Power, Info } from 'lucide-react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
@@ -51,6 +51,22 @@ export default function AdminManagement() {
   };
 
   useEffect(() => { fetchUsers(); }, []);
+
+  const updateSlider = useCallback(() => {
+    const activeTabEl = tabRefs.current[activeTab];
+    if (activeTabEl && tabContainerRef.current) {
+      const containerRect = tabContainerRef.current.getBoundingClientRect();
+      const tabRect = activeTabEl.getBoundingClientRect();
+      setSliderStyle({
+        left: tabRect.left - containerRect.left,
+        width: tabRect.width,
+      });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    requestAnimationFrame(updateSlider);
+  }, [updateSlider]);
 
   const filtered = users.filter(u => {
     if (activeTab === 'STAFF') {
@@ -130,18 +146,22 @@ export default function AdminManagement() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+        <div ref={tabContainerRef} className="relative flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+          <div
+            className="absolute top-1 bottom-1 bg-[#0F766E] rounded-lg shadow-sm transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{ left: sliderStyle.left, width: sliderStyle.width }}
+          />
           {ROLE_TABS.map(tab => (
-            <button key={tab.key} onClick={() => { playClick(); setActiveTab(tab.key); }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            <button key={tab.key} ref={el => { tabRefs.current[tab.key] = el; }} onClick={() => { playClick(); setActiveTab(tab.key); }}
+              className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-300 ${
                 activeTab === tab.key
-                  ? 'bg-white text-[#0F766E] shadow-sm'
+                  ? 'text-white'
                   : 'text-slate-500 hover:text-slate-700'
               }`}>
               <tab.icon size={15} />
               {tab.label}
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                activeTab === tab.key ? 'bg-[#0F766E] text-white' : 'bg-slate-200 text-slate-500'
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors duration-300 ${
+                activeTab === tab.key ? 'bg-white text-[#0F766E]' : 'bg-slate-200 text-slate-500'
               }`}>{counts[tab.key]}</span>
             </button>
           ))}
@@ -185,7 +205,7 @@ export default function AdminManagement() {
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
                             {user.avatar ? (
-                              <img src={user.avatar} alt={user.name}
+                              <img src={authUrl(user.avatar)} alt={user.name}
                                 className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100" />
                             ) : (
                               <div className={`w-10 h-10 bg-gradient-to-br ${getAvatarColor(user.name)} text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-md`}>
@@ -338,6 +358,9 @@ function UserModal({ user, onClose, onSave }) {
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const tabRefs = useRef({});
+  const tabContainerRef = useRef(null);
+  const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
   const [consentChecked, setConsentChecked] = useState(false);
 
   const handleAvatarChange = (e) => {

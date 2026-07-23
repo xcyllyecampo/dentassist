@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
@@ -91,7 +91,7 @@ export default function Patients() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       {p.user?.avatar ? (
-                        <img src={p.user.avatar} alt={p.user.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100" />
+                        <img src={authUrl(p.user.avatar)} alt={p.user.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100" />
                       ) : (
                         <div className="w-8 h-8 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-sm font-bold">
                           {p.user?.name?.charAt(0)?.toUpperCase()}

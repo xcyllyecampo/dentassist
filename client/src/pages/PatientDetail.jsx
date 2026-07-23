@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import Spinner from '../components/Spinner';
 import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, Calendar, Stethoscope, Pill, Image, Smile } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
@@ -516,7 +516,7 @@ export default function PatientDetail() {
                   {patient.xrayImages?.map(img => (
                     <div key={img.id} className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
                       <div className="aspect-square bg-gray-100">
-                        <img src={`/${img.filePath}`} alt="X-Ray" className="w-full h-full object-cover" />
+                        <img src={authUrl(`/${img.filePath}`)} alt="X-Ray" className="w-full h-full object-cover" />
                       </div>
                       <div className="p-3">
                         <div className="flex items-center justify-between mb-1">

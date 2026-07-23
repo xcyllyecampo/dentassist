@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
-import api from '../lib/api';
+import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { playClick } from '../lib/sounds';
@@ -359,7 +359,7 @@ export default function Appointments() {
                                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                               }`}>
                               {d.avatar ? (
-                                <img src={d.avatar} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
+                                <img src={authUrl(d.avatar)} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
                               ) : (
                                 <div className="w-7 h-7 bg-[#0F766E] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
                                   {d.name?.charAt(0)?.toUpperCase()}
@@ -518,7 +518,7 @@ export default function Appointments() {
                               : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
                           }`}>
                           {d.avatar ? (
-                            <img src={d.avatar} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
+                            <img src={authUrl(d.avatar)} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
                           ) : (
                             <div className="w-7 h-7 bg-[#0F766E] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
                               {d.name?.charAt(0)?.toUpperCase()}
