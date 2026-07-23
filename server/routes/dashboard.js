@@ -1,9 +1,9 @@
 const express = require("express");
-const { auth } = require("../middleware/auth");
+const { auth, roleGuard } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/", auth, async (req, res) => {
+router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const today = new Date();
@@ -38,6 +38,7 @@ router.get("/", auth, async (req, res) => {
       prisma.room.findMany({ orderBy: { number: "asc" } }),
       prisma.queueEntry.count({ where: { status: "WAITING" } }),
       prisma.appointment.findMany({
+        where: { date: { gte: today, lt: tomorrow } },
         include: {
           patient: { include: { user: { select: { name: true } } } },
           dentist: { select: { name: true } },
@@ -46,8 +47,8 @@ router.get("/", auth, async (req, res) => {
         take: 10,
       }),
       prisma.user.findMany({
-        where: { role: "DENTIST" },
-        select: { id: true, name: true },
+        where: { role: "DENTIST", active: true },
+        select: { id: true, name: true, avatar: true },
       }),
     ]);
 

@@ -1,5 +1,6 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
 
@@ -22,6 +23,7 @@ router.get("/", auth, async (req, res) => {
     });
     res.json(rooms);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -44,8 +46,10 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) => {
     });
 
     io.to("twin").emit("room-update", { roomId: room.id, status: room.status });
+    notifyAllStaff(prisma, io, { type: "room", message: `Room ${room.number} status: ${room.status}` });
     res.json(room);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -58,6 +62,7 @@ router.post("/", auth, roleGuard("ADMIN"), async (req, res) => {
     const room = await prisma.room.create({ data: { number, name } });
     res.status(201).json(room);
   } catch (err) {
+    console.error(err);
     if (err.code === "P2002") return res.status(409).json({ error: "Room number already exists" });
     res.status(500).json({ error: "Server error" });
   }
@@ -69,6 +74,7 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
     await prisma.room.delete({ where: { id: req.params.id } });
     res.json({ message: "Room deleted" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });

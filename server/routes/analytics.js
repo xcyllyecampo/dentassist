@@ -1,9 +1,9 @@
 const express = require("express");
-const { auth } = require("../middleware/auth");
+const { auth, roleGuard } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/daily", auth, async (req, res) => {
+router.get("/daily", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const today = new Date();
@@ -24,7 +24,7 @@ router.get("/daily", auth, async (req, res) => {
   }
 });
 
-router.get("/procedures", auth, async (req, res) => {
+router.get("/procedures", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const treatments = await prisma.treatment.groupBy({
@@ -39,37 +39,41 @@ router.get("/procedures", auth, async (req, res) => {
   }
 });
 
-router.get("/revenue", auth, async (req, res) => {
+router.get("/revenue", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const days = parseInt(req.query.days) || 7;
-    const data = [];
+    const since = new Date();
+    since.setDate(since.getDate() - (days - 1));
+    since.setHours(0, 0, 0, 0);
 
+    const treatments = await prisma.treatment.findMany({
+      where: { createdAt: { gte: since } },
+      select: { cost: true, createdAt: true },
+    });
+
+    const data = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       date.setHours(0, 0, 0, 0);
+      const dateStr = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split("T")[0];
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
-
-      const revenue = await prisma.treatment.aggregate({
-        _sum: { cost: true },
-        where: { createdAt: { gte: date, lt: nextDay } },
-      });
-
-      data.push({
-        date: date.toISOString().split("T")[0],
-        revenue: revenue._sum.cost || 0,
-      });
+      const dayRevenue = treatments
+        .filter(t => t.createdAt >= date && t.createdAt < nextDay)
+        .reduce((sum, t) => sum + (t.cost || 0), 0);
+      data.push({ date: dateStr, revenue: dayRevenue });
     }
 
     res.json(data);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-router.get("/returning-patients", auth, async (req, res) => {
+router.get("/returning-patients", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const patients = await prisma.patient.findMany({
@@ -86,7 +90,7 @@ router.get("/returning-patients", auth, async (req, res) => {
   }
 });
 
-router.get("/peak-hours", auth, async (req, res) => {
+router.get("/peak-hours", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const days = parseInt(req.query.days) || 30;

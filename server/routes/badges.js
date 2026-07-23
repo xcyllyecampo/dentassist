@@ -8,7 +8,8 @@ router.get("/", auth, async (req, res) => {
     const badges = await prisma.badge.findMany({ orderBy: { name: "asc" } });
     res.json(badges);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -22,7 +23,8 @@ router.get("/patient/:patientId", auth, async (req, res) => {
     });
     res.json(earned);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -51,7 +53,8 @@ router.post("/award", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (r
 
     res.json(patientBadge);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

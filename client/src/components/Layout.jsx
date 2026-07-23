@@ -11,7 +11,7 @@ export default function Layout({ children }) {
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden transition-opacity" onClick={() => setMobileOpen(false)} />
       )}
-      <main className={`flex-1 transition-all duration-300 ease-out md:ml-64 ${collapsed ? 'md:!ml-16' : ''}`}>
+      <main className={`flex-1 transition-all duration-300 ease-out md:ml-[264px] ${collapsed ? 'md:!ml-16' : ''}`}>
         <div className="min-h-screen">
           {children}
         </div>

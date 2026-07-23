@@ -1,5 +1,8 @@
+const VALID_APPOINTMENT_STATUSES = ["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"];
+
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
 
@@ -22,6 +25,7 @@ router.get("/month", auth, async (req, res) => {
     });
     res.json(appointments);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -50,6 +54,7 @@ router.get("/available-slots", auth, async (req, res) => {
 
     res.json({ availableSlots, dentists, rooms, booked });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -79,6 +84,7 @@ router.get("/", auth, async (req, res) => {
     });
     res.json(appointments);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -100,6 +106,7 @@ router.get("/my", auth, async (req, res) => {
     });
     res.json(appointments);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -119,6 +126,79 @@ router.get("/:id", auth, async (req, res) => {
     if (!appointment) return res.status(404).json({ error: "Appointment not found" });
     res.json(appointment);
   } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/:id/check-in", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const io = req.app.get("io");
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: req.params.id },
+      include: { patient: true },
+    });
+    if (!appointment) return res.status(404).json({ error: "Appointment not found" });
+
+    if (req.user.role === "PATIENT" && appointment.patient?.userId !== req.user.id)
+      return res.status(403).json({ error: "You can only check in to your own appointment" });
+
+    if (appointment.status !== "SCHEDULED" && appointment.status !== "CONFIRMED")
+      return res.status(400).json({ error: "Appointment cannot be checked in at this stage" });
+
+    let roomId = appointment.roomId;
+    if (!roomId) {
+      const availableRoom = await prisma.room.findFirst({
+        where: { status: "AVAILABLE" },
+        orderBy: { number: "asc" },
+      });
+      if (availableRoom) {
+        roomId = availableRoom.id;
+        await prisma.room.update({ where: { id: roomId }, data: { status: "OCCUPIED" } });
+        io.to("twin").emit("room-update", { roomId, status: "OCCUPIED" });
+      }
+    }
+
+    const updated = await prisma.appointment.update({
+      where: { id: req.params.id },
+      data: { status: "IN_PROGRESS", roomId },
+      include: {
+        patient: { include: { user: { select: { name: true, avatar: true } } } },
+        dentist: { select: { name: true } },
+        room: true,
+      },
+    });
+
+    let queueEntry = null;
+    const existingQueue = await prisma.queueEntry.findFirst({
+      where: { patientId: appointment.patientId, status: { in: ["WAITING", "IN_PROGRESS"] } },
+    });
+    if (!existingQueue) {
+      const lastEntry = await prisma.queueEntry.findFirst({
+        where: { status: "WAITING" },
+        orderBy: { position: "desc" },
+      });
+      const position = (lastEntry?.position || 0) + 1;
+      const waitingCount = await prisma.queueEntry.count({ where: { status: "WAITING" } });
+      const estimatedWait = waitingCount * 30;
+      queueEntry = await prisma.queueEntry.create({
+        data: { patientId: appointment.patientId, position, estimatedWait, dentistId: appointment.dentistId, status: "IN_PROGRESS" },
+        include: { patient: { include: { user: { select: { name: true, avatar: true } } } }, dentist: { select: { name: true } } },
+      });
+      io.to("queue").emit("queue-update", queueEntry);
+      io.to("twin").emit("queue-update", { waitingCount: waitingCount + 1 });
+    }
+
+    notifyAllStaff(prisma, io, {
+      type: "appointment",
+      message: `${updated.patient?.user?.name || "Patient"} checked in for their appointment`,
+    });
+
+    res.json({ appointment: updated, queueEntry });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -191,6 +271,7 @@ router.post("/", auth, async (req, res) => {
     }
 
     io.to("queue").emit("appointment-update", appointment);
+    notifyAllStaff(prisma, io, { type: "appointment", message: `New appointment: ${appointment.patient?.user?.name || "Patient"} with ${appointment.dentist?.name || "Dentist"} on ${new Date(date).toLocaleDateString()} at ${time}` });
     res.status(201).json(appointment);
   } catch (err) {
     console.error(err);
@@ -205,7 +286,12 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req,
     const { status, roomId, notes, date, time, duration, reason } = req.body;
 
     const updateData = {};
-    if (status !== undefined) updateData.status = status;
+    if (status !== undefined) {
+      if (!VALID_APPOINTMENT_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `Invalid status. Allowed: ${VALID_APPOINTMENT_STATUSES.join(", ")}` });
+      }
+      updateData.status = status;
+    }
     if (roomId !== undefined) updateData.roomId = roomId || null;
     if (notes !== undefined) updateData.notes = notes;
     if (date !== undefined) updateData.date = new Date(date);
@@ -274,8 +360,55 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req,
     }
 
     io.to("queue").emit("appointment-update", appointment);
+    notifyAllStaff(prisma, io, { type: "appointment", message: `Appointment updated: ${appointment.patient?.user?.name || "Patient"} - ${appointment.status}` });
     res.json(appointment);
   } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/:id/cancel", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const io = req.app.get("io");
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: req.params.id },
+      include: { patient: { include: { user: { select: { name: true } } } } },
+    });
+    if (!appointment) return res.status(404).json({ error: "Appointment not found" });
+
+    if (req.user.role === "PATIENT" && appointment.patient?.userId !== req.user.id)
+      return res.status(403).json({ error: "You can only cancel your own appointments" });
+
+    if (appointment.status !== "SCHEDULED" && appointment.status !== "CONFIRMED")
+      return res.status(400).json({ error: "Only scheduled or confirmed appointments can be cancelled" });
+
+    const updated = await prisma.appointment.update({
+      where: { id: req.params.id },
+      data: { status: "CANCELLED" },
+      include: {
+        patient: { include: { user: { select: { name: true } } } },
+        dentist: { select: { name: true } },
+        room: true,
+      },
+    });
+
+    if (updated.roomId) {
+      await prisma.room.update({ where: { id: updated.roomId }, data: { status: "CLEANING" } });
+      io.to("twin").emit("room-update", { roomId: updated.roomId, status: "CLEANING" });
+      setTimeout(async () => {
+        await prisma.room.update({ where: { id: updated.roomId }, data: { status: "AVAILABLE" } });
+        io.to("twin").emit("room-update", { roomId: updated.roomId, status: "AVAILABLE" });
+      }, 300000);
+    }
+
+    io.to("queue").emit("appointment-update", updated);
+    notifyAllStaff(prisma, io, { type: "appointment", message: `Appointment cancelled: ${updated.patient?.user?.name || "Patient"} - ${new Date(updated.date).toLocaleDateString()} at ${updated.time}` });
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -286,8 +419,11 @@ router.delete("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) =>
     await prisma.appointment.delete({ where: { id: req.params.id } });
     res.json({ message: "Appointment deleted" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 module.exports = router;
+
+

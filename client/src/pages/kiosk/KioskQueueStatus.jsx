@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { playClick, playCallPatient } from '../../lib/sounds';
-import { io } from 'socket.io-client';
+import { getSocket } from '../../lib/socket';
 import { Clock, Users, Loader, AlertTriangle } from 'lucide-react';
 
 export default function KioskQueueStatus() {
@@ -11,7 +11,6 @@ export default function KioskQueueStatus() {
   const [servingCount, setServingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const socketRef = useRef(null);
 
   const prevStatusRef = useRef(null);
 
@@ -38,15 +37,18 @@ export default function KioskQueueStatus() {
   useEffect(() => {
     fetchMyEntry();
 
-    const socket = io(window.location.origin, { path: '/socket.io' });
-    socketRef.current = socket;
+    const socket = getSocket();
     socket.emit('join-queue');
 
-    socket.on('queue-update', () => {
+    const onQueueUpdate = () => {
       fetchMyEntry();
-    });
+    };
 
-    return () => socket.disconnect();
+    socket.on('queue-update', onQueueUpdate);
+
+    return () => {
+      socket.off('queue-update', onQueueUpdate);
+    };
   }, []);
 
   const positionProgress = myEntry && myEntry.position > 0

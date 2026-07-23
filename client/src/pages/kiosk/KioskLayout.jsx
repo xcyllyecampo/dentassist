@@ -30,12 +30,6 @@ export default function KioskLayout({ children, showBack = true, title }) {
           {isHome && <div />}
         </div>
 
-        <button
-          onClick={() => { playClick(); handleLogout(); }}
-          className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white/80 hover:text-white rounded-xl text-sm font-medium transition-colors backdrop-blur-sm"
-        >
-          <LogOut size={14} /> Logout
-        </button>
       </header>
 
       {/* Title bar */}

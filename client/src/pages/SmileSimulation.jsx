@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
@@ -37,6 +37,12 @@ export default function SmileSimulation() {
   const [treatmentType, setTreatmentType] = useState('whitening');
   const [simulating, setSimulating] = useState(false);
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];

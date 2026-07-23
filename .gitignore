@@ -9,3 +9,4 @@ server/generated/
 client/node_modules/
 client/dist/
 server/node_modules/
+server/backups/

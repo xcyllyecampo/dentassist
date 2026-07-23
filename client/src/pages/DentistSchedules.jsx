@@ -32,39 +32,21 @@ export default function DentistSchedules() {
     setError(null);
     Promise.all([
       api.get('/dentist-schedules'),
-      api.get('/patients').catch(() => ({ data: [] })),
-    ]).then(([schedRes]) => {
+      api.get('/dentist-schedules/dentists').catch(() => ({ data: [] })),
+    ]).then(([schedRes, dentistsRes]) => {
       setSchedules(schedRes.data);
-      const dentistsRes = schedRes.data;
-      const uniqueDentists = [];
-      const seen = new Set();
-      dentistsRes.forEach(s => {
-        if (!seen.has(s.user?.id)) {
-          seen.add(s.user?.id);
-          uniqueDentists.push({ id: s.user.id, name: s.user.name });
+      const merged = dentistsRes.data || [];
+      // Add any dentists from schedules that aren't in the dentists list
+      schedRes.data.forEach(s => {
+        if (s.user && !merged.find(d => d.id === s.user.id)) {
+          merged.push({ id: s.user.id, name: s.user.name, avatar: s.user.avatar });
         }
       });
-      setDentists(uniqueDentists);
+      setDentists(merged);
     }).catch(() => setError('Failed to load schedules')).finally(() => setLoading(false));
   };
 
   useEffect(() => { fetchData(); }, []);
-
-  useEffect(() => {
-    if (dentists.length === 0) {
-      api.get('/dentist-schedules').then(res => {
-        const unique = [];
-        const seen = new Set();
-        res.data.forEach(s => {
-          if (!seen.has(s.user?.id)) {
-            seen.add(s.user?.id);
-            unique.push({ id: s.user.id, name: s.user.name });
-          }
-        });
-        setDentists(unique);
-      }).catch(() => {});
-    }
-  }, []);
 
   const handleAdd = async () => {
     playClick();
@@ -96,10 +78,10 @@ export default function DentistSchedules() {
 
   const grouped = {};
   schedules.forEach(s => {
-    const name = s.user?.name || 'Unknown';
-    if (!grouped[name]) grouped[name] = {};
-    if (!grouped[name][s.dayOfWeek]) grouped[name][s.dayOfWeek] = [];
-    grouped[name][s.dayOfWeek].push(s);
+    const id = s.userId;
+    if (!grouped[id]) grouped[id] = { name: s.user?.name || 'Unknown', days: {} };
+    if (!grouped[id].days[s.dayOfWeek]) grouped[id].days[s.dayOfWeek] = [];
+    grouped[id].days[s.dayOfWeek].push(s);
   });
 
   if (loading) return <Layout><Header title="Dentist Schedules" /><Spinner className="py-20" /></Layout>;
@@ -130,17 +112,27 @@ export default function DentistSchedules() {
 
         {Object.keys(grouped).length === 0 ? (
           <div className="text-center py-16">
-            <Calendar size={48} className="mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-400">No schedules configured yet</p>
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Calendar size={28} className="text-slate-300" />
+            </div>
+            <p className="text-slate-500 font-medium mb-1">No schedules configured yet</p>
+            <p className="text-slate-400 text-sm">Add a schedule to set dentist availability</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {Object.entries(grouped).map(([dentistName, days]) => (
-              <div key={dentistName} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            {Object.entries(grouped).map(([dentistId, { name: dentistName, days }]) => (
+              <div key={dentistId} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="px-5 py-3 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
-                  <div className="w-8 h-8 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-sm font-bold">
-                    {dentistName.charAt(0)}
-                  </div>
+                  {(() => {
+                    const dent = dentists.find(d => d.id === dentistId);
+                    return dent?.avatar ? (
+                      <img src={dent.avatar} alt={dentistName} className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-200" />
+                    ) : (
+                      <div className="w-8 h-8 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-sm font-bold">
+                        {dentistName.charAt(0)}
+                      </div>
+                    );
+                  })()}
                   <h3 className="font-bold text-slate-900 text-sm">{dentistName}</h3>
                 </div>
                 <div className="p-4">

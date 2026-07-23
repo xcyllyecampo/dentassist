@@ -4,13 +4,18 @@ import Header from '../components/Header';
 import Spinner from '../components/Spinner';
 import api from '../lib/api';
 import { useToast } from '../context/ToastContext';
-import { Plus, Clock, CheckCircle, XCircle, Phone, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { getSocket } from '../lib/socket';
+import { Plus, Clock, CheckCircle, XCircle, Phone, AlertTriangle, Stethoscope, Users } from 'lucide-react';
 import { playCallPatient } from '../lib/sounds';
 
 export default function Queue() {
   const toast = useToast();
+  const { user } = useAuth();
   const [queue, setQueue] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [dentists, setDentists] = useState([]);
+  const [filterDentistId, setFilterDentistId] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState('');
   const [loading, setLoading] = useState(true);
@@ -19,10 +24,11 @@ export default function Queue() {
   const fetchData = () => {
     setLoading(true);
     setError(null);
-    Promise.all([api.get('/queue'), api.get('/patients')])
-      .then(([queueRes, patientsRes]) => {
+    Promise.all([api.get('/queue'), api.get('/patients'), api.get('/dashboard')])
+      .then(([queueRes, patientsRes, dashRes]) => {
         setQueue(queueRes.data);
         setPatients(patientsRes.data);
+        setDentists(dashRes.data.dentists || []);
       })
       .catch(() => setError('Failed to load queue'))
       .finally(() => setLoading(false));
@@ -32,11 +38,26 @@ export default function Queue() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const socket = getSocket();
+    const handler = () => fetchData();
+    socket.on('queue-update', handler);
+    return () => socket.off('queue-updated', handler);
+  }, []);
+
+  const isDentist = user?.role === 'DENTIST';
+  const filteredQueue = filterDentistId === 'all'
+    ? queue
+    : queue.filter(e => e.dentistId === filterDentistId);
+
+  const waiting = filteredQueue.filter(e => e.status === 'WAITING');
+  const inProgress = filteredQueue.filter(e => e.status === 'IN_PROGRESS');
+
   const handleAdd = async () => {
     if (!selectedPatient) return;
     try {
-      const res = await api.post('/queue', { patientId: selectedPatient });
-      setQueue([...queue, res.data]);
+      const res = await api.post('/queue', { patientId: selectedPatient, dentistId: filterDentistId !== 'all' ? filterDentistId : undefined });
+      setQueue(prev => [...prev, res.data]);
       setShowModal(false);
       setSelectedPatient('');
       toast.success('Patient added to queue');
@@ -48,16 +69,13 @@ export default function Queue() {
       if (status === 'IN_PROGRESS') playCallPatient();
       await api.put(`/queue/${id}`, { status });
       if (status === 'IN_PROGRESS') {
-        setQueue(queue.map(e => e.id === id ? { ...e, status: 'IN_PROGRESS' } : e));
+        setQueue(prev => prev.map(e => e.id === id ? { ...e, status: 'IN_PROGRESS' } : e));
       } else {
-        setQueue(queue.filter(e => e.id !== id));
+        setQueue(prev => prev.filter(e => e.id !== id));
       }
       toast.success('Queue status updated');
     } catch (err) { toast.error('Error updating queue'); }
   };
-
-  const waiting = queue.filter(e => e.status === 'WAITING');
-  const inProgress = queue.filter(e => e.status === 'IN_PROGRESS');
 
   return (
     <Layout>
@@ -93,6 +111,35 @@ export default function Queue() {
           </button>
         </div>
 
+        {/* Dentist filter tabs */}
+        {dentists.length > 0 && (
+          <div className="flex items-center gap-1.5 mb-6 overflow-x-auto pb-1">
+            <button onClick={() => setFilterDentistId('all')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                filterDentistId === 'all'
+                  ? 'bg-[#004aad] text-white shadow-sm'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}>
+              <Users size={13} /> {isDentist ? 'My Patients' : 'All Dentists'}
+            </button>
+            {dentists.map(d => (
+              <button key={d.id} onClick={() => setFilterDentistId(d.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                  filterDentistId === d.id
+                    ? 'bg-[#004aad] text-white shadow-sm'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}>
+                {d.avatar ? (
+                  <img src={d.avatar} alt={d.name} className="w-4 h-4 rounded-full object-cover" />
+                ) : (
+                  <Stethoscope size={13} />
+                )}
+                {d.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -100,14 +147,21 @@ export default function Queue() {
             </h3>
             <div className="space-y-3">
               {waiting.length === 0 ? <p className="text-gray-400 text-sm">No patients waiting</p> :
-                waiting.sort((a, b) => a.position - b.position).map((entry) => (
-                  <div key={entry.id} className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center font-bold text-lg">
-                        {entry.position}
-                      </div>
-                      <div>
-                        <div className="font-medium text-slate-900">{entry.patient?.user?.name}</div>
+                [...waiting].sort((a, b) => a.position - b.position).map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between p-4 bg-amber-50 rounded-lg border border-amber-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center font-bold text-sm">
+                          {entry.position}
+                        </div>
+                        {entry.patient?.user?.avatar ? (
+                          <img src={entry.patient.user.avatar} alt={entry.patient.user.name} className="w-9 h-9 rounded-full object-cover ring-2 ring-amber-200" />
+                        ) : (
+                          <div className="w-9 h-9 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center text-sm font-bold">
+                            {entry.patient?.user?.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-medium text-slate-900">{entry.patient?.user?.name}</div>
                         <div className="text-xs text-gray-500">
                           Est. wait: {entry.estimatedWait || '?'} min
                         </div>
@@ -136,11 +190,20 @@ export default function Queue() {
             <div className="space-y-3">
               {inProgress.length === 0 ? <p className="text-gray-400 text-sm">No patients in progress</p> :
                 inProgress.map((entry) => (
-                  <div key={entry.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <div>
-                      <div className="font-medium text-slate-900">{entry.patient?.user?.name}</div>
-                      <div className="text-xs text-gray-500">Position #{entry.position}</div>
-                    </div>
+                    <div key={entry.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center gap-3">
+                        {entry.patient?.user?.avatar ? (
+                          <img src={entry.patient.user.avatar} alt={entry.patient.user.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-slate-200" />
+                        ) : (
+                          <div className="w-10 h-10 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-sm font-bold">
+                            {entry.patient?.user?.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div className="font-medium text-slate-900">{entry.patient?.user?.name}</div>
+                          <div className="text-xs text-gray-500">Position #{entry.position}</div>
+                        </div>
+                      </div>
                     <div className="flex gap-2">
                       <button onClick={() => handleStatusUpdate(entry.id, 'COMPLETED')}
                         className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200" title="Complete">
@@ -164,11 +227,17 @@ export default function Queue() {
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Add Patient to Queue</h2>
               <select value={selectedPatient} onChange={e => setSelectedPatient(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-sm mb-4 focus:ring-2 focus:ring-[#004aad] focus:outline-none ${selectedPatient === '' ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
+                className={`w-full px-3 py-2 border rounded-lg text-sm mb-3 focus:ring-2 focus:ring-[#004aad] focus:outline-none ${selectedPatient === '' ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
                 <option value="">Select Patient</option>
                 {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
               </select>
-              {selectedPatient === '' && <p className="text-xs text-red-500 -mt-2 mb-3">Please select a patient</p>}
+              {selectedPatient === '' && <p className="text-xs text-red-500 -mt-1 mb-3">Please select a patient</p>}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Assign Dentist</label>
+              <select value={filterDentistId !== 'all' ? filterDentistId : ''} onChange={e => {}}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4 bg-slate-50 text-gray-500 cursor-not-allowed"
+                disabled>
+                <option value="">{filterDentistId !== 'all' ? dentists.find(d => d.id === filterDentistId)?.name || 'Selected Dentist' : 'Auto-assign'}</option>
+              </select>
               <div className="flex justify-end gap-3">
                 <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
                 <button onClick={handleAdd} disabled={!selectedPatient} className={`px-4 py-2 text-white rounded-lg text-sm font-medium ${selectedPatient ? 'bg-[#004aad] hover:bg-[#003782]' : 'bg-gray-300 cursor-not-allowed'}`}>Add to Queue</button>

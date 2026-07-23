@@ -3,7 +3,7 @@ const { auth, roleGuard } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/patient/:patientId", auth, async (req, res) => {
+router.get("/patient/:patientId", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const treatments = await prisma.treatment.findMany({
@@ -17,6 +17,7 @@ router.get("/patient/:patientId", auth, async (req, res) => {
     });
     res.json(treatments);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -41,6 +42,7 @@ router.post("/", auth, roleGuard("DENTIST"), async (req, res) => {
     });
     res.status(201).json(treatment);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -62,6 +64,7 @@ router.put("/:id", auth, roleGuard("DENTIST"), async (req, res) => {
     });
     res.json(treatment);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -72,6 +75,7 @@ router.delete("/:id", auth, roleGuard("DENTIST", "ADMIN"), async (req, res) => {
     await prisma.treatment.delete({ where: { id: req.params.id } });
     res.json({ message: "Treatment deleted" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });

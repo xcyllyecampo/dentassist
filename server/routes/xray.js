@@ -1,5 +1,5 @@
 const express = require("express");
-const { auth } = require("../middleware/auth");
+const { auth, roleGuard } = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
 
@@ -7,11 +7,22 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, `xray-${Date.now()}${path.extname(file.originalname)}`),
 });
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/dicom', 'application/dicom'];
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_TYPES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, WebP, and DICOM files are allowed.'));
+    }
+  },
+});
 
 const router = express.Router();
 
-router.get("/patient/:patientId", auth, async (req, res) => {
+router.get("/patient/:patientId", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const images = await prisma.xrayImage.findMany({
@@ -20,11 +31,12 @@ router.get("/patient/:patientId", auth, async (req, res) => {
     });
     res.json(images);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-router.post("/upload", auth, upload.single("image"), async (req, res) => {
+router.post("/upload", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.single("image"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { patientId, fileType } = req.body;
@@ -39,11 +51,12 @@ router.post("/upload", auth, upload.single("image"), async (req, res) => {
     });
     res.status(201).json(image);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-router.post("/analyze/:id", auth, async (req, res) => {
+router.post("/analyze/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const image = await prisma.xrayImage.findUnique({ where: { id: req.params.id } });
@@ -64,6 +77,7 @@ router.post("/analyze/:id", auth, async (req, res) => {
       });
       res.json(updated);
     } catch (fetchErr) {
+      console.error(fetchErr);
       const mockAnalysis = {
         findings: [
           { area: "Lower left molar", confidence: 0.87, type: "possible_cavity", description: "Potential decay detected on tooth #19" },
@@ -80,6 +94,7 @@ router.post("/analyze/:id", auth, async (req, res) => {
       res.json(updated);
     }
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });

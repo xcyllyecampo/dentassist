@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import ClinicScene3D from '../components/ClinicScene3D';
 import Spinner from '../components/Spinner';
 import api from '../lib/api';
-import { io } from 'socket.io-client';
+import { getSocket } from '../lib/socket';
 import { AlertTriangle } from 'lucide-react';
 
 const ROOM_COLORS = {
@@ -28,7 +28,6 @@ export default function DigitalTwin() {
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const socketRef = useRef(null);
 
   const fetchData = () => {
     setLoading(true);
@@ -45,24 +44,29 @@ export default function DigitalTwin() {
   useEffect(() => {
     fetchData();
 
-    const socket = io(window.location.origin, { path: '/socket.io' });
-    socketRef.current = socket;
+    const socket = getSocket();
     socket.emit('join-twin');
     socket.emit('join-queue');
 
-    socket.on('room-update', ({ roomId, status }) => {
+    const onRoomUpdate = ({ roomId, status }) => {
       setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status } : r));
       setLastUpdate(new Date());
-    });
+    };
 
-    socket.on('queue-update', () => {
+    const onQueueUpdate = () => {
       api.get('/queue').then(res => {
         setQueue(res.data);
         setLastUpdate(new Date());
       });
-    });
+    };
 
-    return () => socket.disconnect();
+    socket.on('room-update', onRoomUpdate);
+    socket.on('queue-update', onQueueUpdate);
+
+    return () => {
+      socket.off('room-update', onRoomUpdate);
+      socket.off('queue-update', onQueueUpdate);
+    };
   }, []);
 
   if (loading) return <Layout><Header title="Digital Twin — Live Clinic View" /><Spinner className="py-20" /></Layout>;

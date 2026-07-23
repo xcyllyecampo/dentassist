@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
-import { playClick } from '../../lib/sounds';
+import { useToast } from '../../context/ToastContext';
+import { playClick, playError } from '../../lib/sounds';
 import Spinner from '../../components/Spinner';
-import { AlertTriangle, Calendar, Stethoscope, Pill, X as XRayIcon, Circle, HelpCircle } from 'lucide-react';
+import { AlertTriangle, Calendar, Stethoscope, Pill, Circle, XCircle, Clock, Loader } from 'lucide-react';
 
 const TABS = [
   { id: 'appointments', label: 'Appointments', icon: Calendar },
@@ -17,7 +18,8 @@ export default function KioskRecords() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('appointments');
-  const [showToothGuide, setShowToothGuide] = useState(false);
+  const [cancellingId, setCancellingId] = useState(null);
+  const toast = useToast();
 
   const fetchPatient = () => {
     setLoading(true);
@@ -29,6 +31,25 @@ export default function KioskRecords() {
   };
 
   useEffect(() => { fetchPatient(); }, []);
+
+  const handleCancel = async (apptId) => {
+    if (!window.confirm('Are you sure you want to cancel this appointment? The time slot will become available for others.')) return;
+    setCancellingId(apptId);
+    try {
+      await api.put('/appointments/' + apptId + '/cancel');
+      setPatient(prev => ({
+        ...prev,
+        appointments: prev.appointments.map(a =>
+          a.id === apptId ? { ...a, status: 'CANCELLED' } : a
+        ),
+      }));
+      toast.success('Appointment cancelled successfully');
+    } catch (err) {
+      playError();
+      toast.error(err.response?.data?.error || 'Failed to cancel appointment');
+    }
+    setCancellingId(null);
+  };
 
   if (loading) return <KioskLayout title="My Records"><Spinner className="py-20" /></KioskLayout>;
   if (error) return (
@@ -85,18 +106,47 @@ export default function KioskRecords() {
         {activeTab === 'appointments' && (
           <div className="space-y-3">
             {patient.appointments?.length === 0 ? (
-              <p className="text-white/40 text-center py-8">No appointments yet</p>
-            ) : patient.appointments?.map(a => (
-              <div key={a.id} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-                <div>
-                  <div className="text-white font-medium">{new Date(a.date).toLocaleDateString()} at {a.time}</div>
-                  <div className="text-white/50 text-sm">{a.reason}</div>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Calendar size={20} className="text-white/30" />
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                  a.status === 'COMPLETED' ? 'bg-green-500/20 text-green-300 border border-green-500/40' :
-                  a.status === 'IN_PROGRESS' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                  'bg-blue-500/20 text-blue-300 border border-blue-500/40'
-                }`}>{a.status}</span>
+                <p className="text-white/50 font-medium mb-1">No appointments yet</p>
+                <p className="text-white/30 text-xs">Book your first appointment to get started</p>
+              </div>
+            ) : patient.appointments?.map(a => (
+              <div key={a.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-white font-medium">{new Date(a.date).toLocaleDateString()} at {a.time}</div>
+                    <div className="text-white/50 text-sm">{a.reason}</div>
+                    {a.dentist && (
+                      <div className="flex items-center gap-1 text-white/40 text-xs mt-1">
+                        <Stethoscope size={12} /> {a.dentist.name}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {(a.status === 'SCHEDULED' || a.status === 'CONFIRMED') && (
+                      <button
+                        onClick={() => handleCancel(a.id)}
+                        disabled={cancellingId === a.id}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-red-500/20 text-red-300 border border-red-500/40 rounded-lg text-xs font-medium hover:bg-red-500/30 transition-all disabled:opacity-50"
+                      >
+                        {cancellingId === a.id ? (
+                          <><Loader size={12} className="animate-spin" /> Cancelling...</>
+                        ) : (
+                          <><XCircle size={12} /> Cancel</>
+                        )}
+                      </button>
+                    )}
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                      a.status === 'COMPLETED' ? 'bg-green-500/20 text-green-300 border border-green-500/40' :
+                      a.status === 'IN_PROGRESS' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+                      a.status === 'CANCELLED' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
+                      'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                    }`}>{a.status}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -105,7 +155,13 @@ export default function KioskRecords() {
         {activeTab === 'treatments' && (
           <div className="space-y-3">
             {patient.treatments?.length === 0 ? (
-              <p className="text-white/40 text-center py-8">No treatments yet</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Stethoscope size={20} className="text-white/30" />
+                </div>
+                <p className="text-white/50 font-medium mb-1">No treatments yet</p>
+                <p className="text-white/30 text-xs">Your treatments will appear here after your first visit</p>
+              </div>
             ) : patient.treatments?.map(t => (
               <div key={t.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
                 <div className="text-white font-medium">{t.procedure}</div>
@@ -119,7 +175,13 @@ export default function KioskRecords() {
         {activeTab === 'prescriptions' && (
           <div className="space-y-3">
             {patient.prescriptions?.length === 0 ? (
-              <p className="text-white/40 text-center py-8">No prescriptions yet</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Pill size={20} className="text-white/30" />
+                </div>
+                <p className="text-white/50 font-medium mb-1">No prescriptions yet</p>
+                <p className="text-white/30 text-xs">Prescriptions from your dentist will show up here</p>
+              </div>
             ) : patient.prescriptions?.map(p => (
               <div key={p.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
                 <div className="text-white font-medium">{p.medication}</div>
@@ -129,30 +191,35 @@ export default function KioskRecords() {
           </div>
         )}
 
-        {activeTab === 'teeth' && (
+        {activeTab === 'teeth' && (() => {
+          const allTeeth = Array.from({ length: 32 }, (_, i) => {
+            const dbTooth = patient.teeth?.find(t => t.toothNumber === i + 1);
+            return dbTooth || { toothNumber: i + 1, status: 'HEALTHY', id: `default-${i + 1}` };
+          });
+          const getStatusStyle = (status) => {
+            switch (status) {
+              case 'HEALTHY': return 'bg-green-500/20 text-green-300 border border-green-500/40';
+              case 'FILLING': return 'bg-blue-500/20 text-blue-300 border border-blue-500/40';
+              case 'CROWN': return 'bg-purple-500/20 text-purple-300 border border-purple-500/40';
+              case 'DECAYED': return 'bg-red-500/20 text-red-300 border border-red-500/40';
+              case 'MISSING': return 'bg-white/5 text-white/30 border border-white/10';
+              default: return 'bg-white/10 text-white/60 border border-white/10';
+            }
+          };
+          return (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-bold">Interactive Tooth Chart</h3>
-              <button onClick={() => { playClick(); setShowToothGuide(true); }}
-                className="flex items-center gap-1 text-xs text-white/60 hover:text-white font-medium">
-                <HelpCircle size={14} /> Tooth Guide
-              </button>
-            </div>
+            <h3 className="text-white font-bold mb-4">Interactive Tooth Chart</h3>
             <div className="grid grid-cols-8 gap-2">
-              {patient.teeth?.map(tooth => (
+              {allTeeth.map(tooth => (
                 <div key={tooth.id}
-                  className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all hover:scale-110 ${
-                    tooth.status === 'HEALTHY' ? 'bg-green-500/20 text-green-300 border border-green-500/40' :
-                    tooth.status === 'FILLING' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' :
-                    tooth.status === 'CROWN' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
-                    tooth.status === 'DECAYED' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
-                    tooth.status === 'MISSING' ? 'bg-white/5 text-white/30 border border-white/10' :
-                    'bg-white/10 text-white/60 border border-white/10'
-                  }`}>
+                  className={`aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
                   <span>#{tooth.toothNumber}</span>
                   <span className="text-[9px] font-normal opacity-70">{tooth.status}</span>
                 </div>
               ))}
+            </div>
+            <div className="mt-4 rounded-xl overflow-hidden border border-white/10">
+              <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
             </div>
             <div className="flex flex-wrap gap-3 mt-4 text-xs text-white/60">
               <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-500/40 rounded" /> Healthy</span>
@@ -162,24 +229,9 @@ export default function KioskRecords() {
               <span className="flex items-center gap-1"><span className="w-3 h-3 bg-white/10 rounded" /> Missing</span>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
-
-      {showToothGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowToothGuide(false)}>
-          <div className="bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden border border-white/20" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="font-bold text-white">Tooth Numbering Guide</h3>
-              <button onClick={() => setShowToothGuide(false)} className="text-white/40 hover:text-white transition-colors">
-                <XRayIcon size={20} />
-              </button>
-            </div>
-            <div className="p-4">
-              <img src="/images/tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto rounded-lg" />
-            </div>
-          </div>
-        </div>
-      )}
     </KioskLayout>
   );
 }

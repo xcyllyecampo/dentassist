@@ -4,14 +4,12 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { useToast } from '../context/ToastContext';
-import { useAuth } from '../context/AuthContext';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Eye, Trash2, Users, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Eye, Users, AlertTriangle } from 'lucide-react';
 
 export default function Patients() {
   const toast = useToast();
-  const { user } = useAuth();
   const [patients, setPatients] = useState([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -39,15 +37,6 @@ export default function Patients() {
       setForm({ name: '', email: '', phone: '', dob: '', gender: '', bloodType: '', allergies: '', medicalHistory: '' });
       toast.success('Patient created successfully');
     } catch (err) { toast.error(err.response?.data?.error || 'Error creating patient'); }
-  };
-
-  const handleDelete = async (id) => {
-    if (!confirm('Delete this patient?')) return;
-    try {
-      await api.delete(`/patients/${id}`);
-      setPatients(patients.filter(p => p.id !== id));
-      toast.success('Patient deleted');
-    } catch (err) { toast.error('Error deleting patient'); }
   };
 
   const filtered = patients.filter(p =>
@@ -101,9 +90,13 @@ export default function Patients() {
                 <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-sm font-bold">
-                        {p.user?.name?.charAt(0)}
-                      </div>
+                      {p.user?.avatar ? (
+                        <img src={p.user.avatar} alt={p.user.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100" />
+                      ) : (
+                        <div className="w-8 h-8 bg-[#c2d5f7] text-[#002d6b] rounded-full flex items-center justify-center text-sm font-bold">
+                          {p.user?.name?.charAt(0)?.toUpperCase()}
+                        </div>
+                      )}
                       <span className="text-sm font-medium text-slate-900">{p.user?.name}</span>
                     </div>
                   </td>
@@ -112,14 +105,9 @@ export default function Patients() {
                   <td className="px-6 py-4 text-sm text-gray-600">{p.gender || 'N/A'}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{p.bloodType || 'N/A'}</td>
                   <td className="px-6 py-4 text-right">
-                    <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-[#004aad] hover:text-[#002d6b] text-sm mr-3">
+                    <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-[#004aad] hover:text-[#002d6b] text-sm">
                       <Eye size={14} /> View
                     </Link>
-                  {user?.role === 'ADMIN' && (
-                    <button onClick={() => handleDelete(p.id)} className="inline-flex items-center gap-1 text-red-500 hover:text-red-700 text-sm">
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  )}
                   </td>
                 </tr>
               ))}
@@ -129,7 +117,7 @@ export default function Patients() {
         </div>
 
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
               <h2 className="text-lg font-bold text-slate-900 mb-4">Add New Patient</h2>
               <form onSubmit={handleCreate} className="space-y-4">

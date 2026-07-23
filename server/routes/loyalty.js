@@ -16,7 +16,8 @@ router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, re
     });
     res.json(points);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -37,7 +38,8 @@ router.get("/patient/:patientId", auth, async (req, res) => {
     }
     res.json(points);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -66,7 +68,8 @@ router.post("/earn", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (re
     });
     res.json(updated);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

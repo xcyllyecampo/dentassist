@@ -1,5 +1,5 @@
 const express = require("express");
-const { auth } = require("../middleware/auth");
+const { auth, roleGuard } = require("../middleware/auth");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -206,7 +206,7 @@ async function getClinicContext(prisma) {
   };
 }
 
-router.post("/chat", auth, async (req, res) => {
+router.post("/chat", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { message, history } = req.body;
@@ -225,12 +225,12 @@ router.post("/chat", auth, async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.debug("AI service unavailable, using mock chat response");
+    console.error("AI service unavailable, using mock chat response");
     res.json(MOCK_RESPONSES.chat(req.body.message || ""));
   }
 });
 
-router.post("/xray/analyze", auth, upload.single("file"), async (req, res) => {
+router.post("/xray/analyze", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.single("file"), async (req, res) => {
   try {
     const formData = new FormData();
     const fileBuffer = fs.readFileSync(req.file.path);
@@ -244,12 +244,12 @@ router.post("/xray/analyze", auth, upload.single("file"), async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.debug("AI service unavailable, using mock xray analysis");
+    console.error("AI service unavailable, using mock xray analysis");
     res.json(MOCK_RESPONSES.xray);
   }
 });
 
-router.post("/oral/screen", auth, upload.single("file"), async (req, res) => {
+router.post("/oral/screen", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.single("file"), async (req, res) => {
   try {
     const formData = new FormData();
     const fileBuffer = fs.readFileSync(req.file.path);
@@ -263,12 +263,12 @@ router.post("/oral/screen", auth, upload.single("file"), async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.debug("AI service unavailable, using mock oral screening");
+    console.error("AI service unavailable, using mock oral screening");
     res.json(MOCK_RESPONSES.oral);
   }
 });
 
-router.post("/treatment/suggest", auth, async (req, res) => {
+router.post("/treatment/suggest", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const { symptoms, examination_findings, patient_age, patient_gender, medical_history } = req.body;
     const response = await fetch(`${AI_SERVICE_URL}/treatment/suggest`, {
@@ -279,12 +279,12 @@ router.post("/treatment/suggest", auth, async (req, res) => {
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.debug("AI service unavailable, using mock treatment suggestions");
+    console.error("AI service unavailable, using mock treatment suggestions");
     res.json(MOCK_RESPONSES.treatment);
   }
 });
 
-router.post("/smile/simulate", auth, upload.single("file"), async (req, res) => {
+router.post("/smile/simulate", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.single("file"), async (req, res) => {
   try {
     const treatmentType = req.body.treatment_type || "whitening";
     const formData = new FormData();
@@ -300,7 +300,7 @@ router.post("/smile/simulate", auth, upload.single("file"), async (req, res) => 
     const result = await response.json();
     res.json(result);
   } catch (err) {
-    console.debug("AI service unavailable, using mock smile simulation");
+    console.error("AI service unavailable, using mock smile simulation");
     res.json(MOCK_RESPONSES.smile(req.body.treatment_type || "whitening"));
   }
 });

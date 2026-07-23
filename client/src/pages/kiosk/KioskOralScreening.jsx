@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
@@ -11,6 +11,12 @@ export default function KioskOralScreening() {
   const [preview, setPreview] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];

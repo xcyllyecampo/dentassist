@@ -10,11 +10,27 @@ router.get("/", auth, async (req, res) => {
     const where = dentistId ? { userId: dentistId } : {};
     const schedules = await prisma.dentistSchedule.findMany({
       where,
-      include: { user: { select: { id: true, name: true } } },
+      include: { user: { select: { id: true, name: true, avatar: true } } },
       orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
     });
     res.json(schedules);
   } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/dentists", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const dentists = await prisma.user.findMany({
+      where: { role: "DENTIST", active: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+    res.json(dentists);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -28,6 +44,7 @@ router.get("/dentist/:dentistId", auth, async (req, res) => {
     });
     res.json(schedules);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -40,10 +57,11 @@ router.post("/", auth, roleGuard("ADMIN"), async (req, res) => {
       where: { userId_dayOfWeek: { userId: dentistId, dayOfWeek } },
       update: { startTime, endTime },
       create: { userId: dentistId, dayOfWeek, startTime, endTime },
-      include: { user: { select: { id: true, name: true } } },
+      include: { user: { select: { id: true, name: true, avatar: true } } },
     });
     res.status(201).json(schedule);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -54,6 +72,7 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
     await prisma.dentistSchedule.delete({ where: { id: req.params.id } });
     res.json({ message: "Schedule deleted" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });

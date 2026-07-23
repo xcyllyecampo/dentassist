@@ -56,15 +56,20 @@ model User {
   role      Role     @default(PATIENT)
   phone     String?
   avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  active    Boolean  @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastEditedBy   String?
+  lastEditedAt   DateTime?
 
   patient          Patient?
   dentistSchedules DentistSchedule[] @relation("DentistSchedules")
   dentistAppointments  Appointment[] @relation("DentistAppointments")
+  dentistQueueEntries  QueueEntry[]  @relation("DentistQueueEntries")
   treatments       Treatment[]
   xrayUploads      XrayImage[]
   refreshTokens    RefreshToken[]
+  notifications    Notification[]
 }
 
 model Patient {
@@ -112,7 +117,7 @@ model Appointment {
   patientId   String
   patient     Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
   dentistId   String
-  dentist     User              @relation("DentistAppointments", fields: [dentistId], references: [id])
+  dentist     User              @relation("DentistAppointments", fields: [dentistId], references: [id], onDelete: Restrict)
   roomId      String?
   room        Room?             @relation(fields: [roomId], references: [id])
   date        DateTime
@@ -147,7 +152,7 @@ model Treatment {
   dentistId     String
   dentist       User     @relation(fields: [dentistId], references: [id])
   appointmentId String?
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   procedure     String
   description   String?
   notes         String?
@@ -163,7 +168,7 @@ model Prescription {
   patientId   String
   patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   treatmentId String?
-  treatment   Treatment? @relation(fields: [treatmentId], references: [id])
+  treatment   Treatment? @relation(fields: [treatmentId], references: [id], onDelete: SetNull)
   medication  String
   dosage      String
   frequency   String
@@ -189,6 +194,8 @@ model QueueEntry {
   id            String      @id @default(cuid())
   patientId     String
   patient       Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  dentistId     String?
+  dentist           User?       @relation("DentistQueueEntries", fields: [dentistId], references: [id], onDelete: SetNull)
   position      Int
   status        QueueStatus @default(WAITING)
   estimatedWait Int?
@@ -206,6 +213,18 @@ model DentistSchedule {
   createdAt DateTime @default(now())
 
   @@unique([userId, dayOfWeek])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
 }
 
 model RefreshToken {

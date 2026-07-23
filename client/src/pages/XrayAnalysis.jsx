@@ -23,6 +23,12 @@ export default function XrayAnalysis() {
     }
   }, [selectedPatient]);
 
+  useEffect(() => {
+    return () => {
+      if (directPreview) URL.revokeObjectURL(directPreview);
+    };
+  }, [directPreview]);
+
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || !selectedPatient) return;

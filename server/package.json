@@ -8,6 +8,7 @@
     "dev": "nodemon index.js",
     "db:migrate": "npx prisma migrate dev --name init",
     "db:seed": "node prisma/seed.js",
+    "db:backup": "node prisma/backup.js",
     "db:reset": "npx prisma migrate reset --force"
   },
   "keywords": [],

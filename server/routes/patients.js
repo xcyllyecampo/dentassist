@@ -1,5 +1,6 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ router.get("/me", auth, async (req, res) => {
     const patient = await prisma.patient.findUnique({
       where: { userId: req.user.id },
       include: {
-        user: { select: { name: true, email: true, phone: true } },
+        user: { select: { name: true, email: true, phone: true, avatar: true } },
         teeth: { orderBy: { toothNumber: "asc" } },
         appointments: { orderBy: { date: "desc" }, take: 10 },
         treatments: { orderBy: { createdAt: "desc" }, take: 10 },
@@ -20,6 +21,7 @@ router.get("/me", auth, async (req, res) => {
     if (!patient) return res.status(404).json({ error: "Patient profile not found" });
     res.json(patient);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -28,22 +30,23 @@ router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, re
   try {
     const prisma = req.app.get("prisma");
     const patients = await prisma.patient.findMany({
-      include: { user: { select: { name: true, email: true, phone: true } } },
+      include: { user: { select: { name: true, email: true, phone: true, avatar: true } } },
       orderBy: { createdAt: "desc" },
     });
     res.json(patients);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-router.get("/:id", auth, async (req, res) => {
+router.get("/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const patient = await prisma.patient.findUnique({
       where: { id: req.params.id },
       include: {
-        user: { select: { name: true, email: true, phone: true } },
+        user: { select: { name: true, email: true, phone: true, avatar: true } },
         teeth: { orderBy: { toothNumber: "asc" } },
         appointments: { orderBy: { date: "desc" }, take: 10 },
         treatments: { orderBy: { createdAt: "desc" }, take: 10 },
@@ -54,6 +57,7 @@ router.get("/:id", auth, async (req, res) => {
     if (!patient) return res.status(404).json({ error: "Patient not found" });
     res.json(patient);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -81,7 +85,7 @@ router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req, r
         emergencyContact,
         insuranceInfo,
       },
-      include: { user: { select: { name: true, email: true, phone: true } } },
+      include: { user: { select: { name: true, email: true, phone: true, avatar: true } } },
     });
 
     const defaultTeeth = Array.from({ length: 32 }, (_, i) => ({
@@ -90,6 +94,9 @@ router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req, r
       status: "HEALTHY",
     }));
     await prisma.tooth.createMany({ data: defaultTeeth });
+
+    const io = req.app.get("io");
+    notifyAllStaff(prisma, io, { type: "patient", message: `New patient registered: ${patient.user?.name || name}` });
 
     res.status(201).json(patient);
   } catch (err) {
@@ -106,10 +113,11 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req,
     const patient = await prisma.patient.update({
       where: { id: req.params.id },
       data: { dob: dob ? new Date(dob) : undefined, gender, bloodType, address, allergies, medicalHistory, emergencyContact, insuranceInfo },
-      include: { user: { select: { name: true, email: true, phone: true } } },
+      include: { user: { select: { name: true, email: true, phone: true, avatar: true } } },
     });
     res.json(patient);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -123,6 +131,7 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
     await prisma.user.delete({ where: { id: patient.userId } });
     res.json({ message: "Patient deleted" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -138,8 +147,10 @@ router.put("/:patientId/teeth/:toothNumber", auth, roleGuard("DENTIST", "ADMIN")
     });
     res.json(tooth);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 module.exports = router;
+

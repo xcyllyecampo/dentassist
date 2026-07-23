@@ -12,7 +12,6 @@ const STATUS_COLORS = {
 const FLOOR_MARBLE = '#f5f0eb';
 const FLOOR_MARBLE2 = '#ebe5dd';
 const WALL_COLOR = '#e8edf5';
-const WALL_GLASS = '#88ccee';
 const WOOD = '#c4a882';
 const WOOD_DARK = '#a08060';
 const CLINICAL_WHITE = '#e8e8e8';
@@ -46,38 +45,54 @@ function Floor() {
 
 /* ─── WALLS ─── */
 function Walls() {
-  const wallMat = { color: WALL_COLOR, transparent: true, opacity: 0.22, roughness: 0.5 };
-  const glassMat = { color: WALL_GLASS, transparent: true, opacity: 0.12, roughness: 0.1, metalness: 0.1 };
+  const wallMat = { color: WALL_COLOR, roughness: 0.6, metalness: 0.05 };
+  const trimMat = { color: '#d5dce8', roughness: 0.5, metalness: 0.05 };
   return (
     <group>
       {/* Back wall */}
-      <mesh position={[0, 1.2, -7]} castShadow>
-        <boxGeometry args={[20, 2.4, 0.08]} />
+      <mesh position={[0, 1.2, -7]} castShadow receiveShadow>
+        <boxGeometry args={[20, 2.4, 0.12]} />
         <meshStandardMaterial {...wallMat} />
+      </mesh>
+      {/* Back wall trim (baseboard) */}
+      <mesh position={[0, 0.08, -6.94]}>
+        <boxGeometry args={[20, 0.16, 0.04]} />
+        <meshStandardMaterial {...trimMat} />
+      </mesh>
+      {/* Back wall trim (top rail) */}
+      <mesh position={[0, 2.32, -6.94]}>
+        <boxGeometry args={[20, 0.16, 0.04]} />
+        <meshStandardMaterial {...trimMat} />
       </mesh>
       {/* Left wall */}
-      <mesh position={[-10, 1.2, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-        <boxGeometry args={[14, 2.4, 0.08]} />
+      <mesh position={[-10, 1.2, 0]} rotation={[0, Math.PI / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[14, 2.4, 0.12]} />
         <meshStandardMaterial {...wallMat} />
+      </mesh>
+      {/* Left wall trim (baseboard) */}
+      <mesh position={[-9.94, 0.08, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <boxGeometry args={[14, 0.16, 0.04]} />
+        <meshStandardMaterial {...trimMat} />
+      </mesh>
+      {/* Left wall trim (top rail) */}
+      <mesh position={[-9.94, 2.32, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <boxGeometry args={[14, 0.16, 0.04]} />
+        <meshStandardMaterial {...trimMat} />
       </mesh>
       {/* Right wall */}
-      <mesh position={[10, 1.2, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
-        <boxGeometry args={[14, 2.4, 0.08]} />
+      <mesh position={[10, 1.2, 0]} rotation={[0, Math.PI / 2, 0]} castShadow receiveShadow>
+        <boxGeometry args={[14, 2.4, 0.12]} />
         <meshStandardMaterial {...wallMat} />
       </mesh>
-      {/* Front wall - glass entrance */}
-      <mesh position={[-5, 1.2, 7]}>
-        <boxGeometry args={[8, 2.4, 0.06]} />
-        <meshStandardMaterial {...glassMat} />
+      {/* Right wall trim (baseboard) */}
+      <mesh position={[9.94, 0.08, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <boxGeometry args={[14, 0.16, 0.04]} />
+        <meshStandardMaterial {...trimMat} />
       </mesh>
-      <mesh position={[6.5, 1.2, 7]}>
-        <boxGeometry args={[5, 2.4, 0.06]} />
-        <meshStandardMaterial {...glassMat} />
-      </mesh>
-      {/* Glass door */}
-      <mesh position={[0.5, 1.0, 7]}>
-        <boxGeometry args={[2.5, 2.0, 0.04]} />
-        <meshStandardMaterial color="#aaddff" transparent opacity={0.15} roughness={0.05} />
+      {/* Right wall trim (top rail) */}
+      <mesh position={[9.94, 2.32, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <boxGeometry args={[14, 0.16, 0.04]} />
+        <meshStandardMaterial {...trimMat} />
       </mesh>
     </group>
   );
@@ -109,10 +124,10 @@ function WalkInKiosk() {
         <meshStandardMaterial color={SCREEN_BLUE} emissive={SCREEN_BLUE} emissiveIntensity={0.6} />
       </mesh>
       {/* Screen text */}
-      <Text position={[0, 1.25, 0.62]} fontSize={0.12} color="#ffffff" fontWeight="bold">
+      <Text position={[0, 1.25, 0.62]} fontSize={0.22} color="#ffffff" fontWeight="bold">
         DentAssist
       </Text>
-      <Text position={[0, 1.08, 0.62]} fontSize={0.07} color="#ffffff">
+      <Text position={[0, 1.08, 0.62]} fontSize={0.3} color="#ffffff">
         Walk-In Kiosk
       </Text>
       {/* Base */}
@@ -155,7 +170,7 @@ function ReceptionDesk() {
         <meshStandardMaterial color="#0ea5e9" emissive="#0ea5e9" emissiveIntensity={0.3} />
       </mesh>
       {/* Reception sign */}
-      <Text position={[0, 1.5, 0]} fontSize={0.2} color="#0369a1" fontWeight="bold">
+      <Text position={[0, 1.5, 0]} fontSize={0.28} color="#0369a1" fontWeight="bold">
         RECEPTION
       </Text>
       {/* Chair behind desk */}
@@ -250,10 +265,10 @@ function WaitingArea({ queue }) {
           <planeGeometry args={[1.1, 0.6]} />
           <meshStandardMaterial color={SCREEN_GREEN} emissive={SCREEN_GREEN} emissiveIntensity={0.4} />
         </mesh>
-        <Text position={[0, 0.1, 0.03]} fontSize={0.08} color="#ffffff" fontWeight="bold">
+        <Text position={[0, 0.1, 0.03]} fontSize={0.3} color="#ffffff" fontWeight="bold">
           QUEUE STATUS
         </Text>
-        <Text position={[0, -0.08, 0.03]} fontSize={0.14} color="#ffffff">
+        <Text position={[0, -0.08, 0.03]} fontSize={0.24} color="#ffffff">
           #{waitingCount > 0 ? '1' : '—'}
         </Text>
         {/* TV mount */}
@@ -276,7 +291,7 @@ function ConsultationRoom() {
         <meshStandardMaterial color="#f0f5ff" roughness={0.4} />
       </mesh>
       {/* Room label */}
-      <Text position={[0, 2.2, -1.8]} fontSize={0.18} color="#0369a1" fontWeight="bold">
+      <Text position={[0, 2.2, -1.8]} fontSize={0.28} color="#0369a1" fontWeight="bold">
         CONSULTATION
       </Text>
       {/* Desk */}
@@ -337,7 +352,7 @@ function XrayRoom() {
         <planeGeometry args={[4.5, 4]} />
         <meshStandardMaterial color="#e8e0f0" roughness={0.4} />
       </mesh>
-      <Text position={[0, 2.2, -1.8]} fontSize={0.18} color="#7c3aed" fontWeight="bold">
+      <Text position={[0, 2.2, -1.8]} fontSize={0.28} color="#7c3aed" fontWeight="bold">
         X-RAY ROOM
       </Text>
       {/* Panoramic X-ray machine */}
@@ -373,7 +388,7 @@ function XrayRoom() {
         <boxGeometry args={[0.4, 0.3, 0.02]} />
         <meshStandardMaterial color="#eab308" emissive="#eab308" emissiveIntensity={0.2} />
       </mesh>
-      <Text position={[-1.8, 1.5, -1.78]} fontSize={0.06} color="#000000" fontWeight="bold">
+      <Text position={[-1.8, 1.5, -1.78]} fontSize={0.3} color="#000000" fontWeight="bold">
         X-RAY
       </Text>
     </group>
@@ -394,7 +409,7 @@ function TreatmentRoom({ room, position, onClick, isSelected }) {
       </mesh>
 
       {/* Room label */}
-      <Text position={[0, 2.2, -2]} fontSize={0.2} color="#0369a1" fontWeight="bold">
+      <Text position={[0, 2.2, -2]} fontSize={0.28} color="#0369a1" fontWeight="bold">
         {room.name || `Room ${room.number}`}
       </Text>
 
@@ -550,7 +565,7 @@ function TreatmentRoom({ room, position, onClick, isSelected }) {
 
       {/* Patient info when occupied */}
       {room.status === 'OCCUPIED' && appointment && (
-        <Text position={[0, 1.8, 0]} fontSize={0.12} color="#1e293b" maxWidth={4} textAlign="center">
+        <Text position={[0, 1.8, 0]} fontSize={0.22} color="#1e293b" maxWidth={4} textAlign="center">
           {`${appointment.patient?.user?.name || 'Patient'} — ${appointment.reason || ''}`}
         </Text>
       )}
@@ -566,7 +581,7 @@ function SterilizationRoom() {
         <planeGeometry args={[5.5, 4]} />
         <meshStandardMaterial color="#f0fdf4" roughness={0.4} />
       </mesh>
-      <Text position={[0, 2.2, -1.8]} fontSize={0.18} color="#16a34a" fontWeight="bold">
+      <Text position={[0, 2.2, -1.8]} fontSize={0.28} color="#16a34a" fontWeight="bold">
         STERILIZATION
       </Text>
       {/* Dirty zone */}
@@ -589,7 +604,7 @@ function SterilizationRoom() {
       <RoundedBox args={[0.7, 0.5, 0.6]} radius={0.03} position={[-1.5, 0.25, -0.5]} castShadow receiveShadow>
         <meshStandardMaterial color={CLINICAL_WHITE} roughness={0.4} />
       </RoundedBox>
-      <Text position={[-1.5, 0.55, -0.5]} fontSize={0.06} color="#334155">
+      <Text position={[-1.5, 0.55, -0.5]} fontSize={0.3} color="#334155">
         Ultrasonic
       </Text>
       {/* Autoclave */}
@@ -600,14 +615,14 @@ function SterilizationRoom() {
         <circleGeometry args={[0.15, 16]} />
         <meshStandardMaterial color="#1e293b" />
       </mesh>
-      <Text position={[0.8, 0.95, -0.8]} fontSize={0.06} color="#334155">
+      <Text position={[0.8, 0.95, -0.8]} fontSize={0.3} color="#334155">
         Autoclave
       </Text>
       {/* Drying station */}
       <RoundedBox args={[0.8, 0.7, 0.5]} radius={0.03} position={[1.5, 0.35, 0.5]} castShadow receiveShadow>
         <meshStandardMaterial color={CLINICAL_WHITE} roughness={0.4} />
       </RoundedBox>
-      <Text position={[1.5, 0.75, 0.5]} fontSize={0.06} color="#334155">
+      <Text position={[1.5, 0.75, 0.5]} fontSize={0.3} color="#334155">
         Dryer
       </Text>
       {/* Storage cabinets */}
@@ -629,7 +644,7 @@ function StorageRoom() {
         <planeGeometry args={[5.5, 3]} />
         <meshStandardMaterial color="#fafaf9" roughness={0.5} />
       </mesh>
-      <Text position={[0, 2.2, -1.3]} fontSize={0.16} color="#78716c" fontWeight="bold">
+      <Text position={[0, 2.2, -1.3]} fontSize={0.3} color="#78716c" fontWeight="bold">
         SUPPLY STORAGE
       </Text>
       {/* Shelving units */}
@@ -659,7 +674,7 @@ function StaffRoom() {
         <planeGeometry args={[5.5, 4]} />
         <meshStandardMaterial color="#fefce8" roughness={0.5} />
       </mesh>
-      <Text position={[0, 2.2, -1.8]} fontSize={0.16} color="#a16207" fontWeight="bold">
+      <Text position={[0, 2.2, -1.8]} fontSize={0.3} color="#a16207" fontWeight="bold">
         STAFF ROOM
       </Text>
       {/* Table */}
@@ -706,7 +721,7 @@ function Restroom() {
         <planeGeometry args={[3, 2.5]} />
         <meshStandardMaterial color="#f0f9ff" roughness={0.3} />
       </mesh>
-      <Text position={[0, 2.2, -1.1]} fontSize={0.14} color="#0369a1" fontWeight="bold">
+      <Text position={[0, 2.2, -1.1]} fontSize={0.24} color="#0369a1" fontWeight="bold">
         RESTROOM
       </Text>
       {/* Toilet */}
@@ -735,7 +750,7 @@ function Restroom() {
         <boxGeometry args={[0.3, 0.3, 0.02]} />
         <meshStandardMaterial color="#0ea5e9" />
       </mesh>
-      <Text position={[0, 1.2, 1.28]} fontSize={0.08} color="#ffffff" fontWeight="bold">
+      <Text position={[0, 1.2, 1.28]} fontSize={0.3} color="#ffffff" fontWeight="bold">
         PWD
       </Text>
     </group>
@@ -750,7 +765,7 @@ function Hallway() {
         <planeGeometry args={[18, 1.5]} />
         <meshStandardMaterial color="#e2e8f0" roughness={0.3} />
       </mesh>
-      <Text position={[0, 0.05, 0.5]} fontSize={0.15} color="#94a3b8">
+      <Text position={[0, 0.05, 0.5]} fontSize={0.28} color="#94a3b8">
         ─── HALLWAY ───
       </Text>
     </group>
@@ -815,6 +830,35 @@ function TechDetails() {
   );
 }
 
+/* ─── INNER ROOM DIVIDERS ─── */
+function RoomDividers() {
+  const wallMat = { color: '#dde4ee', roughness: 0.6, metalness: 0.05 };
+  return (
+    <group>
+      {/* Left partition wall (separates Staff/Sterilization/Storage from center) */}
+      <mesh position={[-5, 1.0, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[14, 2.0, 0.08]} />
+        <meshStandardMaterial {...wallMat} />
+      </mesh>
+      {/* Right partition wall (separates Xray from center) */}
+      <mesh position={[5, 1.0, 0]} rotation={[0, Math.PI / 2, 0]} castShadow>
+        <boxGeometry args={[14, 2.0, 0.08]} />
+        <meshStandardMaterial {...wallMat} />
+      </mesh>
+      {/* Treatment room area divider (back wall of treatment zone) */}
+      <mesh position={[0, 1.0, 1.5]}>
+        <boxGeometry args={[8, 2.0, 0.08]} />
+        <meshStandardMaterial {...wallMat} />
+      </mesh>
+      {/* Consultation room back wall */}
+      <mesh position={[0, 1.0, -1.8]}>
+        <boxGeometry args={[6, 2.0, 0.08]} />
+        <meshStandardMaterial {...wallMat} />
+      </mesh>
+    </group>
+  );
+}
+
 /* ─── MAIN SCENE ─── */
 export default function ClinicScene({ rooms, queue, selectedRoom, onSelectRoom }) {
   const roomPositions = useMemo(() => {
@@ -852,6 +896,7 @@ export default function ClinicScene({ rooms, queue, selectedRoom, onSelectRoom }
       <ReceptionDesk />
       <WaitingArea queue={queue} />
       <Hallway />
+      <RoomDividers />
       <ConsultationRoom />
       <XrayRoom />
       <SterilizationRoom />

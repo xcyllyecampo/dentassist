@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import Spinner from '../components/Spinner';
-import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, HelpCircle } from 'lucide-react';
+import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, Calendar, Stethoscope, Pill, Image, Smile } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { playClick, playSuccess, playError } from '../lib/sounds';
@@ -46,7 +46,6 @@ export default function PatientDetail() {
 
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [toothNote, setToothNote] = useState('');
-  const [showToothGuide, setShowToothGuide] = useState(false);
 
   const fetchPatient = () => {
     setLoading(true);
@@ -217,35 +216,37 @@ export default function PatientDetail() {
             </div>
           )}
 
-          {activeTab === 'teeth' && (
+          {activeTab === 'teeth' && (() => {
+            const allTeeth = Array.from({ length: 32 }, (_, i) => {
+              const dbTooth = patient.teeth?.find(t => t.toothNumber === i + 1);
+              return dbTooth || { toothNumber: i + 1, status: 'HEALTHY', id: `default-${i + 1}` };
+            });
+            return (
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-900">Interactive Tooth Chart</h3>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => { playClick(); setShowToothGuide(true); }}
-                    className="flex items-center gap-1 text-xs text-[#004aad] hover:text-[#003782] font-medium">
-                    <HelpCircle size={14} /> Tooth Guide
+                {selectedTooth && (
+                  <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
+                    <X size={14} /> Clear selection
                   </button>
-                  {selectedTooth && (
-                    <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
-                      <X size={14} /> Clear selection
-                    </button>
-                  )}
-                </div>
+                )}
               </div>
               <p className="text-xs text-gray-500 mb-3">Click a tooth to update its status</p>
               <div className="grid grid-cols-8 gap-2 mb-4">
-                {patient.teeth?.map(tooth => (
+                {allTeeth.map(tooth => (
                   <div key={tooth.id}
                     onClick={() => { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); }}
                     className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold cursor-pointer transition-all hover:scale-110 ${
-                      selectedTooth?.id === tooth.id ? 'ring-2 ring-[#004aad] ring-offset-2 scale-110' : ''
+                      selectedTooth?.toothNumber === tooth.toothNumber ? 'ring-2 ring-[#004aad] ring-offset-2 scale-110' : ''
                     } ${STATUS_COLORS[tooth.status] || 'bg-[#e6efff] text-[#003782] border border-slate-200'}`}>
                     <span>#{tooth.toothNumber}</span>
                     <span className="text-[10px] font-normal">{tooth.status}</span>
                   </div>
                 ))}
+              </div>
+              <div className="rounded-xl overflow-hidden border border-slate-200 mb-4">
+                <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
               </div>
               <div className="flex flex-wrap gap-3 text-xs mb-4">
                 {TOOTH_STATUSES.map(s => (
@@ -276,11 +277,20 @@ export default function PatientDetail() {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'appointments' && (
             <div className="space-y-3">
-              {patient.appointments?.length === 0 ? <p className="text-gray-400">No appointments yet</p> :
+              {patient.appointments?.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Calendar size={20} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-500 font-medium mb-1">No appointments yet</p>
+                  <p className="text-slate-400 text-xs">This patient has no appointment history</p>
+                </div>
+              ) :
                 patient.appointments?.map(a => (
                   <div key={a.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div>
@@ -307,7 +317,15 @@ export default function PatientDetail() {
                   <Plus size={14} /> Add Treatment
                 </button>
               </div>
-              {patient.treatments?.length === 0 ? <p className="text-gray-400">No treatments yet</p> :
+              {patient.treatments?.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Stethoscope size={20} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-500 font-medium mb-1">No treatments yet</p>
+                  <p className="text-slate-400 text-xs">Add a treatment record for this patient</p>
+                </div>
+              ) :
                 <div className="space-y-3">
                   {patient.treatments?.map(t => (
                     <div key={t.id} className="p-3 bg-slate-50 rounded-lg flex items-start justify-between">
@@ -399,7 +417,15 @@ export default function PatientDetail() {
                   <Plus size={14} /> Add Prescription
                 </button>
               </div>
-              {patient.prescriptions?.length === 0 ? <p className="text-gray-400">No prescriptions yet</p> :
+              {patient.prescriptions?.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Pill size={20} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-500 font-medium mb-1">No prescriptions yet</p>
+                  <p className="text-slate-400 text-xs">Prescriptions for this patient will appear here</p>
+                </div>
+              ) :
                 <div className="space-y-3">
                   {patient.prescriptions?.map(p => (
                     <div key={p.id} className="p-3 bg-slate-50 rounded-lg flex items-start justify-between">
@@ -478,7 +504,13 @@ export default function PatientDetail() {
           {activeTab === 'x-rays' && (
             <div>
               {patient.xrayImages?.length === 0 ? (
-                <p className="text-gray-400">No X-ray images yet. Upload from the X-Ray Analysis module.</p>
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Image size={20} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-500 font-medium mb-1">No X-ray images yet</p>
+                  <p className="text-slate-400 text-xs">Upload images from the X-Ray Analysis module</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {patient.xrayImages?.map(img => (
@@ -536,7 +568,13 @@ export default function PatientDetail() {
               <div>
                 <h3 className="font-bold text-slate-900 mb-3">Earned Badges</h3>
                 {badges.length === 0 ? (
-                  <p className="text-gray-400 text-sm">No badges earned yet</p>
+                  <div className="text-center py-6">
+                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Award size={20} className="text-slate-300" />
+                    </div>
+                    <p className="text-slate-500 font-medium mb-1">No badges earned yet</p>
+                    <p className="text-slate-400 text-xs">Badges are awarded as patients complete milestones</p>
+                  </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {badges.map(pb => (
@@ -593,22 +631,6 @@ export default function PatientDetail() {
           )}
         </div>
       </div>
-
-      {showToothGuide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowToothGuide(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900">Tooth Numbering Guide</h3>
-              <button onClick={() => setShowToothGuide(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4">
-              <img src="/images/tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto rounded-lg" />
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }

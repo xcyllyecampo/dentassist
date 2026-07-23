@@ -1,29 +1,31 @@
-import { NavLink, useLocation } from 'react-router-dom';
+﻿import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
-  Stethoscope, Image, BarChart3, Box, CalendarClock,
-  Settings, LogOut, ChevronLeft, ChevronRight, Sparkles
+  Stethoscope, Image, BarChart3, CalendarClock,
+  Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
 } from 'lucide-react';
 import { playClick, playWhoosh } from '../lib/sounds';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
-  { to: '/patients', icon: Users, label: 'Patients', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
-  { to: '/appointments', icon: Calendar, label: 'Appointments', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
-  { to: '/queue', icon: Clock, label: 'Queue', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
+  { to: '/patients', icon: Users, label: 'Patients', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'], badge: 'patient' },
+  { to: '/appointments', icon: Calendar, label: 'Appointments', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'], badge: 'appointment' },
+  { to: '/queue', icon: Clock, label: 'Queue', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'], badge: 'queue' },
   { to: '/records', icon: Activity, label: 'Records', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
   { to: '/xray', icon: Image, label: 'X-Ray Analysis', roles: ['ADMIN', 'DENTIST'] },
   { to: '/oral-screening', icon: Stethoscope, label: 'Oral Screening', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
   { to: '/smile-simulation', icon: Sparkles, label: 'Smile Simulation', roles: ['ADMIN', 'DENTIST'] },
   { to: '/treatment-support', icon: Settings, label: 'Treatment Support', roles: ['ADMIN', 'DENTIST'] },
   { to: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['ADMIN', 'DENTIST'] },
-  { to: '/digital-twin', icon: Box, label: 'Digital Twin', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
   { to: '/schedules', icon: CalendarClock, label: 'Dentist Schedules', roles: ['ADMIN'] },
+  { to: '/admin/manage-users', icon: ShieldCheck, label: 'Manage Users', roles: ['ADMIN'] },
 ];
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const { user, logout } = useAuth();
+  const { counts } = useNotifications();
   const location = useLocation();
 
   if (user?.role === 'PATIENT') return null;
@@ -42,27 +44,36 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
 
   const sidebarContent = (isMobile = false) => (
     <>
-      <div className={`p-4 flex items-center ${collapsed && !isMobile ? 'justify-center' : 'justify-between'} border-b border-white/10`}>
-        {(!collapsed || isMobile) && (
-          <div className="flex items-center gap-3">
-            <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="w-[72px] h-[72px] rounded-xl object-contain" />
-            <div>
-              <div className="font-bold text-white text-sm tracking-tight">DentAssist</div>
-              <div className="text-[10px] text-[#6b9ae8]/60 font-medium tracking-wide uppercase">AI Dental Clinic</div>
+      {/* Branding section */}
+      <div className="relative border-b border-white/[0.08]">
+        {(!collapsed || isMobile) ? (
+          <div className="flex items-center pt-4 pb-5 px-5">
+            <div className="flex-1 flex items-center justify-start">
+              <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-[44px] w-auto object-contain" />
             </div>
+            {!isMobile && (
+              <button onClick={handleCollapse}
+                className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-[#8bb4f8] hover:text-white absolute right-3 top-3">
+                {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+              </button>
+            )}
           </div>
-        )}
-        {!isMobile && (
-          <button onClick={handleCollapse}
-            className="p-1.5 hover:bg-white/10 rounded-lg text-[#6b9ae8]/60 hover:text-white transition-colors">
-            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </button>
+        ) : (
+          <div className="relative flex items-center justify-center h-14">
+            {!isMobile && (
+              <button onClick={handleCollapse}
+                className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-[#8bb4f8] hover:text-white">
+                {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+              </button>
+            )}
+          </div>
         )}
       </div>
 
       <nav className="flex-1 py-3 overflow-y-auto px-2 space-y-0.5">
-        {filteredNav.map(({ to, icon: Icon, label }) => {
+        {filteredNav.map(({ to, icon: Icon, label, badge }) => {
           const isActive = location.pathname === to;
+          const badgeCount = badge ? (counts[badge] || 0) : 0;
           return (
             <NavLink
               key={to}
@@ -77,7 +88,17 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-[#4a85d6] to-[#1a5fb4] rounded-r-full" />
               )}
-              <Icon size={18} className={isActive ? 'text-[#4a85d6]' : 'text-[#4a85d6]/40 group-hover:text-[#6b9ae8]'} />
+              <div className="relative">
+                <Icon size={18} className={isActive ? 'text-[#4a85d6]' : 'text-[#4a85d6]/40 group-hover:text-[#6b9ae8]'} />
+                {badgeCount > 0 && !collapsed && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] bg-rose-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center px-0.5">
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
+                {badgeCount > 0 && collapsed && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full" />
+                )}
+              </div>
               {(!collapsed || isMobile) && (
                 <span className="text-sm font-medium truncate">{label}</span>
               )}
@@ -107,15 +128,15 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
   return (
     <>
       {/* Desktop */}
-      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex-col ${collapsed ? 'w-16' : 'w-64'}`}
+      <aside className={`hidden md:flex fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex-col ${collapsed ? 'w-16' : 'w-[264px]'}`}
         style={{ borderRight: '1px solid rgba(0, 74, 173, 0.08)' }}>
         {sidebarContent()}
       </aside>
 
       {/* Mobile */}
-      <aside className={`md:hidden fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex flex-col ${mobileOpen ? 'w-64' : 'w-0'} overflow-hidden`}
+      <aside className={`md:hidden fixed left-0 top-0 h-full bg-gradient-to-b from-[#0c0f1a] via-[#111827] to-[#0f172a] text-white transition-all duration-300 ease-out z-50 flex flex-col ${mobileOpen ? 'w-[264px]' : 'w-0'} overflow-hidden`}
         style={{ borderRight: '1px solid rgba(0, 74, 173, 0.08)' }}>
-        <div className="min-w-[16rem] flex flex-col h-full">
+        <div className="min-w-[264px] flex flex-col h-full">
           {sidebarContent(true)}
         </div>
       </aside>

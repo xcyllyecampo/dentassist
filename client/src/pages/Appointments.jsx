@@ -50,7 +50,7 @@ export default function Appointments() {
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     Promise.all([
       api.get(`/appointments?date=${dateStr}`),
       api.get('/patients'),
@@ -75,7 +75,7 @@ export default function Appointments() {
         .then(res => setMonthAppointments(res.data))
         .catch(() => setMonthAppointments([]));
     }
-  }, [viewMode, selectedDate]);
+  }, [viewMode, selectedDate, appointments]);
 
   const getMonthDays = () => {
     const year = selectedDate.getFullYear();
@@ -104,7 +104,7 @@ export default function Appointments() {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/appointments', { ...form, date: form.date || selectedDate.toISOString().split('T')[0] });
+      const res = await api.post('/appointments', { ...form, date: form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] });
       setAppointments([...appointments, res.data]);
       setShowCreateModal(false);
       setForm({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
@@ -115,7 +115,7 @@ export default function Appointments() {
   const handleStatusUpdate = async (id, status) => {
     try {
       const res = await api.put(`/appointments/${id}`, { status });
-      setAppointments(appointments.map(a => a.id === id ? res.data : a));
+      setAppointments(prev => prev.map(a => a.id === id ? res.data : a));
       toast.success(`Appointment ${status.toLowerCase().replace('_', ' ')}`);
     } catch (err) { toast.error('Error updating appointment'); }
   };
@@ -161,14 +161,14 @@ export default function Appointments() {
         <>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => { playClick(); const d = new Date(selectedDate); d.setDate(d.getDate() - (viewMode === 'month' ? 30 : 1)); setSelectedDate(d); }}
+            <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() - 1) : d.setDate(d.getDate() - 1); setSelectedDate(d); }}
               className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft size={20} /></button>
             <h2 className="text-lg font-bold text-slate-900">
               {viewMode === 'month'
                 ? selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
                 : selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </h2>
-            <button onClick={() => { playClick(); const d = new Date(selectedDate); d.setDate(d.getDate() + (viewMode === 'month' ? 30 : 1)); setSelectedDate(d); }}
+            <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() + 1) : d.setDate(d.getDate() + 1); setSelectedDate(d); }}
               className="p-2 hover:bg-slate-100 rounded-lg"><ChevronRight size={20} /></button>
           </div>
           <div className="flex items-center gap-3">
@@ -245,7 +245,7 @@ export default function Appointments() {
                 {timeSlots.map(time => (
                   <div key={time} className="h-16 border-b border-slate-100 px-2 py-1" />
                 ))}
-                {appointments.filter(a => timeSlots.includes(a.time)).map(appt => {
+                {appointments.map(appt => {
                   const slotIndex = timeSlots.indexOf(appt.time);
                   const top = slotIndex * 64;
                   const height = Math.max(64, (appt.duration / 30) * 64);
@@ -350,11 +350,26 @@ export default function Appointments() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
-                        <select value={editForm.dentistId || ''} onChange={e => setEditForm({...editForm, dentistId: e.target.value})}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
-                          <option value="">Select Dentist</option>
-                          {dentists.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
+                        <div className="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto">
+                          {dentists.map(d => (
+                            <button key={d.id} type="button" onClick={() => setEditForm({...editForm, dentistId: d.id})}
+                              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border text-sm text-left transition-all ${
+                                editForm.dentistId === d.id
+                                  ? 'border-[#004aad] bg-[#e6efff] ring-1 ring-[#004aad]'
+                                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                              }`}>
+                              {d.avatar ? (
+                                <img src={d.avatar} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-7 h-7 bg-[#004aad] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                                  {d.name?.charAt(0)?.toUpperCase()}
+                                </div>
+                              )}
+                              <span className="font-medium text-slate-900 truncate">{d.name}</span>
+                              {editForm.dentistId === d.id && <div className="ml-auto w-2 h-2 rounded-full bg-[#004aad]" />}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
@@ -494,11 +509,26 @@ export default function Appointments() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
-                    <select required value={form.dentistId} onChange={e => setForm({...form, dentistId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none">
-                      <option value="">Select Dentist</option>
-                      {dentists.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
+                    <div className="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto">
+                      {dentists.map(d => (
+                        <button key={d.id} type="button" onClick={() => setForm({...form, dentistId: d.id})}
+                          className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border text-sm text-left transition-all ${
+                            form.dentistId === d.id
+                              ? 'border-[#004aad] bg-[#e6efff] ring-1 ring-[#004aad]'
+                              : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                          }`}>
+                          {d.avatar ? (
+                            <img src={d.avatar} alt={d.name} className="w-7 h-7 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-7 h-7 bg-[#004aad] text-white rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                              {d.name?.charAt(0)?.toUpperCase()}
+                            </div>
+                          )}
+                          <span className="font-medium text-slate-900 truncate">{d.name}</span>
+                          {form.dentistId === d.id && <div className="ml-auto w-2 h-2 rounded-full bg-[#004aad]" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Room</label>
@@ -518,7 +548,7 @@ export default function Appointments() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input type="date" value={form.date || selectedDate.toISOString().split('T')[0]} onChange={e => setForm({...form, date: e.target.value})}
+                    <input type="date" value={form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0]} onChange={e => setForm({...form, date: e.target.value})}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#004aad] focus:outline-none" />
                   </div>
                   <div>

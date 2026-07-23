@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, UserPlus, Eye, EyeOff, QrCode } from 'lucide-react';
@@ -11,8 +11,38 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [qrUrl, setQrUrl] = useState('');
+  const [qrSize, setQrSize] = useState(240);
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const emailRef = useRef(null);
+  const nameRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/server-info')
+      .then(r => r.json())
+      .then(data => {
+        const port = window.location.port;
+        setQrUrl(`${window.location.protocol}//${data.ip}${port ? ':' + port : ''}`);
+      })
+      .catch(() => setQrUrl(window.location.origin));
+  }, []);
+
+  useEffect(() => {
+    const calc = () => setQrSize(Math.min(240, Math.max(160, window.innerWidth - 100)));
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, []);
+
+  useEffect(() => {
+    if (isLogin) {
+      emailRef.current?.focus();
+    } else {
+      nameRef.current?.focus();
+    }
+  }, [isLogin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,15 +76,15 @@ export default function Login() {
       <div className="absolute inset-0 bg-black/40" />
 
       {/* Login card */}
-      <div className="relative z-10 w-full max-w-md animate-slide-up">
+      <div className="relative z-10 w-full max-w-[403px] animate-slide-up">
         {/* Logo above card */}
         <div className="mb-5 text-center">
-          <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-32 mx-auto object-contain drop-shadow-lg" />
+          <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-[115px] mx-auto object-contain drop-shadow-lg" />
         </div>
         <div className="glass-card rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b border-slate-100 mx-6">
-            <button onClick={() => { playClick(); setIsLogin(true); }}
+            <button onClick={() => { playClick(); setIsLogin(true); setAgreedToTerms(false); }}
               className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 border-b-2 ${
                 isLogin ? 'text-[#004aad] border-[#004aad]' : 'text-slate-400 border-transparent hover:text-slate-600'
               }`}>
@@ -81,8 +111,9 @@ export default function Login() {
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
                 <input type="text" required value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  ref={nameRef}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
-                  placeholder="Dr. Juan Dela Cruz" />
+                  placeholder="" />
               </div>
             )}
 
@@ -94,8 +125,17 @@ export default function Login() {
                   <option value="PATIENT">Patient</option>
                   <option value="DENTIST">Dentist</option>
                   <option value="ASSISTANT">Assistant</option>
-                  <option value="ADMIN">Admin</option>
                 </select>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="animate-slide-up" style={{ animationDelay: '0.07s' }}>
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
+                <input type="tel" required value={form.phone || ''}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
+                  placeholder="XXX-XXX-XXXX" />
               </div>
             )}
 
@@ -103,6 +143,7 @@ export default function Login() {
               <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
               <input type="email" required value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                ref={emailRef}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#004aad]/30 focus:border-[#4a85d6] focus:outline-none text-sm transition-all"
                 placeholder="you@example.com" />
             </div>
@@ -121,7 +162,20 @@ export default function Login() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
+            {!isLogin && (
+              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input type="checkbox" checked={agreedToTerms}
+                    onChange={(e) => { playClick(); setAgreedToTerms(e.target.checked); }}
+                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#004aad] focus:ring-[#004aad]/30 cursor-pointer" />
+                  <span className="text-[11px] text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
+                    I have read and agree to the DentAssist Terms and Agreement and Privacy Policy, and I consent to the collection and processing of my personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).
+                  </span>
+                </label>
+              </div>
+            )}
+
+            <button type="submit" disabled={loading || (!isLogin && !agreedToTerms)}
               className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -140,20 +194,22 @@ export default function Login() {
         </div>
 
         {/* QR Code Section */}
-        <div className="mt-4 glass-card rounded-3xl shadow-2xl shadow-black/30 p-6 text-center">
+        <div className="mt-4 glass-card rounded-3xl shadow-2xl shadow-black/30 p-5 md:p-6 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <QrCode size={16} className="text-slate-500" />
             <span className="text-slate-700 text-xs font-semibold uppercase tracking-wider">or scan to access on your phone</span>
           </div>
-          <div className="inline-block bg-white p-3 rounded-2xl mb-3">
-            <QRCodeSVG
-              value={typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}
-              size={140}
-              bgColor="#ffffff"
-              fgColor="#003782"
-              level="M"
-              includeMargin={false}
-            />
+          <div className="flex justify-center w-full mb-3">
+            <div className="bg-white p-3 rounded-2xl" style={{ width: qrSize, height: qrSize }}>
+              <QRCodeSVG
+                value={qrUrl}
+                size={qrSize - 24}
+                bgColor="#ffffff"
+                fgColor="#003782"
+                level="M"
+                includeMargin={false}
+              />
+            </div>
           </div>
           <p className="text-slate-500 text-xs">Scan with your phone camera to open</p>
         </div>
