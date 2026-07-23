@@ -98,7 +98,7 @@ export default function Patients() {
                         </div>
                       )}
                       <span className="text-sm font-medium text-slate-900">{p.user?.name}</span>
-                      {p.createdAt && (Date.now() - new Date(p.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000) && (
+                      {p.createdAt && (Date.now() - new Date(p.createdAt).getTime() < 3 * 24 * 60 * 60 * 1000) && (
                         <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-red-500 text-white">New</span>
                       )}
                     </div>
