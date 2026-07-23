@@ -14,7 +14,7 @@ const ROLE_TABS = [
 
 const ROLES = [
   { value: 'ADMIN', label: 'Admin', color: 'bg-rose-100 text-rose-700' },
-  { value: 'DENTIST', label: 'Dentist', color: 'bg-[#F0FDFA] text-[#0D6D65]' },
+  { value: 'DENTIST', label: 'Dentist', color: 'bg-blue-100 text-blue-700' },
   { value: 'ASSISTANT', label: 'Assistant', color: 'bg-emerald-100 text-emerald-700' },
   { value: 'PATIENT', label: 'Patient', color: 'bg-amber-100 text-amber-700' },
 ];
@@ -44,6 +44,9 @@ export default function AdminManagement() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [toggleConfirm, setToggleConfirm] = useState(null);
   const [error, setError] = useState('');
+  const tabRefs = useRef({});
+  const tabContainerRef = useRef(null);
+  const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
 
   const fetchUsers = () => {
     setLoading(true);
@@ -358,9 +361,6 @@ function UserModal({ user, onClose, onSave }) {
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const tabRefs = useRef({});
-  const tabContainerRef = useRef(null);
-  const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
   const [consentChecked, setConsentChecked] = useState(false);
 
   const handleAvatarChange = (e) => {

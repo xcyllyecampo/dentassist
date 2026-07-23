@@ -22,7 +22,12 @@ export default function Login() {
   const registerTabRef = useRef(null);
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
   const [welcomeUser, setWelcomeUser] = useState(null);
+  const navTimeoutRef = useRef(null);
   const isLogin = mode === 'login';
+
+  useEffect(() => {
+    return () => { if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current); };
+  }, []);
 
   const updateIndicator = useCallback(() => {
     const activeRef = isLogin ? loginTabRef : registerTabRef;
@@ -74,7 +79,8 @@ export default function Login() {
       }
       playSuccess();
       setWelcomeUser(res.user);
-      setTimeout(() => navigate('/dashboard'), 2600);
+      const dest = res.user.role === 'PATIENT' ? '/kiosk' : '/dashboard';
+      navTimeoutRef.current = setTimeout(() => navigate(dest), 2600);
     } catch (err) {
       playError();
       setError(err.response?.data?.error || 'Something went wrong');
@@ -138,18 +144,6 @@ export default function Login() {
 
             {!isLogin && (
               <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Role</label>
-                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all">
-                  <option value="PATIENT">Patient</option>
-                  <option value="DENTIST">Dentist</option>
-                  <option value="ASSISTANT">Assistant</option>
-                </select>
-              </div>
-            )}
-
-            {!isLogin && (
-              <div className="animate-slide-up" style={{ animationDelay: '0.07s' }}>
                 <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
                 <input type="tel" required value={form.phone || ''}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}

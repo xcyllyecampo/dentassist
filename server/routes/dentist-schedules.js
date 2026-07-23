@@ -25,7 +25,7 @@ router.get("/dentists", auth, async (req, res) => {
     const prisma = req.app.get("prisma");
     const dentists = await prisma.user.findMany({
       where: { role: "DENTIST", active: true },
-      select: { id: true, name: true },
+      select: { id: true, name: true, avatar: true },
       orderBy: { name: "asc" },
     });
     res.json(dentists);

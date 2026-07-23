@@ -213,43 +213,42 @@ export default function KioskCheckIn() {
             <h2 className="text-lg font-bold text-white mb-1 text-center">Choose a Dentist</h2>
             <p className="text-white/50 text-center text-sm mb-4">Pick your preferred dentist (optional)</p>
 
-            <div className="space-y-2 mb-5">
+            <div className="grid grid-cols-2 gap-3 mb-5">
               <button
                 onClick={() => { playClick(); setSelectedDentist(null); }}
-                className={`w-full p-3 rounded-xl border-2 text-center transition-all ${
+                className={`p-4 rounded-xl border-2 text-center transition-all ${
                   !selectedDentist
                     ? 'border-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20'
                     : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                 }`}
               >
+                <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Stethoscope size={24} className="text-white/60" />
+                </div>
                 <div className="text-white font-bold text-sm">No Preference</div>
-                <div className="text-white/40 text-xs">First available dentist</div>
+                <div className="text-white/40 text-xs">First available</div>
               </button>
               {dentists.map(d => (
                 <button
                   key={d.id}
                   onClick={() => { playClick(); setSelectedDentist(d); }}
-                  className={`w-full p-3 rounded-xl border-2 flex items-center gap-3 text-left transition-all ${
+                  className={`p-4 rounded-xl border-2 text-center transition-all ${
                     selectedDentist?.id === d.id
                       ? 'border-teal-400 bg-teal-500/20 shadow-lg shadow-teal-500/20'
                       : 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20'
                   }`}
                 >
                   {d.avatar ? (
-                    <img src={authUrl(d.avatar)} alt={d.name} className="w-10 h-10 rounded-full object-cover ring-2 ring-white/20" />
+                    <img src={authUrl(d.avatar)} alt={d.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-white/20 mx-auto mb-2" />
                   ) : (
-                    <div className="w-10 h-10 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20">
-                      <Stethoscope size={18} />
+                    <div className="w-14 h-14 bg-teal-500/30 text-white rounded-full flex items-center justify-center text-lg font-bold ring-2 ring-white/20 mx-auto mb-2">
+                      {d.name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                   )}
-                  <div>
-                    <div className="text-white font-bold text-sm">{d.name}</div>
-                    <div className="text-white/40 text-xs">Dentist</div>
-                  </div>
+                  <div className="text-white font-bold text-sm">{d.name}</div>
+                  <div className="text-white/40 text-xs">Dentist</div>
                   {selectedDentist?.id === d.id && (
-                    <div className="ml-auto">
-                      <CheckCircle size={18} className="text-teal-400" />
-                    </div>
+                    <CheckCircle size={16} className="text-teal-400 mx-auto mt-1.5" />
                   )}
                 </button>
               ))}

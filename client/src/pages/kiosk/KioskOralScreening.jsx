@@ -56,13 +56,13 @@ export default function KioskOralScreening() {
       {!preview && (
         <div className="flex flex-col items-center justify-center py-12">
           <div className="w-16 h-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-5 border border-white/20">
-            <Camera size={32} className="text-emerald-400" />
+            <Camera size={32} className="text-blue-400" />
           </div>
           <h2 className="text-xl font-bold text-white mb-2 text-center">AI Oral Check</h2>
           <p className="text-white/60 text-sm mb-8 text-center px-4">
             Take a clear photo of the inside of your mouth. Our AI will analyze it and highlight any areas of concern.
           </p>
-          <label className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-4 rounded-2xl hover:from-emerald-600 hover:to-emerald-700 cursor-pointer font-bold text-lg shadow-xl shadow-emerald-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]" onClick={() => playClick()}>
+          <label className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-2xl hover:from-blue-600 hover:to-blue-700 cursor-pointer font-bold text-lg shadow-xl shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-[0.98]" onClick={() => playClick()}>
             <Camera size={20} /> Choose Photo
             <input type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
           </label>
@@ -79,7 +79,7 @@ export default function KioskOralScreening() {
             <button
               onClick={() => { playClick(); handleAnalyze(); }}
               disabled={analyzing}
-              className="w-full mt-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 rounded-xl font-bold text-base hover:from-emerald-600 hover:to-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+              className="w-full mt-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold text-base hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all"
             >
               {analyzing ? (
                 <>
@@ -100,7 +100,7 @@ export default function KioskOralScreening() {
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-bold text-sm">Analysis Results</h3>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full ${result.source === 'gemini' ? 'bg-green-500/20 text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full ${result.source === 'gemini' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
                   {result.source === 'gemini' ? 'AI-Powered' : 'Demo Mode'}
                 </span>
               </div>
@@ -110,7 +110,7 @@ export default function KioskOralScreening() {
                 <div className="text-white/50 text-xs mb-1.5">Overall Oral Health Score</div>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-3 bg-white/10 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${(result.overall_score || 0) > 80 ? 'bg-green-500' : (result.overall_score || 0) > 60 ? 'bg-amber-500' : 'bg-red-500'}`}
+                    <div className={`h-full rounded-full ${(result.overall_score || 0) > 80 ? 'bg-blue-500' : (result.overall_score || 0) > 60 ? 'bg-amber-500' : 'bg-red-500'}`}
                       style={{ width: `${result.overall_score || 0}%` }} />
                   </div>
                   <span className="text-lg font-bold text-white">{result.overall_score}/100</span>
@@ -121,7 +121,7 @@ export default function KioskOralScreening() {
               <div className="space-y-2 mb-4">
                 {result.areas?.map((area, i) => (
                   <div key={i} className={`p-2.5 rounded-xl border ${
-                    area.severity === 'none' ? 'bg-green-500/10 border-green-500/30' :
+                    area.severity === 'none' ? 'bg-blue-500/10 border-blue-500/30' :
                     area.severity === 'mild' ? 'bg-amber-500/10 border-amber-500/30' :
                     'bg-red-500/10 border-red-500/30'
                   }`}>
@@ -141,7 +141,7 @@ export default function KioskOralScreening() {
                   <ul className="space-y-1">
                     {result.recommendations.map((rec, i) => (
                       <li key={i} className="flex items-start gap-1.5 text-xs text-white/70">
-                        <CheckCircle size={12} className="mt-0.5 text-green-400 shrink-0" />
+                        <CheckCircle size={12} className="mt-0.5 text-blue-400 shrink-0" />
                         {rec}
                       </li>
                     ))}

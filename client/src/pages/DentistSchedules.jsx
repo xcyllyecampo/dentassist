@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Spinner from '../components/Spinner';
@@ -42,6 +42,9 @@ export default function DentistSchedules() {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [selectedDentist, setSelectedDentist] = useState(null);
+  const dentistRefs = useRef({});
+  const dentistContainerRef = useRef(null);
+  const [sliderStyle, setSliderStyle] = useState({ top: 0, height: 0 });
   const [form, setForm] = useState({ dentistId: '', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' });
   const isAdmin = user?.role === 'ADMIN';
 
@@ -70,6 +73,22 @@ export default function DentistSchedules() {
       setSelectedDentist(dentists[0].id);
     }
   }, [dentists, selectedDentist]);
+
+  const updateSlider = useCallback(() => {
+    const activeEl = dentistRefs.current[selectedDentist];
+    if (activeEl && dentistContainerRef.current) {
+      const containerRect = dentistContainerRef.current.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      setSliderStyle({
+        top: elRect.top - containerRect.top,
+        height: elRect.height,
+      });
+    }
+  }, [selectedDentist]);
+
+  useEffect(() => {
+    requestAnimationFrame(updateSlider);
+  }, [updateSlider]);
 
   const handleAdd = async () => {
     playClick();
@@ -154,7 +173,11 @@ export default function DentistSchedules() {
         ) : (
           <div className="flex gap-6">
             {/* Left sidebar - Dentist tabs */}
-            <div className="w-64 shrink-0 space-y-2">
+            <div ref={dentistContainerRef} className="w-64 shrink-0 space-y-2 relative">
+              <div
+                className="absolute left-0 right-0 bg-[#0F766E]/10 rounded-2xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] pointer-events-none"
+                style={{ top: sliderStyle.top, height: sliderStyle.height }}
+              />
               {Object.entries(grouped).map(([dentistId, { name: dentistName, days }]) => {
                 const dent = dentists.find(d => d.id === dentistId);
                 const slotCount = Object.values(days).reduce((a, s) => a + s.length, 0);
@@ -162,8 +185,9 @@ export default function DentistSchedules() {
                 return (
                   <button
                     key={dentistId}
+                    ref={el => { dentistRefs.current[dentistId] = el; }}
                     onClick={() => { playClick(); setSelectedDentist(dentistId); }}
-                    className={`w-full text-left rounded-2xl p-4 transition-all duration-200 ${
+                    className={`relative w-full text-left rounded-2xl p-4 transition-all duration-200 ${
                       isActive
                         ? 'bg-white shadow-lg shadow-teal-500/10 border-2 border-[#0F766E]/30 ring-1 ring-[#0F766E]/10'
                         : 'bg-white/60 border-2 border-transparent hover:bg-white hover:shadow-md hover:shadow-slate-200/50'

@@ -49,7 +49,7 @@ router.get("/available-slots", auth, async (req, res) => {
     const bookedTimes = [...new Set(booked.map(b => b.time))];
     const availableSlots = allSlots.filter(t => !bookedTimes.includes(t));
 
-    const dentists = await prisma.user.findMany({ where: { role: "DENTIST" }, select: { id: true, name: true } });
+    const dentists = await prisma.user.findMany({ where: { role: "DENTIST" }, select: { id: true, name: true, avatar: true } });
     const rooms = await prisma.room.findMany({ where: { status: { not: "MAINTENANCE" } }, select: { id: true, number: true, name: true, status: true } });
 
     res.json({ availableSlots, dentists, rooms, booked });

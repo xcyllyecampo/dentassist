@@ -5,6 +5,9 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+
+if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
 
 const app = express();
 const server = http.createServer(app);
@@ -99,6 +102,24 @@ async function cleanupExpiredTokens() {
 
 cleanupExpiredTokens();
 setInterval(cleanupExpiredTokens, 3600000);
+
+async function cleanupOrphanedPatients() {
+  try {
+    const orphaned = await prisma.patient.findMany({
+      where: { user: { role: { not: "PATIENT" } } },
+      include: { user: { select: { id: true, name: true, role: true } } },
+    });
+    for (const p of orphaned) {
+      await prisma.tooth.deleteMany({ where: { patientId: p.id } });
+      await prisma.patient.delete({ where: { id: p.id } });
+      console.log(`Cleaned orphaned patient record for ${p.user.name} (now ${p.user.role})`);
+    }
+  } catch (err) {
+    console.error("Orphaned patient cleanup failed:", err.message);
+  }
+}
+
+cleanupOrphanedPatients();
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 

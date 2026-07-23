@@ -118,7 +118,13 @@ router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), async (req
       select: { id: true, name: true, email: true, role: true, phone: true, avatar: true, active: true, lastEditedBy: true, lastEditedAt: true },
     });
 
-    if (user.role === "PATIENT") {
+    if (role && role !== "PATIENT") {
+      const existingPatient = await prisma.patient.findUnique({ where: { userId: user.id } });
+      if (existingPatient) {
+        await prisma.tooth.deleteMany({ where: { patientId: existingPatient.id } });
+        await prisma.patient.delete({ where: { userId: user.id } });
+      }
+    } else if (user.role === "PATIENT") {
       const patient = await prisma.patient.findUnique({ where: { userId: user.id } });
       if (patient) {
         const patientUpdate = {};

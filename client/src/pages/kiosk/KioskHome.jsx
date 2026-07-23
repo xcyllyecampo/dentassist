@@ -6,7 +6,7 @@ import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight, Cale
 
 const SIDE_CARDS = [
   { id: 'queue', path: '/kiosk/queue', icon: Clock, label: 'Queue Status', subtitle: 'Your position & wait', gradient: 'from-amber-500 to-amber-600' },
-  { id: 'oral', path: '/kiosk/oral-screening', icon: ScanFace, label: 'AI Oral Check', subtitle: 'Scan your mouth with AI', gradient: 'from-emerald-500 to-emerald-600' },
+  { id: 'oral', path: '/kiosk/oral-screening', icon: ScanFace, label: 'AI Oral Check', subtitle: 'Scan your mouth with AI', gradient: 'from-blue-500 to-blue-600' },
   { id: 'smile', path: '/kiosk/smile', icon: Sparkles, label: 'Smile Analysis', subtitle: 'See what AI finds', gradient: 'from-rose-500 to-rose-600' },
   { id: 'records', path: '/kiosk/records', icon: FolderOpen, label: 'My Records', subtitle: 'Appointments & history', gradient: 'from-amber-400 to-yellow-500' },
   { id: 'logout', path: '', icon: LogOut, label: 'Logout', subtitle: 'Sign out of your account', gradient: 'from-slate-500 to-slate-600', action: 'logout' },
