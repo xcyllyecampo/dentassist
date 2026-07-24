@@ -65,44 +65,40 @@ export default function KioskRecords() {
   return (
     <KioskLayout title="My Records">
       {/* Patient info card */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-white text-xl font-bold">
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white text-base font-bold shrink-0">
             {patient.user?.name?.charAt(0)}
           </div>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold text-white">{patient.user?.name}</h2>
-            <p className="text-white/50 text-sm">{patient.user?.email}</p>
-          </div>
-          <div className="text-right text-sm text-white/60 space-y-1">
-            <div>Blood Type: <span className="text-white font-medium">{patient.bloodType || 'N/A'}</span></div>
-            <div>Allergies: <span className="text-amber-300 font-medium">{patient.allergies || 'None'}</span></div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold text-white truncate">{patient.user?.name}</h2>
+            <p className="text-white/50 text-xs truncate">{patient.user?.email}</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
         {TABS.map(tab => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
               onClick={() => { playClick(); setActiveTab(tab.id); }}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.id
                   ? 'bg-white/20 text-white border border-white/30'
                   : 'bg-white/5 text-white/50 border border-transparent hover:bg-white/10 hover:text-white/70'
               }`}
             >
-              <Icon size={16} /> {tab.label}
+              <Icon size={14} /> {tab.label}
             </button>
           );
         })}
       </div>
 
       {/* Tab content */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6">
+      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
         {activeTab === 'appointments' && (
           <div className="space-y-3">
             {patient.appointments?.length === 0 ? (
@@ -198,28 +194,30 @@ export default function KioskRecords() {
           });
           const getStatusStyle = (status) => {
             switch (status) {
-              case 'HEALTHY': return 'bg-green-500/20 text-green-300 border border-green-500/40';
-              case 'FILLING': return 'bg-teal-500/20 text-teal-300 border border-teal-500/40';
-              case 'CROWN': return 'bg-purple-500/20 text-purple-300 border border-purple-500/40';
-              case 'DECAYED': return 'bg-red-500/20 text-red-300 border border-red-500/40';
+              case 'HEALTHY': return 'bg-green-500/30 text-green-200 border border-green-500/50';
+              case 'FILLING': return 'bg-blue-500/30 text-blue-200 border border-blue-500/50';
+              case 'CROWN': return 'bg-violet-500/30 text-violet-200 border border-violet-500/50';
+              case 'DECAYED': return 'bg-red-500/30 text-red-200 border border-red-500/50';
               case 'MISSING': return 'bg-white/5 text-white/30 border border-white/10';
+              case 'IMPLANT': return 'bg-orange-500/30 text-orange-200 border border-orange-500/50';
+              case 'BRIDGE': return 'bg-pink-500/30 text-pink-200 border border-pink-500/50';
+              case 'TREATED': return 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/50';
               default: return 'bg-white/10 text-white/60 border border-white/10';
             }
           };
           return (
           <div>
-            <h3 className="text-white font-bold mb-3 text-sm">Interactive Tooth Chart</h3>
-            <div className="flex gap-3 mb-3">
-              <div className="grid grid-cols-8 gap-1 flex-1">
+            <h3 className="text-white font-bold mb-2 text-sm">Interactive Tooth Chart</h3>
+            <div className="flex gap-2 items-start mb-3">
+              <div className="grid grid-cols-8 gap-1 flex-[2] min-w-0">
                 {allTeeth.map(tooth => (
                   <div key={tooth.id}
-                    className={`aspect-square rounded flex flex-col items-center justify-center text-[8px] font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
-                    <span className="text-[9px]">#{tooth.toothNumber}</span>
-                    <span className="text-[6px] font-normal opacity-70 leading-tight">{tooth.status}</span>
+                    className={`h-8 min-w-0 rounded flex items-center justify-center font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
+                    <span className="text-xs">#{tooth.toothNumber}</span>
                   </div>
                 ))}
               </div>
-              <div className="w-1/3 rounded-lg overflow-hidden border border-white/10 shrink-0 self-start">
+              <div className="flex-1 max-w-[35%] rounded-lg overflow-hidden border border-white/10 shrink-0">
                 <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
               </div>
             </div>

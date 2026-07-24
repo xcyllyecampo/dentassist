@@ -11,14 +11,25 @@ import { playClick, playSuccess, playError } from '../lib/sounds';
 
 const TOOTH_STATUSES = ['HEALTHY', 'FILLING', 'CROWN', 'DECAYED', 'MISSING', 'IMPLANT', 'BRIDGE', 'TREATED'];
 const STATUS_COLORS = {
-  HEALTHY: 'bg-green-100 text-green-700 border-green-200',
-  FILLING: 'bg-teal-100 text-teal-700 border-teal-200',
-  CROWN: 'bg-purple-100 text-purple-700 border-purple-200',
-  DECAYED: 'bg-red-100 text-red-700 border-red-200',
-  MISSING: 'bg-gray-200 text-gray-500 border-gray-300',
-  IMPLANT: 'bg-amber-100 text-amber-700 border-amber-200',
-  BRIDGE: 'bg-pink-100 text-pink-700 border-pink-200',
-  TREATED: 'bg-teal-100 text-teal-700 border-teal-200',
+  HEALTHY: 'bg-green-200 text-green-800 border-green-300',
+  FILLING: 'bg-blue-200 text-blue-800 border-blue-300',
+  CROWN: 'bg-violet-200 text-violet-800 border-violet-300',
+  DECAYED: 'bg-red-200 text-red-800 border-red-300',
+  MISSING: 'bg-gray-300 text-gray-700 border-gray-400',
+  IMPLANT: 'bg-orange-200 text-orange-800 border-orange-300',
+  BRIDGE: 'bg-pink-200 text-pink-800 border-pink-300',
+  TREATED: 'bg-emerald-200 text-emerald-800 border-emerald-300',
+};
+
+const STATUS_BUTTON_COLORS = {
+  HEALTHY: { base: 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200', active: 'bg-green-600 text-white border-green-600 shadow-green-200' },
+  FILLING: { base: 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200', active: 'bg-blue-600 text-white border-blue-600 shadow-blue-200' },
+  CROWN: { base: 'bg-violet-100 text-violet-700 border-violet-200 hover:bg-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
+  DECAYED: { base: 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200', active: 'bg-red-600 text-white border-red-600 shadow-red-200' },
+  MISSING: { base: 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200', active: 'bg-gray-600 text-white border-gray-600 shadow-gray-200' },
+  IMPLANT: { base: 'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200', active: 'bg-orange-600 text-white border-orange-600 shadow-orange-200' },
+  BRIDGE: { base: 'bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200', active: 'bg-pink-600 text-white border-pink-600 shadow-pink-200' },
+  TREATED: { base: 'bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-200', active: 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-200' },
 };
 
 const PRESCRIPTION_FREQUENCY = ['Once daily', 'Twice daily', 'Three times daily', 'Every 4 hours', 'As needed', 'Before meals', 'After meals'];
@@ -177,14 +188,19 @@ export default function PatientDetail() {
       <Header title={`Patient: ${patient.user?.name}`} />
       <div className="p-6">
         <button onClick={() => navigate('/records')}
-          className="flex items-center gap-2 px-4 py-2 mb-4 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
-          <ArrowLeft size={16} /> Back to Records
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-[#0F766E] transition-colors mb-4">
+          <ArrowLeft size={14} /> Back to Records
         </button>
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-2xl font-bold">
-              {patient.user?.name?.charAt(0)}
-            </div>
+            {patient.user?.avatar ? (
+              <img src={authUrl(patient.user.avatar)} alt={patient.user?.name}
+                className="w-16 h-16 rounded-full object-cover ring-2 ring-[#99F6E4]" />
+            ) : (
+              <div className="w-16 h-16 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-2xl font-bold">
+                {patient.user?.name?.charAt(0)}
+              </div>
+            )}
             <div>
               <h2 className="text-xl font-bold text-slate-900">{patient.user?.name}</h2>
               <p className="text-sm text-gray-500">{patient.user?.email} · {patient.user?.phone || 'No phone'}</p>
@@ -225,57 +241,70 @@ export default function PatientDetail() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-slate-900">Interactive Tooth Chart</h3>
-                {selectedTooth && (
-                  <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700">
-                    <X size={14} /> Clear selection
-                  </button>
-                )}
               </div>
               <p className="text-xs text-gray-500 mb-3">Click a tooth to update its status</p>
-              <div className="grid grid-cols-8 gap-2 mb-4">
-                {allTeeth.map(tooth => (
-                  <div key={tooth.id}
-                    onClick={() => { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); }}
-                    className={`w-full aspect-square rounded-lg flex flex-col items-center justify-center text-xs font-bold cursor-pointer transition-all hover:scale-110 ${
-                      selectedTooth?.toothNumber === tooth.toothNumber ? 'ring-2 ring-[#0F766E] ring-offset-2 scale-110' : ''
-                    } ${STATUS_COLORS[tooth.status] || 'bg-[#F0FDFA] text-[#0D6D65] border border-slate-200'}`}>
-                    <span>#{tooth.toothNumber}</span>
-                    <span className="text-[10px] font-normal">{tooth.status}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="rounded-xl overflow-hidden border border-slate-200 mb-4">
-                <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
-              </div>
-              <div className="flex flex-wrap gap-3 text-xs mb-4">
-                {TOOTH_STATUSES.map(s => (
-                  <span key={s} className="flex items-center gap-1">
-                    <span className={`w-3 h-3 rounded border ${STATUS_COLORS[s]?.split(' ')[0]}`} /> {s}
-                  </span>
-                ))}
-              </div>
-
-              {selectedTooth && (
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mt-4">
-                  <h4 className="font-bold text-slate-900 mb-3">Tooth #{selectedTooth.toothNumber} — Current: {selectedTooth.status}</h4>
-                  <textarea value={toothNote} onChange={(e) => setToothNote(e.target.value)}
-                    placeholder="Notes (optional)" rows={2}
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-[#0F766E]" />
-                  <div className="flex flex-wrap gap-2">
-                    {TOOTH_STATUSES.map(s => (
-                      <button key={s} onClick={() => updateToothStatus(selectedTooth.toothNumber, s)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
-                          selectedTooth.status === s
-                            ? 'bg-[#0F766E] text-white border-[#0F766E]'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-[#0F766E] hover:text-[#0F766E]'
-                        }`}>
-                        {s}
-                      </button>
+              <div className="flex gap-2 items-start mb-4">
+                <div className="flex-1 min-w-0">
+                  <div className="grid grid-cols-8 gap-1 mb-3">
+                    {allTeeth.map(tooth => (
+                      <div key={tooth.id}
+                        onClick={() => { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); }}
+                        className={`h-12 min-w-0 rounded-lg flex flex-col items-center justify-center font-bold cursor-pointer transition-all hover:scale-110 ${
+                          selectedTooth?.toothNumber === tooth.toothNumber ? 'ring-2 ring-[#0F766E] ring-offset-2 scale-110' : ''
+                        } ${STATUS_COLORS[tooth.status] || 'bg-[#F0FDFA] text-[#0D6D65] border border-slate-200'}`}>
+                        <span className="text-xs leading-none">#{tooth.toothNumber}</span>
+                        <span className="text-[9px] font-normal opacity-70 leading-none mt-0.5">{tooth.status}</span>
+                      </div>
                     ))}
                   </div>
+                  <div className="flex flex-wrap gap-2 text-[11px] mb-3">
+                    {TOOTH_STATUSES.map(s => (
+                      <span key={s} className="flex items-center gap-1">
+                        <span className={`w-3 h-3 rounded border ${STATUS_COLORS[s]?.split(' ')[0]}`} /> {s}
+                      </span>
+                    ))}
+                  </div>
+                  {selectedTooth && (
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-lg shadow-slate-100">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm border ${STATUS_COLORS[selectedTooth.status] || 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                          #{selectedTooth.toothNumber}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">Update Tooth Status</h4>
+                          <p className="text-xs text-slate-400">Currently: {selectedTooth.status}</p>
+                        </div>
+                        <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
+                          className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                          <X size={16} />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 mb-3">
+                        {TOOTH_STATUSES.map(s => {
+                          const colors = STATUS_BUTTON_COLORS[s];
+                          const isActive = selectedTooth.status === s;
+                          return (
+                            <button key={s} onClick={() => updateToothStatus(selectedTooth.toothNumber, s)}
+                              className={`px-2 py-2 text-[11px] font-semibold rounded-xl border-2 transition-all duration-200 ${
+                                isActive
+                                  ? `${colors.active} shadow-md scale-[1.02]`
+                                  : `${colors.base}`
+                              }`}>
+                              {s}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <textarea value={toothNote} onChange={(e) => setToothNote(e.target.value)}
+                        placeholder="Notes (optional)" rows={2}
+                        className="w-full px-3 py-2 text-sm border-2 border-slate-300 bg-slate-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-transparent resize-none" />
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="flex-1 rounded-xl overflow-hidden border border-slate-200 shrink-0 self-stretch">
+                  <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-full object-contain" />
+                </div>
+              </div>
             </div>
             );
           })()}
