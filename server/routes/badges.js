@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { badgeSchemas } = require("../lib/schemas");
 
 router.get("/", auth, async (req, res) => {
   try {
@@ -28,7 +30,7 @@ router.get("/patient/:patientId", auth, async (req, res) => {
   }
 });
 
-router.post("/award", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
+router.post("/award", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(badgeSchemas.award), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { patientId, badgeId } = req.body;

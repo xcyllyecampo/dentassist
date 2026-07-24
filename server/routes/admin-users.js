@@ -3,7 +3,10 @@ const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const path = require("path");
+const fs = require("fs");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { adminUserSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
@@ -31,7 +34,7 @@ router.get("/", auth, roleGuard("ADMIN"), async (req, res) => {
       select: {
         id: true, name: true, email: true, role: true, phone: true, avatar: true, active: true,
         lastEditedBy: true, lastEditedAt: true,
-        patient: { select: { id: true, dob: true, gender: true, bloodType: true } },
+        patient: { select: { id: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -59,11 +62,10 @@ router.get("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
   }
 });
 
-router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), async (req, res) => {
+router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(adminUserSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { name, email, password, role, phone, dob, gender, bloodType } = req.body;
-    if (!name || !email || !role) return res.status(400).json({ error: "Name, email, and role are required" });
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(400).json({ error: "Email already registered" });
@@ -97,7 +99,7 @@ router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), async (req, 
   }
 });
 
-router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), async (req, res) => {
+router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(adminUserSchemas.update), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { name, email, role, phone, dob, gender, bloodType, password } = req.body;
@@ -157,6 +159,10 @@ router.put("/:id/toggle-active", auth, roleGuard("ADMIN"), async (req, res) => {
       select: { id: true, name: true, email: true, role: true, phone: true, avatar: true, active: true },
     });
 
+    if (!user.active) {
+      await prisma.refreshToken.deleteMany({ where: { userId: req.params.id } });
+    }
+
     const io = req.app.get("io");
     notifyAllStaff(prisma, io, { type: "staff", message: `${updated.name} has been ${updated.active ? "activated" : "deactivated"}` });
     res.json(updated);
@@ -169,7 +175,6 @@ router.put("/:id/toggle-active", auth, roleGuard("ADMIN"), async (req, res) => {
 router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
-    const io = req.app.get("io");
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
     if (!user) return res.status(404).json({ error: "User not found" });
     if (user.id === req.user.id) return res.status(400).json({ error: "Cannot delete your own account" });
@@ -179,7 +184,7 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
     }
 
     if (user.role === "PATIENT") {
-      const patient = await prisma.patient.findUnique({ where: { userId: user.id } });
+      const patient = await prisma.patient.findUnique({ where: { userId: user.id }, include: { xrayImages: { select: { filePath: true } } } });
       if (patient) {
         await prisma.appointment.updateMany({
           where: { patientId: patient.id, status: { in: ["SCHEDULED", "CONFIRMED"] } },
@@ -189,7 +194,15 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
           where: { patientId: patient.id, status: { in: ["WAITING", "IN_PROGRESS"] } },
           data: { status: "CANCELLED" },
         });
+        for (const img of patient.xrayImages) {
+          try { if (img.filePath) fs.unlinkSync(img.filePath); } catch {}
+        }
       }
+    }
+
+    if (user.avatar) {
+      const avatarPath = user.avatar.replace(/^\/uploads\//, "uploads/");
+      try { fs.unlinkSync(avatarPath); } catch {}
     }
 
     await prisma.user.delete({ where: { id: req.params.id } });

@@ -88,5 +88,4 @@ async def analyze_xray(file: UploadFile = File(...)):
     except Exception as e:
         result = mock_xray_analysis()
         result["source"] = "mock"
-        result["error"] = str(e)
         return result

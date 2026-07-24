@@ -1,5 +1,7 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { roomSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
@@ -30,15 +32,11 @@ router.get("/", auth, async (req, res) => {
 
 const VALID_STATUSES = ["AVAILABLE", "OCCUPIED", "CLEANING", "MAINTENANCE"];
 
-router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) => {
+router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), validate(roomSchemas.update), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
     const { status } = req.body;
-
-    if (!VALID_STATUSES.includes(status)) {
-      return res.status(400).json({ error: `Invalid status. Allowed: ${VALID_STATUSES.join(", ")}` });
-    }
 
     const room = await prisma.room.update({
       where: { id: req.params.id },
@@ -54,11 +52,10 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) => {
   }
 });
 
-router.post("/", auth, roleGuard("ADMIN"), async (req, res) => {
+router.post("/", auth, roleGuard("ADMIN"), validate(roomSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { number, name } = req.body;
-    if (!number || !name) return res.status(400).json({ error: "Room number and name are required" });
     const room = await prisma.room.create({ data: { number, name } });
     res.status(201).json(room);
   } catch (err) {

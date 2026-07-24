@@ -107,4 +107,19 @@ router.post("/analyze/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), as
   }
 });
 
+router.delete("/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const image = await prisma.xrayImage.findUnique({ where: { id: req.params.id } });
+    if (!image) return res.status(404).json({ error: "Image not found" });
+
+    try { if (image.filePath) fs.unlinkSync(image.filePath); } catch {}
+    await prisma.xrayImage.delete({ where: { id: req.params.id } });
+    res.json({ message: "X-ray image deleted" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;

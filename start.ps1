@@ -31,14 +31,25 @@ if ($pgService) {
 }
 
 $env:PGPASSWORD = "postgres"
-$psqlPath = "C:\Program Files\PostgreSQL\17\bin\psql.exe"
-$dbExists = & $psqlPath -U postgres -h localhost -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='dental_assist'" 2>$null
-if ($dbExists -ne "1") {
-    Write-Host "  -> Creating dental_assist database..." -ForegroundColor Yellow
-    & $psqlPath -U postgres -h localhost -d postgres -c "CREATE DATABASE dental_assist;" 2>$null
-    Write-Host "  -> Database created" -ForegroundColor Green
+$psqlPath = (Get-Command psql -ErrorAction SilentlyContinue).Source
+if (-not $psqlPath) {
+    $pgDirs = Get-ChildItem "C:\Program Files\PostgreSQL" -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending
+    foreach ($dir in $pgDirs) {
+        $candidate = Join-Path $dir.FullName "bin\psql.exe"
+        if (Test-Path $candidate) { $psqlPath = $candidate; break }
+    }
 }
-Write-Host "  -> Database ready" -ForegroundColor Green
+if (-not $psqlPath) {
+    Write-Host "  -> psql not found, skipping database check" -ForegroundColor DarkGray
+} else {
+    $dbExists = & $psqlPath -U postgres -h localhost -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='dental_assist'" 2>$null
+    if ($dbExists -ne "1") {
+        Write-Host "  -> Creating dental_assist database..." -ForegroundColor Yellow
+        & $psqlPath -U postgres -h localhost -d postgres -c "CREATE DATABASE dental_assist;" 2>$null
+        Write-Host "  -> Database created" -ForegroundColor Green
+    }
+    Write-Host "  -> Database ready" -ForegroundColor Green
+}
 Write-Host ""
 
 # --- Start all services ---

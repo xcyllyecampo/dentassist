@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "lint": "eslint .",
     "db:migrate": "npx prisma migrate dev --name init",
     "db:seed": "node prisma/seed.js",
     "db:backup": "node prisma/backup.js",
@@ -22,12 +23,16 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.6.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
     "prisma": "^6.19.3",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "eslint": "^8.57.1",
     "nodemon": "^3.1.9"
   }
 }

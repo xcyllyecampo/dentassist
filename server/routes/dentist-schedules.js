@@ -1,5 +1,7 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { dentistScheduleSchemas } = require("../lib/schemas");
 
 const router = express.Router();
 
@@ -49,7 +51,7 @@ router.get("/dentist/:dentistId", auth, async (req, res) => {
   }
 });
 
-router.post("/", auth, roleGuard("ADMIN"), async (req, res) => {
+router.post("/", auth, roleGuard("ADMIN"), validate(dentistScheduleSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { dentistId, dayOfWeek, startTime, endTime } = req.body;

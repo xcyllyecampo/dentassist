@@ -1,5 +1,9 @@
 const express = require("express");
+const fs = require("fs");
+const crypto = require("crypto");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { patientSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
@@ -62,13 +66,14 @@ router.get("/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req,
   }
 });
 
-router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req, res) => {
+router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(patientSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { name, email, phone, dob, gender, bloodType, address, allergies, medicalHistory, emergencyContact, insuranceInfo } = req.body;
     const bcrypt = require("bcryptjs");
 
-    const hashed = await bcrypt.hash("password123", 10);
+    const tempPassword = crypto.randomBytes(12).toString("base64url");
+    const hashed = await bcrypt.hash(tempPassword, 10);
     const user = await prisma.user.create({
       data: { email, password: hashed, name, role: "PATIENT", phone },
     });
@@ -98,14 +103,14 @@ router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req, r
     const io = req.app.get("io");
     notifyAllStaff(prisma, io, { type: "patient", message: `New patient registered: ${patient.user?.name || name}` });
 
-    res.status(201).json(patient);
+    res.status(201).json({ ...patient, tempPassword });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req, res) => {
+router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(patientSchemas.update), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { dob, gender, bloodType, address, allergies, medicalHistory, emergencyContact, insuranceInfo } = req.body;
@@ -125,8 +130,19 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req,
 router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
-    const patient = await prisma.patient.findUnique({ where: { id: req.params.id } });
+    const patient = await prisma.patient.findUnique({
+      where: { id: req.params.id },
+      include: { xrayImages: { select: { filePath: true } }, user: { select: { avatar: true } } },
+    });
     if (!patient) return res.status(404).json({ error: "Patient not found" });
+
+    for (const img of patient.xrayImages) {
+      try { if (img.filePath) fs.unlinkSync(img.filePath); } catch {}
+    }
+    if (patient.user?.avatar) {
+      const avatarPath = patient.user.avatar.replace(/^\/uploads\//, "uploads/");
+      try { fs.unlinkSync(avatarPath); } catch {}
+    }
 
     await prisma.user.delete({ where: { id: patient.userId } });
     res.json({ message: "Patient deleted" });
@@ -136,7 +152,7 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
   }
 });
 
-router.put("/:patientId/teeth/:toothNumber", auth, roleGuard("DENTIST", "ADMIN"), async (req, res) => {
+router.put("/:patientId/teeth/:toothNumber", auth, roleGuard("DENTIST", "ADMIN"), validate(patientSchemas.updateTooth), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { status, notes } = req.body;

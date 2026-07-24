@@ -137,5 +137,5 @@ async def simulate_smile(
 
     except Exception as e:
         result = mock_smile_simulation(treatment_type)
-        result["error"] = str(e)
+        result["source"] = "mock"
         return result

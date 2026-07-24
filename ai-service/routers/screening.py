@@ -69,5 +69,5 @@ async def screen_oral(file: UploadFile = File(...)):
 
     except Exception as e:
         result = mock_oral_screening()
-        result["error"] = str(e)
+        result["source"] = "mock"
         return result

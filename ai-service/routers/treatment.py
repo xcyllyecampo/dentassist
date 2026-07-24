@@ -155,5 +155,5 @@ Respond with JSON:
 
     except Exception as e:
         result = mock_treatment_response(req.symptoms)
-        result["error"] = str(e)
+        result["source"] = "mock"
         return result

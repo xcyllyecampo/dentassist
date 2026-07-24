@@ -2,7 +2,11 @@ const VALID_APPOINTMENT_STATUSES = ["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "CO
 
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { appointmentSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
+
+const roomsAwaitingCleanup = new Map();
 
 const router = express.Router();
 
@@ -203,7 +207,7 @@ router.put("/:id/check-in", auth, async (req, res) => {
   }
 });
 
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, validate(appointmentSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
@@ -218,10 +222,6 @@ router.post("/", auth, async (req, res) => {
         const availableDentist = await prisma.user.findFirst({ where: { role: "DENTIST" }, select: { id: true } });
         if (availableDentist) dentistId = availableDentist.id;
       }
-    }
-
-    if (!patientId || !dentistId || !date || !time) {
-      return res.status(400).json({ error: "Missing required fields: patientId, dentistId, date, time" });
     }
 
     const apptDuration = duration || 30;
@@ -279,19 +279,14 @@ router.post("/", auth, async (req, res) => {
   }
 });
 
-router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req, res) => {
+router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(appointmentSchemas.update), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
     const { status, roomId, notes, date, time, duration, reason } = req.body;
 
     const updateData = {};
-    if (status !== undefined) {
-      if (!VALID_APPOINTMENT_STATUSES.includes(status)) {
-        return res.status(400).json({ error: `Invalid status. Allowed: ${VALID_APPOINTMENT_STATUSES.join(", ")}` });
-      }
-      updateData.status = status;
-    }
+    if (status !== undefined) updateData.status = status;
     if (roomId !== undefined) updateData.roomId = roomId || null;
     if (notes !== undefined) updateData.notes = notes;
     if (date !== undefined) updateData.date = new Date(date);
@@ -352,10 +347,7 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), async (req,
       if (appointment.roomId) {
         await prisma.room.update({ where: { id: appointment.roomId }, data: { status: "CLEANING" } });
         io.to("twin").emit("room-update", { roomId: appointment.roomId, status: "CLEANING" });
-        setTimeout(async () => {
-          await prisma.room.update({ where: { id: appointment.roomId }, data: { status: "AVAILABLE" } });
-          io.to("twin").emit("room-update", { roomId: appointment.roomId, status: "AVAILABLE" });
-        }, 300000);
+        roomsAwaitingCleanup.set(appointment.roomId, Date.now());
       }
     }
 
@@ -398,10 +390,7 @@ router.put("/:id/cancel", auth, async (req, res) => {
     if (updated.roomId) {
       await prisma.room.update({ where: { id: updated.roomId }, data: { status: "CLEANING" } });
       io.to("twin").emit("room-update", { roomId: updated.roomId, status: "CLEANING" });
-      setTimeout(async () => {
-        await prisma.room.update({ where: { id: updated.roomId }, data: { status: "AVAILABLE" } });
-        io.to("twin").emit("room-update", { roomId: updated.roomId, status: "AVAILABLE" });
-      }, 300000);
+      roomsAwaitingCleanup.set(updated.roomId, Date.now());
     }
 
     io.to("queue").emit("appointment-update", updated);
@@ -424,6 +413,6 @@ router.delete("/:id", auth, roleGuard("ADMIN", "ASSISTANT"), async (req, res) =>
   }
 });
 
-module.exports = router;
+module.exports = { router, roomsAwaitingCleanup };
 
 

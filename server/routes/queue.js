@@ -1,5 +1,7 @@
 ﻿const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { queueSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
@@ -51,7 +53,7 @@ router.get("/my-entry", auth, async (req, res) => {
   }
 });
 
-router.post("/self-check-in", auth, async (req, res) => {
+router.post("/self-check-in", auth, validate(queueSchemas.selfCheckIn), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
@@ -89,7 +91,7 @@ router.post("/self-check-in", auth, async (req, res) => {
   }
 });
 
-router.post("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
+router.post("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(queueSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
@@ -119,7 +121,7 @@ router.post("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, r
   }
 });
 
-router.put("/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
+router.put("/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(queueSchemas.update), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");

@@ -1,5 +1,7 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { aiSchemas } = require("../lib/schemas");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -11,7 +13,15 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => cb(null, `ai-${Date.now()}${path.extname(file.originalname)}`),
 });
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp", "application/dicom"];
+const upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Only JPEG, PNG, WebP, and DICOM files are allowed"));
+  },
+});
 
 const MOCK_RESPONSES = {
   chat: (message) => ({
@@ -206,7 +216,7 @@ async function getClinicContext(prisma) {
   };
 }
 
-router.post("/chat", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
+router.post("/chat", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(aiSchemas.chat), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { message, history } = req.body;
@@ -268,7 +278,7 @@ router.post("/oral/screen", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", "PA
   }
 });
 
-router.post("/treatment/suggest", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
+router.post("/treatment/suggest", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(aiSchemas.treatmentSuggest), async (req, res) => {
   try {
     const { symptoms, examination_findings, patient_age, patient_gender, medical_history } = req.body;
     const response = await fetch(`${AI_SERVICE_URL}/treatment/suggest`, {

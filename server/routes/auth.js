@@ -3,13 +3,16 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { auth } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { authSchemas } = require("../lib/schemas");
+const { strictAuthLimiter, authLimiter } = require("../middleware/rateLimit");
 const { notifyAllStaff } = require("../lib/notify");
 
 const router = express.Router();
 
 async function generateTokens(user, prisma) {
   const accessToken = jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name },
+    { id: user.id, role: user.role },
     process.env.JWT_SECRET,
     { expiresIn: "15m" }
   );
@@ -25,13 +28,10 @@ async function generateTokens(user, prisma) {
   return { accessToken, refreshToken };
 }
 
-router.post("/register", async (req, res) => {
+router.post("/register", authLimiter, validate(authSchemas.register), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
-    const { email, password, name, role, phone } = req.body;
-
-    if (!email || !password || !name) return res.status(400).json({ error: "Email, password, and name are required" });
-    if (typeof password !== "string" || password.length < 6) return res.status(400).json({ error: "Password must be at least 6 characters" });
+    const { email, password, name, phone } = req.body;
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) return res.status(400).json({ error: "Email already registered" });
@@ -62,12 +62,10 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", strictAuthLimiter, validate(authSchemas.login), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { email, password } = req.body;
-
-    if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return res.status(400).json({ error: "Invalid credentials" });
@@ -91,12 +89,10 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/refresh", async (req, res) => {
+router.post("/refresh", authLimiter, validate(authSchemas.refresh), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { refreshToken } = req.body;
-
-    if (!refreshToken) return res.status(400).json({ error: "Refresh token required" });
 
     const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
     if (!stored) return res.status(401).json({ error: "Invalid refresh token" });

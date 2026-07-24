@@ -1,5 +1,7 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
+const validate = require("../middleware/validate");
+const { treatmentSchemas } = require("../lib/schemas");
 
 const router = express.Router();
 
@@ -22,7 +24,7 @@ router.get("/patient/:patientId", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT
   }
 });
 
-router.post("/", auth, roleGuard("DENTIST"), async (req, res) => {
+router.post("/", auth, roleGuard("DENTIST"), validate(treatmentSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { patientId, toothId, appointmentId, procedure, description, notes, cost } = req.body;
@@ -47,7 +49,7 @@ router.post("/", auth, roleGuard("DENTIST"), async (req, res) => {
   }
 });
 
-router.put("/:id", auth, roleGuard("DENTIST"), async (req, res) => {
+router.put("/:id", auth, roleGuard("DENTIST"), validate(treatmentSchemas.update), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
     const { procedure, description, notes, cost, toothId } = req.body;

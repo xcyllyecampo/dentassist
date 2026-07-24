@@ -199,4 +199,4 @@ async def chat(req: ChatRequest):
 
     except Exception as e:
         response = mock_chat_response(req.message, ctx)
-        return {"response": response, "source": "mock", "error": str(e)}
+        return {"response": response, "source": "mock"}
