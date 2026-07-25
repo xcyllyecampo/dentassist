@@ -4,7 +4,7 @@ import { useNotifications } from '../context/NotificationContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
   Stethoscope, Image, BarChart3, CalendarClock,
-  Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck, Box
+  Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
 } from 'lucide-react';
 import { playClick, playWhoosh } from '../lib/sounds';
 
@@ -21,7 +21,6 @@ const navItems = [
   { to: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['ADMIN', 'DENTIST'] },
   { to: '/schedules', icon: CalendarClock, label: 'Dentist Schedules', roles: ['ADMIN'] },
   { to: '/admin/manage-users', icon: ShieldCheck, label: 'Manage Users', roles: ['ADMIN'] },
-  { to: '/digital-twin', icon: Box, label: 'Digital Twin', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
 ];
 
 export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) {

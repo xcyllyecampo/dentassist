@@ -7,9 +7,7 @@ const api = axios.create({
 
 export function authUrl(path) {
   if (!path) return path;
-  const token = localStorage.getItem('token');
-  if (!path.startsWith('/')) path = `/${path}`;
-  return `${path}?token=${encodeURIComponent(token || '')}`;
+  return path;
 }
 
 let isRefreshing = false;

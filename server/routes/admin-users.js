@@ -2,20 +2,18 @@
 const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const path = require("path");
-const fs = require("fs");
 const { auth, roleGuard } = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const { adminUserSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
+const { uploadFile, deleteFile, getPublicUrl } = require("../lib/storage");
 
 const router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, `avatar-${Date.now()}${path.extname(file.originalname)}`),
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 router.get("/", auth, roleGuard("ADMIN"), async (req, res) => {
   try {
@@ -71,10 +69,16 @@ router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(adm
     if (existing) return res.status(400).json({ error: "Email already registered" });
 
     const hashed = await bcrypt.hash(password || crypto.randomBytes(4).toString('hex'), 10);
-    const avatarPath = req.file ? `/uploads/${req.file.filename}` : null;
+
+    let avatarUrl = null;
+    if (req.file) {
+      const filename = `avatar-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+      await uploadFile(req.file.buffer, filename, req.file.mimetype);
+      avatarUrl = getPublicUrl(filename);
+    }
 
     const user = await prisma.user.create({
-      data: { email, password: hashed, name, role, phone, avatar: avatarPath },
+      data: { email, password: hashed, name, role, phone, avatar: avatarUrl },
       select: { id: true, name: true, email: true, role: true, phone: true, avatar: true },
     });
 
@@ -110,7 +114,11 @@ router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(a
     if (role) updateData.role = role;
     if (phone !== undefined) updateData.phone = phone;
     if (password) updateData.password = await bcrypt.hash(password, 10);
-    if (req.file) updateData.avatar = `/uploads/${req.file.filename}`;
+    if (req.file) {
+      const filename = `avatar-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+      await uploadFile(req.file.buffer, filename, req.file.mimetype);
+      updateData.avatar = getPublicUrl(filename);
+    }
     updateData.lastEditedBy = req.user.name;
     updateData.lastEditedAt = new Date();
 
@@ -195,14 +203,13 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
           data: { status: "CANCELLED" },
         });
         for (const img of patient.xrayImages) {
-          try { if (img.filePath) fs.unlinkSync(img.filePath); } catch {}
+          try { if (img.filePath) await deleteFile(img.filePath); } catch {}
         }
       }
     }
 
     if (user.avatar) {
-      const avatarPath = user.avatar.replace(/^\/uploads\//, "uploads/");
-      try { fs.unlinkSync(avatarPath); } catch {}
+      try { await deleteFile(user.avatar); } catch {}
     }
 
     await prisma.user.delete({ where: { id: req.params.id } });

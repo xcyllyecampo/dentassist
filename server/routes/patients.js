@@ -1,7 +1,7 @@
 const express = require("express");
-const fs = require("fs");
 const crypto = require("crypto");
 const { auth, roleGuard } = require("../middleware/auth");
+const { deleteFile } = require("../lib/storage");
 const validate = require("../middleware/validate");
 const { patientSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
@@ -137,11 +137,10 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
     if (!patient) return res.status(404).json({ error: "Patient not found" });
 
     for (const img of patient.xrayImages) {
-      try { if (img.filePath) fs.unlinkSync(img.filePath); } catch {}
+      try { if (img.filePath) await deleteFile(img.filePath); } catch {}
     }
     if (patient.user?.avatar) {
-      const avatarPath = patient.user.avatar.replace(/^\/uploads\//, "uploads/");
-      try { fs.unlinkSync(avatarPath); } catch {}
+      try { await deleteFile(patient.user.avatar); } catch {}
     }
 
     await prisma.user.delete({ where: { id: patient.userId } });

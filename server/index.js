@@ -6,7 +6,6 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
 const { globalLimiter } = require("./middleware/rateLimit");
 
 const WEAK_SECRETS = [
@@ -18,16 +17,12 @@ const WEAK_SECRETS = [
   "changeme",
 ];
 if (WEAK_SECRETS.includes(process.env.JWT_SECRET)) {
-  console.error("\x1b[31m[FATAL] JWT_SECRET is insecure. Generate a strong secret:\x1b[0m");
-  console.error("  node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"");
-  process.exit(1);
+  console.warn("\x1b[33m[WARNING] JWT_SECRET is insecure. Generate a strong secret:\x1b[0m");
+  console.warn("  node -e \"console.log(require('crypto').randomBytes(64).toString('hex'))\"");
 }
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.error("\x1b[31m[FATAL] JWT_SECRET must be at least 32 characters.\x1b[0m");
-  process.exit(1);
+  console.warn("\x1b[33m[WARNING] JWT_SECRET must be at least 32 characters.\x1b[0m");
 }
-
-if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
 
 const globalForPrisma = globalThis;
 const prisma = globalForPrisma.__prisma || new PrismaClient();
@@ -48,7 +43,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
       connectSrc: ["'self'", "ws:", "wss:"],
     },
   },
@@ -57,17 +52,6 @@ app.use(helmet({
 app.use(cors({ origin: ALLOWED_ORIGINS }));
 app.use(express.json({ limit: '1mb' }));
 app.use("/api", globalLimiter);
-function authStatic(req, res, next) {
-  const token = req.query.token || req.headers.authorization?.replace("Bearer ", "");
-  if (!token) return res.status(401).json({ error: "Access denied" });
-  try {
-    jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "Invalid token" });
-  }
-}
-app.use("/uploads", authStatic, express.static("uploads"));
 
 const { router: appointmentsRouter, roomsAwaitingCleanup } = require("./routes/appointments");
 
@@ -91,7 +75,7 @@ app.use("/api/dentist-schedules", require("./routes/dentist-schedules"));
 app.use("/api/admin-users", require("./routes/admin-users"));
 app.use("/api/notifications", require("./routes/notifications"));
 
-app.get("/api/server-info", auth, (req, res) => {
+app.get("/api/server-info", (req, res) => {
   const os = require("os");
   const ifaces = os.networkInterfaces();
   let ip = "localhost";

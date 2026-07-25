@@ -45,8 +45,12 @@ export default function Login() {
     fetch('/api/server-info')
       .then(r => r.json())
       .then(data => {
-        const port = window.location.port;
-        setQrUrl(`${window.location.protocol}//${data.ip}${port ? ':' + port : ''}`);
+        if (data.ip) {
+          const port = window.location.port;
+          setQrUrl(`${window.location.protocol}//${data.ip}${port ? ':' + port : ''}`);
+        } else {
+          setQrUrl(window.location.origin);
+        }
       })
       .catch(() => setQrUrl(window.location.origin));
   }, []);
@@ -214,14 +218,18 @@ export default function Login() {
           </div>
           <div className="flex justify-center w-full mb-3">
             <div className="bg-white p-3 rounded-2xl" style={{ width: qrSize, height: qrSize }}>
-              <QRCodeSVG
-                value={qrUrl}
-                size={qrSize - 24}
-                bgColor="#ffffff"
-                fgColor="#0D6D65"
-                level="M"
-                includeMargin={false}
-              />
+              {qrUrl ? (
+                <QRCodeSVG
+                  value={qrUrl}
+                  size={qrSize - 24}
+                  bgColor="#ffffff"
+                  fgColor="#0D6D65"
+                  level="M"
+                  includeMargin={false}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">Loading...</div>
+              )}
             </div>
           </div>
           <p className="text-slate-500 text-xs">Scan with your phone camera to open</p>

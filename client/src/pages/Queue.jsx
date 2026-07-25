@@ -42,7 +42,7 @@ export default function Queue() {
     const socket = getSocket();
     const handler = () => fetchData();
     socket.on('queue-update', handler);
-    return () => socket.off('queue-updated', handler);
+    return () => socket.off('queue-update', handler);
   }, []);
 
   const isDentist = user?.role === 'DENTIST';

@@ -357,7 +357,7 @@ function UserModal({ user, onClose, onSave }) {
     bloodType: user?.patient?.bloodType || '',
   });
   const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null);
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar ? authUrl(user.avatar) : null);
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

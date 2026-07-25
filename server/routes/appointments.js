@@ -270,7 +270,6 @@ router.post("/", auth, validate(appointmentSchemas.create), async (req, res) => 
       io.to("twin").emit("room-update", { roomId, status: "OCCUPIED" });
     }
 
-    io.to("queue").emit("appointment-update", appointment);
     notifyAllStaff(prisma, io, { type: "appointment", message: `New appointment: ${appointment.patient?.user?.name || "Patient"} with ${appointment.dentist?.name || "Dentist"} on ${new Date(date).toLocaleDateString()} at ${time}` });
     res.status(201).json(appointment);
   } catch (err) {
@@ -351,7 +350,6 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
       }
     }
 
-    io.to("queue").emit("appointment-update", appointment);
     notifyAllStaff(prisma, io, { type: "appointment", message: `Appointment updated: ${appointment.patient?.user?.name || "Patient"} - ${appointment.status}` });
     res.json(appointment);
   } catch (err) {
@@ -393,7 +391,6 @@ router.put("/:id/cancel", auth, async (req, res) => {
       roomsAwaitingCleanup.set(updated.roomId, Date.now());
     }
 
-    io.to("queue").emit("appointment-update", updated);
     notifyAllStaff(prisma, io, { type: "appointment", message: `Appointment cancelled: ${updated.patient?.user?.name || "Patient"} - ${new Date(updated.date).toLocaleDateString()} at ${updated.time}` });
     res.json(updated);
   } catch (err) {

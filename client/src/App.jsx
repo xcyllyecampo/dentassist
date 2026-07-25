@@ -20,7 +20,6 @@ const Analytics = lazy(() => import('./pages/Analytics'));
 const TreatmentSupport = lazy(() => import('./pages/TreatmentSupport'));
 const SmileSimulation = lazy(() => import('./pages/SmileSimulation'));
 const DentistSchedules = lazy(() => import('./pages/DentistSchedules'));
-const DigitalTwin = lazy(() => import('./pages/DigitalTwin'));
 const AdminManagement = lazy(() => import('./pages/AdminManagement'));
 const KioskHome = lazy(() => import('./pages/kiosk/KioskHome'));
 const KioskCheckIn = lazy(() => import('./pages/kiosk/KioskCheckIn'));
@@ -105,7 +104,6 @@ export default function App() {
             <Route path="/smile-simulation" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><SmileSimulation /></ProtectedRoute>} />
             <Route path="/schedules" element={<ProtectedRoute roles={STAFF_ROLES}><DentistSchedules /></ProtectedRoute>} />
             <Route path="/admin/manage-users" element={<ProtectedRoute roles={["ADMIN"]}><AdminManagement /></ProtectedRoute>} />
-            <Route path="/digital-twin" element={<ProtectedRoute roles={STAFF_ROLES}><DigitalTwin /></ProtectedRoute>} />
 
             {/* Patient kiosk routes */}
             <Route path="/kiosk" element={<ProtectedRoute roles={["PATIENT"]}><KioskHome /></ProtectedRoute>} />
