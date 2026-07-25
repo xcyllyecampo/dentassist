@@ -217,7 +217,7 @@ export default function KioskRecords() {
                   </div>
                 ))}
               </div>
-              <div className="rounded-xl overflow-hidden border border-white/10 mb-3">
+              <div className="rounded-xl overflow-hidden border border-white/10">
                 <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
               </div>
               <div className="flex flex-wrap gap-2 text-[10px] text-white/60">

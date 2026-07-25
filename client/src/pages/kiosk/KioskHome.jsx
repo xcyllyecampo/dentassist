@@ -98,7 +98,7 @@ export default function KioskHome() {
         <div className="mt-auto pt-4 kiosk-in" style={{ animationDelay: '0.45s' }}>
           <button
             onClick={() => { playClick(); logout(); navigate('/login'); }}
-            className="kiosk-touch w-full flex items-center justify-center gap-2 py-3 text-white/40 hover:text-white/60 text-xs font-medium transition-colors"
+            className="kiosk-touch w-full flex items-center justify-center gap-2 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-white/40 hover:text-white/60 text-xs font-medium transition-all"
           >
             <LogOut size={14} /> Sign Out
           </button>
