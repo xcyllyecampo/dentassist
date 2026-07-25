@@ -1,7 +1,9 @@
 ﻿import { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import Spinner from '../components/Spinner';
+import Tooltip from '../components/Tooltip';
+import { SkeletonTable } from '../components/Skeleton';
 import api, { authUrl } from '../lib/api';
 import { UserPlus, Search, Edit2, Trash2, X, Camera, Users, Shield, Stethoscope, ChevronDown, Eye, EyeOff, Image, Power, Info } from 'lucide-react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
@@ -35,8 +37,7 @@ function getAvatarColor(name) {
 }
 
 export default function AdminManagement() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('ALL');
   const [modalOpen, setModalOpen] = useState(false);
@@ -48,12 +49,85 @@ export default function AdminManagement() {
   const tabContainerRef = useRef(null);
   const [sliderStyle, setSliderStyle] = useState({ left: 0, width: 0 });
 
-  const fetchUsers = () => {
-    setLoading(true);
-    api.get('/admin-users').then(res => setUsers(res.data)).catch(() => setError('Failed to load users')).finally(() => setLoading(false));
-  };
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => api.get('/admin-users').then(r => r.data),
+  });
 
-  useEffect(() => { fetchUsers(); }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/admin-users/${id}`),
+    onMutate: async (id) => {
+      playClick();
+      await queryClient.cancelQueries({ queryKey: ['admin-users'] });
+      const previous = queryClient.getQueryData(['admin-users']);
+      queryClient.setQueryData(['admin-users'], (old) => (old || []).filter(u => u.id !== id));
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['admin-users'], ctx.previous);
+      playError();
+      setError(err.response?.data?.error || 'Failed to delete user');
+    },
+    onSettled: () => {
+      playSuccess();
+      setDeleteConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: (id) => api.put(`/admin-users/${id}/toggle-active`).then(r => ({ id, active: r.data.active })),
+    onMutate: async (id) => {
+      playClick();
+      await queryClient.cancelQueries({ queryKey: ['admin-users'] });
+      const previous = queryClient.getQueryData(['admin-users']);
+      queryClient.setQueryData(['admin-users'], (old) => (old || []).map(u => u.id === id ? { ...u, active: !u.active } : u));
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['admin-users'], ctx.previous);
+      playError();
+      setError(err.response?.data?.error || 'Failed to update user');
+    },
+    onSettled: () => {
+      playSuccess();
+      setToggleConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (fd) => api.post('/admin-users', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data),
+    onMutate: async (fd) => {
+      await queryClient.cancelQueries({ queryKey: ['admin-users'] });
+      const previous = queryClient.getQueryData(['admin-users']);
+      const optimistic = { id: `temp-${Date.now()}`, name: fd.get('name'), email: fd.get('email'), role: fd.get('role'), active: true };
+      queryClient.setQueryData(['admin-users'], (old) => [optimistic, ...(old || [])]);
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['admin-users'], ctx.previous);
+      playError();
+      setError(err.response?.data?.error || 'Failed to save user');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, fd }) => api.put(`/admin-users/${id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data),
+    onMutate: async ({ id, fd }) => {
+      await queryClient.cancelQueries({ queryKey: ['admin-users'] });
+      const previous = queryClient.getQueryData(['admin-users']);
+      queryClient.setQueryData(['admin-users'], (old) => (old || []).map(u => u.id === id ? { ...u, name: fd.get('name'), email: fd.get('email'), role: fd.get('role') } : u));
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['admin-users'], ctx.previous);
+      playError();
+      setError(err.response?.data?.error || 'Failed to save user');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+  });
 
   const updateSlider = useCallback(() => {
     const activeTabEl = tabRefs.current[activeTab];
@@ -84,39 +158,18 @@ export default function AdminManagement() {
     return true;
   });
 
-  const handleDelete = async (user) => {
-    playClick();
-    try {
-      await api.delete(`/admin-users/${user.id}`);
-      playSuccess();
-      setUsers(prev => prev.filter(u => u.id !== user.id));
-      setDeleteConfirm(null);
-    } catch (err) {
-      playError();
-      setError(err.response?.data?.error || 'Failed to delete user');
-    }
+  const handleDelete = (user) => {
+    deleteMutation.mutate(user.id);
   };
 
-  const handleToggleActive = async (user) => {
-    playClick();
-    try {
-      const res = await api.put(`/admin-users/${user.id}/toggle-active`);
-      playSuccess();
-      setUsers(prev => prev.map(u => u.id === user.id ? { ...u, active: res.data.active } : u));
-    } catch (err) {
-      playError();
-      setError(err.response?.data?.error || 'Failed to update user');
-    }
+  const handleToggleActive = (user) => {
+    toggleMutation.mutate(user.id);
   };
 
   const handleSave = (savedUser) => {
-    if (editUser) {
-      setUsers(prev => prev.map(u => u.id === savedUser.id ? { ...u, ...savedUser } : u));
-    } else {
-      setUsers(prev => [savedUser, ...prev]);
-    }
     setModalOpen(false);
     setEditUser(null);
+    queryClient.invalidateQueries({ queryKey: ['admin-users'] });
   };
 
   const counts = {
@@ -180,7 +233,9 @@ export default function AdminManagement() {
 
         {/* Table */}
         {loading ? (
-          <Spinner className="py-20" />
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <SkeletonTable rows={8} />
+          </div>
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-sm p-12 text-center">
             <Users size={40} className="text-slate-300 mx-auto mb-3" />
@@ -248,23 +303,26 @@ export default function AdminManagement() {
                         <td className="px-5 py-3">
                           <div className="flex items-center justify-end gap-1">
                             {user.role === 'DENTIST' && (
-                              <button onClick={() => { playClick(); setToggleConfirm(user); }}
-                                className={`p-2 rounded-lg transition-colors ${user.active === false ? 'hover:bg-emerald-50 text-slate-400 hover:text-emerald-500' : 'hover:bg-amber-50 text-slate-400 hover:text-amber-500'}`}
-                                title={user.active === false ? 'Activate dentist' : 'Deactivate dentist'}>
-                                <Power size={15} />
-                              </button>
+                              <Tooltip content={user.active === false ? 'Activate' : 'Deactivate'}>
+                                <button onClick={() => { playClick(); setToggleConfirm(user); }}
+                                  className={`p-2 rounded-lg transition-colors ${user.active === false ? 'hover:bg-emerald-50 text-slate-400 hover:text-emerald-500' : 'hover:bg-amber-50 text-slate-400 hover:text-amber-500'}`}>
+                                  <Power size={15} />
+                                </button>
+                              </Tooltip>
                             )}
-                            <button onClick={() => { playClick(); setEditUser(user); setModalOpen(true); }}
-                              className="p-2 hover:bg-[#F0FDFA] rounded-lg text-slate-400 hover:text-[#0F766E] transition-colors"
-                              title="Edit user">
-                              <Edit2 size={15} />
-                            </button>
-                            {user.role !== 'DENTIST' && (
-                              <button onClick={() => { playClick(); setDeleteConfirm(user); }}
-                                className="p-2 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-500 transition-colors"
-                                title="Delete user">
-                                <Trash2 size={15} />
+                            <Tooltip content="Edit">
+                              <button onClick={() => { playClick(); setEditUser(user); setModalOpen(true); }}
+                                className="p-2 hover:bg-[#F0FDFA] rounded-lg text-slate-400 hover:text-[#0F766E] transition-colors">
+                                <Edit2 size={15} />
                               </button>
+                            </Tooltip>
+                            {user.role !== 'DENTIST' && (
+                              <Tooltip content="Delete">
+                                <button onClick={() => { playClick(); setDeleteConfirm(user); }}
+                                  className="p-2 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-500 transition-colors">
+                                  <Trash2 size={15} />
+                                </button>
+                              </Tooltip>
                             )}
                           </div>
                         </td>
@@ -344,6 +402,7 @@ export default function AdminManagement() {
 }
 
 function UserModal({ user, onClose, onSave }) {
+  const queryClient = useQueryClient();
   const isEdit = !!user;
   const fileInputRef = useRef(null);
   const [form, setForm] = useState({
@@ -413,9 +472,11 @@ function UserModal({ user, onClose, onSave }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <h2 className="text-lg font-bold text-slate-900">{isEdit ? 'Edit User' : 'Add New User'}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
-            <X size={18} />
-          </button>
+          <Tooltip content="Close">
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors">
+              <X size={18} />
+            </button>
+          </Tooltip>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -487,10 +548,12 @@ function UserModal({ user, onClose, onSave }) {
                 required={!isEdit}
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#14B8A6] outline-none transition-all pr-10"
                 placeholder={isEdit ? '••••••••' : 'Default: password123'} />
-              <button type="button" onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+              <Tooltip content={showPassword ? 'Hide password' : 'Show password'}>
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </Tooltip>
             </div>
           </div>
 

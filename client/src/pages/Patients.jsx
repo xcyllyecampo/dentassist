@@ -1,42 +1,53 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
-import Spinner from '../components/Spinner';
+import { SkeletonTable } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import { Plus, Search, Users, UserPlus, AlertTriangle, ArrowUpRight } from 'lucide-react';
 
 export default function Patients() {
   const toast = useToast();
-  const [patients, setPatients] = useState([]);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [form, setForm] = useState({ name: '', email: '', phone: '', dob: '', gender: '', bloodType: '', allergies: '', medicalHistory: '' });
 
-  const fetchPatients = () => {
-    setLoading(true);
-    setError(null);
-    api.get('/patients')
-      .then(res => setPatients(res.data))
-      .catch(() => setError('Failed to load patients'))
-      .finally(() => setLoading(false));
-  };
+  const { data: patients = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => api.get('/patients').then(r => r.data),
+  });
 
-  useEffect(() => { fetchPatients(); }, []);
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/patients', form);
-      setPatients([res.data, ...patients]);
+  const createMutation = useMutation({
+    mutationFn: (data) => api.post('/patients', data),
+    onMutate: async (newData) => {
+      await queryClient.cancelQueries({ queryKey: ['patients'] });
+      const previous = queryClient.getQueryData(['patients']);
+      const tempId = `temp-${Date.now()}`;
+      queryClient.setQueryData(['patients'], (old) => [
+        { id: tempId, user: { name: newData.name, email: newData.email, phone: newData.phone, avatar: null }, gender: newData.gender, bloodType: newData.bloodType, createdAt: new Date().toISOString() },
+        ...(old || []),
+      ]);
+      return { previous };
+    },
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
       setShowModal(false);
       setForm({ name: '', email: '', phone: '', dob: '', gender: '', bloodType: '', allergies: '', medicalHistory: '' });
       toast.success('Patient created successfully');
-    } catch (err) { toast.error(err.response?.data?.error || 'Error creating patient'); }
+    },
+    onError: (err, vars, context) => {
+      queryClient.setQueryData(['patients'], context.previous);
+      toast.error(err.response?.data?.error || 'Error creating patient');
+    },
+  });
+
+  const handleCreate = (e) => {
+    e.preventDefault();
+    createMutation.mutate(form);
   };
 
   const filtered = patients.filter(p =>
@@ -91,13 +102,13 @@ export default function Patients() {
 
         {/* Table */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          {loading ? (
-            <Spinner className="py-20" />
+          {isLoading ? (
+            <SkeletonTable rows={5} />
           ) : error ? (
             <div className="py-12 text-center">
               <AlertTriangle size={36} className="mx-auto mb-3 text-red-400" />
-              <p className="text-sm text-red-600 mb-3">{error}</p>
-              <button onClick={fetchPatients} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button>
+              <p className="text-sm text-red-600 mb-3">Failed to load patients</p>
+              <button onClick={() => refetch()} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button>
             </div>
           ) : (
           <div className="overflow-x-auto">
@@ -186,7 +197,7 @@ export default function Patients() {
                   <TextArea label="Medical History" value={form.medicalHistory} onChange={v => setForm({...form, medicalHistory: v})} />
                   <div className="flex justify-end gap-3 pt-2">
                     <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium transition-colors">Cancel</button>
-                    <button type="submit" className="btn-premium px-5 py-2.5 text-white rounded-xl text-sm font-semibold">Create Patient</button>
+                    <button type="submit" disabled={createMutation.isPending} className="btn-premium px-5 py-2.5 text-white rounded-xl text-sm font-semibold disabled:opacity-50">{createMutation.isPending ? 'Creating...' : 'Create Patient'}</button>
                   </div>
                 </form>
               </div>

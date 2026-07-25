@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import Spinner from '../components/Spinner';
+import { SkeletonLine, SkeletonCircle } from '../components/Skeleton';
+import Tooltip from '../components/Tooltip';
 import api, { authUrl } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -36,37 +38,34 @@ function getAvatarColor(name) {
 export default function DentistSchedules() {
   const { user } = useAuth();
   const toast = useToast();
-  const [schedules, setSchedules] = useState([]);
-  const [dentists, setDentists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showForm, setShowForm] = useState(false);
+  const queryClient = useQueryClient();
   const [selectedDentist, setSelectedDentist] = useState(null);
   const dentistRefs = useRef({});
   const dentistContainerRef = useRef(null);
   const [sliderStyle, setSliderStyle] = useState({ top: 0, height: 0 });
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ dentistId: '', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' });
   const isAdmin = user?.role === 'ADMIN';
 
-  const fetchData = () => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      api.get('/dentist-schedules'),
-      api.get('/dentist-schedules/dentists').catch(() => ({ data: [] })),
-    ]).then(([schedRes, dentistsRes]) => {
-      setSchedules(schedRes.data);
-      const merged = dentistsRes.data || [];
-      schedRes.data.forEach(s => {
-        if (s.user && !merged.find(d => d.id === s.user.id)) {
-          merged.push({ id: s.user.id, name: s.user.name, avatar: s.user.avatar });
-        }
-      });
-      setDentists(merged);
-    }).catch(() => setError('Failed to load schedules')).finally(() => setLoading(false));
-  };
+  const { data: schedules = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['dentist-schedules'],
+    queryFn: () => api.get('/dentist-schedules').then(r => r.data),
+  });
 
-  useEffect(() => { fetchData(); }, []);
+  const { data: rawDentists = [] } = useQuery({
+    queryKey: ['dentists'],
+    queryFn: () => api.get('/dentist-schedules/dentists').then(r => r.data).catch(() => []),
+  });
+
+  const dentists = (() => {
+    const merged = [...rawDentists];
+    schedules.forEach(s => {
+      if (s.user && !merged.find(d => d.id === s.user.id)) {
+        merged.push({ id: s.user.id, name: s.user.name, avatar: s.user.avatar });
+      }
+    });
+    return merged;
+  })();
 
   useEffect(() => {
     if (dentists.length > 0 && !selectedDentist) {
@@ -90,33 +89,128 @@ export default function DentistSchedules() {
     requestAnimationFrame(updateSlider);
   }, [updateSlider]);
 
-  const handleAdd = async () => {
-    playClick();
-    if (!form.dentistId) { toast.error('Select a dentist'); return; }
-    try {
-      await api.post('/dentist-schedules', form);
+  const addMutation = useMutation({
+    mutationFn: (formData) => api.post('/dentist-schedules', formData),
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: ['dentist-schedules'] });
+      const previous = queryClient.getQueryData(['dentist-schedules']);
+      const dentist = dentists.find(d => d.id === formData.dentistId);
+      queryClient.setQueryData(['dentist-schedules'], (old = []) => [
+        ...old,
+        {
+          id: `temp-${Date.now()}`,
+          ...formData,
+          userId: formData.dentistId,
+          user: dentist ? { id: dentist.id, name: dentist.name, avatar: dentist.avatar } : null,
+        },
+      ]);
+      return { previous };
+    },
+    onError: (err, formData, context) => {
+      queryClient.setQueryData(['dentist-schedules'], context.previous);
+      toast.error(err.response?.data?.error || 'Failed to add schedule');
+      playError();
+    },
+    onSuccess: () => {
       toast.success('Schedule added');
       playSuccess();
       setShowForm(false);
       setForm({ dentistId: '', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' });
-      fetchData();
-    } catch (e) {
-      toast.error(e.response?.data?.error || 'Failed to add schedule');
-      playError();
-    }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dentist-schedules'] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (schedId) => api.delete(`/dentist-schedules/${schedId}`),
+    onMutate: async (schedId) => {
+      await queryClient.cancelQueries({ queryKey: ['dentist-schedules'] });
+      const previous = queryClient.getQueryData(['dentist-schedules']);
+      queryClient.setQueryData(['dentist-schedules'], (old = []) => old.filter(s => s.id !== schedId));
+      return { previous };
+    },
+    onError: (err, schedId, context) => {
+      queryClient.setQueryData(['dentist-schedules'], context.previous);
+      toast.error('Failed to remove schedule');
+    },
+    onSuccess: () => {
+      toast.success('Schedule removed');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dentist-schedules'] });
+    },
+  });
+
+  const handleAdd = () => {
+    playClick();
+    if (!form.dentistId) { toast.error('Select a dentist'); return; }
+    addMutation.mutate(form);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (schedId) => {
     if (!confirm('Remove this schedule?')) return;
     playClick();
-    try {
-      await api.delete(`/dentist-schedules/${id}`);
-      toast.success('Schedule removed');
-      fetchData();
-    } catch (e) {
-      toast.error('Failed to remove schedule');
-    }
+    deleteMutation.mutate(schedId);
   };
+
+  if (isLoading) return (
+    <Layout>
+      <Header title="Dentist Schedules" />
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <SkeletonLine width="12rem" height="1rem" />
+            <SkeletonLine width="16rem" height="0.75rem" />
+          </div>
+        </div>
+        <div className="flex gap-6">
+          <div className="w-64 shrink-0 space-y-2">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-3 border border-slate-100">
+                <SkeletonCircle size="3rem" />
+                <div className="flex-1 space-y-2">
+                  <SkeletonLine width="70%" height="0.875rem" />
+                  <SkeletonLine width="50%" height="0.625rem" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex-1 bg-white rounded-2xl border border-slate-200 p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <SkeletonCircle size="2.5rem" />
+              <div className="space-y-1.5">
+                <SkeletonLine width="8rem" height="1rem" />
+                <SkeletonLine width="6rem" height="0.625rem" />
+              </div>
+            </div>
+            <div className="grid grid-cols-7 gap-3">
+              {Array.from({ length: 7 }, (_, i) => (
+                <div key={i} className="rounded-xl border-2 border-slate-100 p-3 min-h-[140px]">
+                  <SkeletonLine width="2rem" height="0.625rem" className="mx-auto mb-3" />
+                  <div className="space-y-1.5">
+                    <SkeletonLine height="1.5rem" />
+                    <SkeletonLine height="1.5rem" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+
+  if (isError) return (
+    <Layout>
+      <Header title="Dentist Schedules" />
+      <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
+        <AlertTriangle className="text-red-500" size={48} />
+        <p className="text-red-600 font-medium">Failed to load schedules</p>
+        <button onClick={refetch} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] transition-colors text-sm">Retry</button>
+      </div>
+    </Layout>
+  );
 
   const grouped = {};
   schedules.forEach(s => {
@@ -129,18 +223,6 @@ export default function DentistSchedules() {
   const totalSlots = Object.values(grouped).reduce((acc, d) => {
     return acc + Object.values(d.days).reduce((a, slots) => a + slots.length, 0);
   }, 0);
-
-  if (loading) return <Layout><Header title="Dentist Schedules" /><Spinner className="py-20" /></Layout>;
-  if (error) return (
-    <Layout>
-      <Header title="Dentist Schedules" />
-      <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
-        <AlertTriangle className="text-red-500" size={48} />
-        <p className="text-red-600 font-medium">{error}</p>
-        <button onClick={fetchData} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] transition-colors text-sm">Retry</button>
-      </div>
-    </Layout>
-  );
 
   const activeDentist = dentists.find(d => d.id === selectedDentist);
   const activeDays = grouped[selectedDentist]?.days || {};
@@ -277,10 +359,12 @@ export default function DentistSchedules() {
                                       <span>{s.startTime} – {s.endTime}</span>
                                     </div>
                                     {isAdmin && (
-                                      <button onClick={() => handleDelete(s.id)}
-                                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 shadow-sm">
-                                        <X size={10} />
-                                      </button>
+                                      <Tooltip content="Remove schedule">
+                                        <button onClick={() => handleDelete(s.id)}
+                                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 shadow-sm">
+                                          <X size={10} />
+                                        </button>
+                                      </Tooltip>
                                     )}
                                   </div>
                                 ))}
@@ -306,7 +390,9 @@ export default function DentistSchedules() {
             <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-5">
                 <h3 className="font-bold text-lg text-slate-900">Add Schedule</h3>
-                <button onClick={() => setShowForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                <Tooltip content="Close">
+                  <button onClick={() => setShowForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                </Tooltip>
               </div>
               <div className="space-y-4">
                 <div>

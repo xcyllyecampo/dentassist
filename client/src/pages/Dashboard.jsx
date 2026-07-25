@@ -1,14 +1,15 @@
 ﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import ClinicScene3D from '../components/ClinicScene3D';
-import Spinner from '../components/Spinner';
 import api from '../lib/api';
 import { getSocket } from '../lib/socket';
 import { Users, Calendar, Clock, TrendingUp, Activity, ArrowUpRight, Zap, Star, CheckCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { playClick } from '../lib/sounds';
+import { SkeletonCard, SkeletonLine, SkeletonCircle } from '../components/Skeleton';
 
 const ROOM_COLORS = {
   AVAILABLE: '#10b981',
@@ -23,35 +24,86 @@ const ROOM_LABELS = {
   MAINTENANCE: 'Maintenance',
 };
 
+function DashboardSkeleton() {
+  return (
+    <Layout>
+      <Header title="Dashboard" />
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="bg-slate-200 rounded-2xl h-28 animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-sm p-4 md:p-5 border border-slate-200">
+              <div className="flex items-center gap-3 md:gap-4">
+                <SkeletonCircle size="3rem" />
+                <div className="space-y-2 flex-1">
+                  <SkeletonLine width="60%" height="1.25rem" />
+                  <SkeletonLine width="80%" height="0.75rem" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="h-[280px] md:h-[400px] lg:h-[480px] bg-slate-100 animate-pulse" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <SkeletonLine width="40%" height="0.875rem" />
+                <div className="space-y-2 mt-3">
+                  {Array.from({ length: 3 }, (_, j) => (
+                    <div key={j} className="flex items-center gap-2">
+                      <SkeletonCircle size="1.5rem" />
+                      <SkeletonLine width="70%" height="0.75rem" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
 export default function Dashboard() {
-  const [dashData, setDashData] = useState(null);
-  const [rooms, setRooms] = useState([]);
-  const [queue, setQueue] = useState([]);
+  const queryClient = useQueryClient();
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [loading, setLoading] = useState(true);
+
+  const { data: dashData, isLoading: dashLoading } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => api.get('/dashboard').then(r => r.data),
+  });
+
+  const { data: rooms = [], isLoading: roomsLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => api.get('/rooms').then(r => r.data),
+  });
+
+  const { data: queue = [], isLoading: queueLoading } = useQuery({
+    queryKey: ['queue'],
+    queryFn: () => api.get('/queue').then(r => r.data),
+  });
 
   useEffect(() => {
-    Promise.all([
-      api.get('/dashboard'),
-      api.get('/rooms'),
-      api.get('/queue'),
-    ]).then(([d, r, q]) => {
-      setDashData(d.data);
-      setRooms(r.data);
-      setQueue(q.data);
-    }).catch(() => {}).finally(() => setLoading(false));
-
     const socket = getSocket();
     socket.emit('join-twin');
     socket.emit('join-queue');
 
     const onRoomUpdate = ({ roomId, status }) => {
-      setRooms(prev => prev.map(r => r.id === roomId ? { ...r, status } : r));
+      queryClient.setQueryData(['rooms'], (old) =>
+        old ? old.map(r => r.id === roomId ? { ...r, status } : r) : old
+      );
       setLastUpdate(new Date());
     };
     const onQueueUpdate = () => {
-      api.get('/queue').then(res => { setQueue(res.data); setLastUpdate(new Date()); });
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      setLastUpdate(new Date());
     };
 
     socket.on('room-update', onRoomUpdate);
@@ -61,9 +113,9 @@ export default function Dashboard() {
       socket.off('room-update', onRoomUpdate);
       socket.off('queue-update', onQueueUpdate);
     };
-  }, []);
+  }, [queryClient]);
 
-  if (loading) return <Layout><Header title="Dashboard" /><Spinner className="py-20" /></Layout>;
+  if (dashLoading || roomsLoading || queueLoading) return <DashboardSkeleton />;
 
   const waiting = queue.filter(e => e.status === 'WAITING');
   const inProgress = queue.filter(e => e.status === 'IN_PROGRESS');

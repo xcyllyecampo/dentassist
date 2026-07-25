@@ -1,50 +1,81 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api from '../lib/api';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { TrendingUp, Users, DollarSign, Calendar, AlertTriangle } from 'lucide-react';
-import Spinner from '../components/Spinner';
+import { SkeletonCard, SkeletonLine } from '../components/Skeleton';
 
 const COLORS = ['#0F766E', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6', '#0ea5e9'];
 
+function AnalyticsSkeleton() {
+  return (
+    <Layout>
+      <Header title="Clinic Analytics" />
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }, (_, i) => <SkeletonCard key={i} />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <SkeletonLine width="10rem" height="1rem" />
+              <div className="bg-slate-100 rounded-lg mt-4 animate-pulse" style={{ height: 300 }} />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }, (_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <SkeletonLine width="10rem" height="1rem" />
+              <div className="bg-slate-100 rounded-lg mt-4 animate-pulse" style={{ height: 300 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
 export default function Analytics() {
-  const [revenue, setRevenue] = useState([]);
-  const [procedures, setProcedures] = useState([]);
-  const [returning, setReturning] = useState([]);
-  const [daily, setDaily] = useState(null);
-  const [peakHours, setPeakHours] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [days] = useState(7);
 
-  const fetchData = () => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      api.get('/analytics/revenue?days=7'),
-      api.get('/analytics/procedures'),
-      api.get('/analytics/returning-patients'),
-      api.get('/analytics/daily'),
-      api.get('/analytics/peak-hours'),
-    ]).then(([rev, proc, ret, day, peak]) => {
-      setRevenue(rev.data);
-      setProcedures(proc.data);
-      setReturning(ret.data);
-      setDaily(day.data);
-      setPeakHours(peak.data);
-    }).catch(() => setError('Failed to load analytics')).finally(() => setLoading(false));
-  };
+  const { data: revenue = [], isLoading: revLoading } = useQuery({
+    queryKey: ['analytics', 'revenue', days],
+    queryFn: () => api.get(`/analytics/revenue?days=${days}`).then(r => r.data),
+  });
 
-  useEffect(() => { fetchData(); }, []);
+  const { data: procedures = [], isLoading: procLoading } = useQuery({
+    queryKey: ['analytics', 'procedures'],
+    queryFn: () => api.get('/analytics/procedures').then(r => r.data),
+  });
 
-  if (loading) return <Layout><Header title="Clinic Analytics" /><Spinner className="py-20" /></Layout>;
-  if (error) return (
+  const { data: returning = [], isLoading: retLoading } = useQuery({
+    queryKey: ['analytics', 'returning-patients'],
+    queryFn: () => api.get('/analytics/returning-patients').then(r => r.data),
+  });
+
+  const { data: daily = null, isLoading: dailyLoading, error: dailyError, refetch } = useQuery({
+    queryKey: ['analytics', 'daily'],
+    queryFn: () => api.get('/analytics/daily').then(r => r.data),
+  });
+
+  const { data: peakHours = [], isLoading: peakLoading } = useQuery({
+    queryKey: ['analytics', 'peak-hours'],
+    queryFn: () => api.get('/analytics/peak-hours').then(r => r.data),
+  });
+
+  const isLoading = revLoading || procLoading || retLoading || dailyLoading || peakLoading;
+
+  if (isLoading) return <AnalyticsSkeleton />;
+  if (dailyError) return (
     <Layout>
       <Header title="Clinic Analytics" />
       <div className="p-6 flex flex-col items-center justify-center py-20 gap-4">
         <AlertTriangle className="text-red-500" size={48} />
-        <p className="text-red-600 font-medium">{error}</p>
-        <button onClick={fetchData} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] transition-colors text-sm">Retry</button>
+        <p className="text-red-600 font-medium">Failed to load analytics</p>
+        <button onClick={() => refetch()} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] transition-colors text-sm">Retry</button>
       </div>
     </Layout>
   );

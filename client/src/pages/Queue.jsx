@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import Spinner from '../components/Spinner';
+import Tooltip from '../components/Tooltip';
+import { SkeletonCard, SkeletonLine } from '../components/Skeleton';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -9,41 +11,69 @@ import { getSocket } from '../lib/socket';
 import { Plus, Clock, CheckCircle, XCircle, Phone, AlertTriangle, Stethoscope, Users } from 'lucide-react';
 import { playCallPatient } from '../lib/sounds';
 
+function QueueSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="rounded-xl border border-slate-200 p-4 text-center w-24">
+              <SkeletonLine width="3rem" height="1.5rem" className="mx-auto mb-1" />
+              <SkeletonLine width="4rem" height="0.75rem" className="mx-auto" />
+            </div>
+          ))}
+        </div>
+        <SkeletonLine width="8rem" height="2rem" className="rounded-lg" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {Array.from({ length: 2 }, (_, i) => (
+          <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <SkeletonLine width="10rem" height="1rem" className="mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 3 }, (_, j) => <SkeletonCard key={j} />)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Queue() {
   const toast = useToast();
   const { user } = useAuth();
-  const [queue, setQueue] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [dentists, setDentists] = useState([]);
+  const queryClient = useQueryClient();
   const [filterDentistId, setFilterDentistId] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const fetchData = () => {
-    setLoading(true);
-    setError(null);
-    Promise.all([api.get('/queue'), api.get('/patients'), api.get('/dashboard')])
-      .then(([queueRes, patientsRes, dashRes]) => {
-        setQueue(queueRes.data);
-        setPatients(patientsRes.data);
-        setDentists(dashRes.data.dentists || []);
-      })
-      .catch(() => setError('Failed to load queue'))
-      .finally(() => setLoading(false));
-  };
+  const { data: queue = [], isLoading: loadingQueue, error: queueError } = useQuery({
+    queryKey: ['queue'],
+    queryFn: () => api.get('/queue').then(r => r.data),
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => api.get('/patients').then(r => r.data),
+  });
+
+  const { data: dashboard } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => api.get('/dashboard').then(r => r.data),
+  });
+
+  const dentists = dashboard?.dentists || [];
+  const loading = loadingQueue;
+  const error = queueError ? 'Failed to load queue' : null;
 
   useEffect(() => {
     const socket = getSocket();
-    const handler = () => fetchData();
+    const handler = () => {
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+    };
     socket.on('queue-update', handler);
     return () => socket.off('queue-update', handler);
-  }, []);
+  }, [queryClient]);
 
   const isDentist = user?.role === 'DENTIST';
   const filteredQueue = filterDentistId === 'all'
@@ -53,40 +83,64 @@ export default function Queue() {
   const waiting = filteredQueue.filter(e => e.status === 'WAITING');
   const inProgress = filteredQueue.filter(e => e.status === 'IN_PROGRESS');
 
-  const handleAdd = async () => {
-    if (!selectedPatient) return;
-    try {
-      const res = await api.post('/queue', { patientId: selectedPatient, dentistId: filterDentistId !== 'all' ? filterDentistId : undefined });
-      setQueue(prev => [...prev, res.data]);
-      setShowModal(false);
-      setSelectedPatient('');
-      toast.success('Patient added to queue');
-    } catch (err) { toast.error('Error adding to queue'); }
-  };
+  const addMutation = useMutation({
+    mutationFn: ({ patientId, dentistId }) => api.post('/queue', { patientId, dentistId: dentistId || undefined }).then(r => r.data),
+    onMutate: async ({ patientId, dentistId }) => {
+      await queryClient.cancelQueries({ queryKey: ['queue'] });
+      const previous = queryClient.getQueryData(['queue']);
+      const patient = patients.find(p => p.id === patientId);
+      const optimistic = { id: `temp-${Date.now()}`, patientId, dentistId: dentistId || undefined, status: 'WAITING', position: (queue.length || 0) + 1, patient };
+      queryClient.setQueryData(['queue'], (old) => [...(old || []), optimistic]);
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['queue'], ctx.previous);
+      toast.error('Error adding to queue');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['queue'] }),
+  });
 
-  const handleStatusUpdate = async (id, status) => {
-    try {
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => api.put(`/queue/${id}`, { status }),
+    onMutate: async ({ id, status }) => {
       if (status === 'IN_PROGRESS') playCallPatient();
-      await api.put(`/queue/${id}`, { status });
+      await queryClient.cancelQueries({ queryKey: ['queue'] });
+      const previous = queryClient.getQueryData(['queue']);
       if (status === 'IN_PROGRESS') {
-        setQueue(prev => prev.map(e => e.id === id ? { ...e, status: 'IN_PROGRESS' } : e));
+        queryClient.setQueryData(['queue'], (old) => (old || []).map(e => e.id === id ? { ...e, status: 'IN_PROGRESS' } : e));
       } else {
-        setQueue(prev => prev.filter(e => e.id !== id));
+        queryClient.setQueryData(['queue'], (old) => (old || []).filter(e => e.id !== id));
       }
-      toast.success('Queue status updated');
-    } catch (err) { toast.error('Error updating queue'); }
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['queue'], ctx.previous);
+      toast.error('Error updating queue');
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['queue'] }),
+  });
+
+  const handleAdd = () => {
+    if (!selectedPatient) return;
+    addMutation.mutate({ patientId: selectedPatient, dentistId: filterDentistId }, {
+      onSuccess: () => {
+        setShowModal(false);
+        setSelectedPatient('');
+        toast.success('Patient added to queue');
+      },
+    });
   };
 
   return (
     <Layout>
       <Header title="Queue Management" />
       <div className="p-6">
-        {loading && <Spinner className="py-20" />}
+        {loading && <QueueSkeleton />}
         {error && (
           <div className="text-center py-20">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <p className="text-red-600 mb-4">{error}</p>
-            <button onClick={fetchData} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Retry</button>
+            <button onClick={() => queryClient.invalidateQueries({ queryKey: ['queue'] })} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Retry</button>
           </div>
         )}
         {!loading && !error && (
@@ -168,14 +222,16 @@ export default function Queue() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => handleStatusUpdate(entry.id, 'IN_PROGRESS')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F0FDFA] text-[#0D6D65] rounded-lg hover:bg-[#99F6E4] text-xs font-semibold uppercase tracking-wide" title="Call patient">
+                      <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'IN_PROGRESS' })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F0FDFA] text-[#0D6D65] rounded-lg hover:bg-[#99F6E4] text-xs font-semibold uppercase tracking-wide">
                         <Phone size={12} /> Call Patient
                       </button>
-                      <button onClick={() => handleStatusUpdate(entry.id, 'CANCELLED')}
-                        className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200" title="Cancel">
-                        <XCircle size={14} />
-                      </button>
+                      <Tooltip content="Cancel">
+                        <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'CANCELLED' })}
+                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                          <XCircle size={14} />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 ))
@@ -205,14 +261,18 @@ export default function Queue() {
                         </div>
                       </div>
                     <div className="flex gap-2">
-                      <button onClick={() => handleStatusUpdate(entry.id, 'COMPLETED')}
-                        className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200" title="Complete">
-                        <CheckCircle size={14} />
-                      </button>
-                      <button onClick={() => handleStatusUpdate(entry.id, 'CANCELLED')}
-                        className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200" title="Cancel">
-                        <XCircle size={14} />
-                      </button>
+                      <Tooltip content="Complete">
+                        <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'COMPLETED' })}
+                          className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
+                          <CheckCircle size={14} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content="Cancel">
+                        <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'CANCELLED' })}
+                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                          <XCircle size={14} />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 ))

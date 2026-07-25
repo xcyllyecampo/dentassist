@@ -1,5 +1,6 @@
 ﻿import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -7,6 +8,16 @@ import FloatingAI from './components/FloatingAI';
 import Login from './pages/Login';
 import Spinner from './components/Spinner';
 import { ShieldOff, LogOut } from 'lucide-react';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Patients = lazy(() => import('./pages/Patients'));
@@ -80,6 +91,7 @@ function DefaultRedirect() {
 
 export default function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <ToastProvider>
         <NotificationProvider>
@@ -121,5 +133,6 @@ export default function App() {
         </NotificationProvider>
       </ToastProvider>
     </AuthProvider>
+    </QueryClientProvider>
   );
 }

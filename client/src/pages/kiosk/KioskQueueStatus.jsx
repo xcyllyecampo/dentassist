@@ -1,47 +1,79 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import KioskLayout from './KioskLayout';
 import api from '../../lib/api';
 import { playClick, playCallPatient } from '../../lib/sounds';
 import { getSocket } from '../../lib/socket';
 import { Clock, Users, Loader, AlertTriangle } from 'lucide-react';
 
-export default function KioskQueueStatus() {
-  const [myEntry, setMyEntry] = useState(null);
-  const [waitingCount, setWaitingCount] = useState(0);
-  const [servingCount, setServingCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function KioskQueueSkeleton() {
+  return (
+    <KioskLayout title="My Queue Status">
+      <div className="flex flex-col items-center py-6">
+        <div className="kiosk-card p-6 w-full mb-6">
+          <div className="text-center mb-6">
+            <div className="h-3 bg-white/10 rounded animate-pulse w-32 mx-auto mb-3" />
+            <div className="h-16 bg-white/10 rounded animate-pulse w-24 mx-auto mb-3" />
+            <div className="h-6 bg-white/10 rounded-full animate-pulse w-28 mx-auto" />
+          </div>
+          <div className="mb-4">
+            <div className="flex justify-between mb-2">
+              <div className="h-3 bg-white/10 rounded animate-pulse w-24" />
+              <div className="h-3 bg-white/10 rounded animate-pulse w-20" />
+            </div>
+            <div className="h-3 bg-white/10 rounded-full animate-pulse w-full" />
+          </div>
+          <div className="h-3 bg-white/10 rounded animate-pulse w-64 mx-auto" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 w-full">
+          <div className="kiosk-card p-5 text-center">
+            <div className="h-6 bg-white/10 rounded animate-pulse w-6 mx-auto mb-2" />
+            <div className="h-8 bg-white/10 rounded animate-pulse w-12 mx-auto mb-2" />
+            <div className="h-3 bg-white/10 rounded animate-pulse w-16 mx-auto" />
+          </div>
+          <div className="kiosk-card p-5 text-center">
+            <div className="h-6 bg-white/10 rounded animate-pulse w-6 mx-auto mb-2" />
+            <div className="h-8 bg-white/10 rounded animate-pulse w-12 mx-auto mb-2" />
+            <div className="h-3 bg-white/10 rounded animate-pulse w-20 mx-auto" />
+          </div>
+        </div>
+      </div>
+    </KioskLayout>
+  );
+}
 
+export default function KioskQueueStatus() {
+  const queryClient = useQueryClient();
   const prevStatusRef = useRef(null);
 
-  const fetchMyEntry = () => {
-    setLoading(true);
-    setError(null);
-    Promise.all([
-      api.get('/queue/my-entry'),
-      api.get('/queue'),
-    ]).then(([myRes, queueRes]) => {
-      const newEntry = myRes.data || null;
-      if (prevStatusRef.current === 'WAITING' && newEntry?.status === 'IN_PROGRESS') {
-        playCallPatient();
-      }
-      prevStatusRef.current = newEntry?.status || null;
-      setMyEntry(newEntry);
-      const entries = queueRes.data || [];
-      setWaitingCount(entries.filter(e => e.status === 'WAITING').length);
-      setServingCount(entries.filter(e => e.status === 'IN_PROGRESS').length);
-    }).catch(() => setError('Failed to load queue status'))
-      .finally(() => setLoading(false));
-  };
+  const { data: myEntry, isLoading: loadingMy, error: errorMy, refetch: refetchMy } = useQuery({
+    queryKey: ['kiosk-queue-entry'],
+    queryFn: () => api.get('/queue/my-entry').then(r => r.data || null),
+    refetchInterval: 5000,
+  });
+
+  const { data: queueEntries, isLoading: loadingQueue } = useQuery({
+    queryKey: ['kiosk-queue'],
+    queryFn: () => api.get('/queue').then(r => r.data || []),
+    refetchInterval: 5000,
+  });
 
   useEffect(() => {
-    fetchMyEntry();
+    if (myEntry) {
+      if (prevStatusRef.current === 'WAITING' && myEntry.status === 'IN_PROGRESS') {
+        playCallPatient();
+      }
+      prevStatusRef.current = myEntry.status || null;
+    }
+  }, [myEntry]);
 
+  useEffect(() => {
     const socket = getSocket();
     socket.emit('join-queue');
 
     const onQueueUpdate = () => {
-      fetchMyEntry();
+      queryClient.invalidateQueries({ queryKey: ['kiosk-queue-entry'] });
+      queryClient.invalidateQueries({ queryKey: ['kiosk-queue'] });
     };
 
     socket.on('queue-update', onQueueUpdate);
@@ -49,33 +81,33 @@ export default function KioskQueueStatus() {
     return () => {
       socket.off('queue-update', onQueueUpdate);
     };
-  }, []);
+  }, [queryClient]);
+
+  const loading = loadingMy || loadingQueue;
+  const error = errorMy;
+  const waitingCount = queueEntries?.filter(e => e.status === 'WAITING').length || 0;
+  const servingCount = queueEntries?.filter(e => e.status === 'IN_PROGRESS').length || 0;
 
   const positionProgress = myEntry && myEntry.position > 0
     ? Math.max(0, 100 - (myEntry.position * 15))
     : 0;
 
+  if (loading) return <KioskQueueSkeleton />;
+
   return (
     <KioskLayout title="My Queue Status">
       <div className="flex flex-col items-center py-6">
-        {loading && (
-          <div className="flex items-center gap-3 text-white/60">
-            <Loader size={24} className="animate-spin" />
-            <span>Loading queue status...</span>
-          </div>
-        )}
-
         {error && (
           <div className="text-center">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
-            <p className="text-red-400 mb-4">{error}</p>
-            <button onClick={() => { playClick(); fetchMyEntry(); }} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors">
+            <p className="text-red-400 mb-4">Failed to load queue status</p>
+            <button onClick={() => { playClick(); refetchMy(); }} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors">
               Retry
             </button>
           </div>
         )}
 
-        {!loading && !error && !myEntry && (
+        {!error && !myEntry && (
           <div className="text-center">
             <div className="w-24 h-24 kiosk-card flex items-center justify-center mb-8 mx-auto">
               <Clock size={48} className="text-white/40" />
@@ -88,7 +120,7 @@ export default function KioskQueueStatus() {
           </div>
         )}
 
-        {!loading && !error && myEntry && (
+        {!error && myEntry && (
           <>
             {/* My position card */}
             <div className="kiosk-card p-6 w-full mb-6">

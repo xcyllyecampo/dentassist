@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import KioskLayout from './KioskLayout';
 import api, { authUrl } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { playClick, playError } from '../../lib/sounds';
-import Spinner from '../../components/Spinner';
-import { AlertTriangle, Calendar, Stethoscope, Pill, Circle, XCircle, Clock, Loader } from 'lucide-react';
+import { AlertTriangle, Calendar, Stethoscope, Pill, Circle, XCircle, Loader } from 'lucide-react';
 
 const TABS = [
   { id: 'appointments', label: 'Appointments', icon: Calendar },
@@ -13,51 +13,86 @@ const TABS = [
   { id: 'teeth', label: 'Teeth', icon: Circle },
 ];
 
+function KioskSkeleton() {
+  return (
+    <KioskLayout title="My Records">
+      <div className="space-y-3">
+        <div className="kiosk-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/10 rounded-full animate-pulse shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-white/10 rounded animate-pulse w-1/3" />
+              <div className="h-3 bg-white/10 rounded animate-pulse w-1/2" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="h-9 w-24 bg-white/10 rounded-xl animate-pulse" />
+          ))}
+        </div>
+        <div className="kiosk-card p-4">
+          <div className="space-y-3">
+            {[1,2,3].map(i => (
+              <div key={i} className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                <div className="h-4 bg-white/10 rounded animate-pulse w-2/3 mb-2" />
+                <div className="h-3 bg-white/10 rounded animate-pulse w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </KioskLayout>
+  );
+}
+
 export default function KioskRecords() {
-  const [patient, setPatient] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('appointments');
-  const [cancellingId, setCancellingId] = useState(null);
   const toast = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchPatient = () => {
-    setLoading(true);
-    setError(null);
-    api.get('/patients/me')
-      .then(res => setPatient(res.data))
-      .catch(() => setError('Failed to load your records'))
-      .finally(() => setLoading(false));
-  };
+  const { data: patient, isLoading, error, refetch } = useQuery({
+    queryKey: ['kiosk-patient'],
+    queryFn: () => api.get('/patients/me').then(r => r.data),
+  });
 
-  useEffect(() => { fetchPatient(); }, []);
-
-  const handleCancel = async (apptId) => {
-    if (!window.confirm('Are you sure you want to cancel this appointment? The time slot will become available for others.')) return;
-    setCancellingId(apptId);
-    try {
-      await api.put('/appointments/' + apptId + '/cancel');
-      setPatient(prev => ({
-        ...prev,
-        appointments: prev.appointments.map(a =>
+  const cancelMutation = useMutation({
+    mutationFn: (apptId) => api.put('/appointments/' + apptId + '/cancel'),
+    onMutate: async (apptId) => {
+      await queryClient.cancelQueries({ queryKey: ['kiosk-patient'] });
+      const previous = queryClient.getQueryData(['kiosk-patient']);
+      queryClient.setQueryData(['kiosk-patient'], (old) => ({
+        ...old,
+        appointments: old.appointments.map(a =>
           a.id === apptId ? { ...a, status: 'CANCELLED' } : a
         ),
       }));
-      toast.success('Appointment cancelled successfully');
-    } catch (err) {
+      return { previous };
+    },
+    onError: (err, apptId, ctx) => {
+      queryClient.setQueryData(['kiosk-patient'], ctx.previous);
       playError();
       toast.error(err.response?.data?.error || 'Failed to cancel appointment');
-    }
-    setCancellingId(null);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['kiosk-patient'] });
+    },
+  });
+
+  const handleCancel = (apptId) => {
+    if (!window.confirm('Are you sure you want to cancel this appointment? The time slot will become available for others.')) return;
+    cancelMutation.mutate(apptId);
+    toast.success('Appointment cancelled successfully');
   };
 
-  if (loading) return <KioskLayout title="My Records"><Spinner className="py-20" /></KioskLayout>;
+  if (isLoading) return <KioskSkeleton />;
+
   if (error) return (
     <KioskLayout title="My Records">
       <div className="text-center py-20">
         <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
-        <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={fetchPatient} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Retry</button>
+        <p className="text-red-400 mb-4">Failed to load your records</p>
+        <button onClick={() => refetch()} className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20">Retry</button>
       </div>
     </KioskLayout>
   );
@@ -129,10 +164,10 @@ export default function KioskRecords() {
                     {(a.status === 'SCHEDULED' || a.status === 'CONFIRMED') && (
                       <button
                         onClick={() => handleCancel(a.id)}
-                        disabled={cancellingId === a.id}
+                        disabled={cancelMutation.isPending && cancelMutation.variables === a.id}
                         className="flex items-center gap-1 px-3 py-1.5 bg-red-500/20 text-red-300 border border-red-500/40 rounded-lg text-xs font-medium hover:bg-red-500/30 transition-all disabled:opacity-50"
                       >
-                        {cancellingId === a.id ? (
+                        {cancelMutation.isPending && cancelMutation.variables === a.id ? (
                           <><Loader size={12} className="animate-spin" /> Cancelling...</>
                         ) : (
                           <><XCircle size={12} /> Cancel</>

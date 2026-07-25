@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
-import Spinner from '../components/Spinner';
+import { SkeletonLine, SkeletonCircle } from '../components/Skeleton';
+import Tooltip from '../components/Tooltip';
 import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, Calendar, Stethoscope, Pill, Image, Smile } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
@@ -36,16 +38,11 @@ const PRESCRIPTION_FREQUENCY = ['Once daily', 'Twice daily', 'Three times daily'
 
 export default function PatientDetail() {
   const { id } = useParams();
-  const [patient, setPatient] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [loyalty, setLoyalty] = useState(null);
-  const [badges, setBadges] = useState([]);
-  const [allBadges, setAllBadges] = useState([]);
   const [awarding, setAwarding] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
   const [editTreatment, setEditTreatment] = useState(null);
@@ -58,128 +55,295 @@ export default function PatientDetail() {
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [toothNote, setToothNote] = useState('');
 
-  const fetchPatient = () => {
-    setLoading(true);
-    setError(null);
-    api.get(`/patients/${id}`)
-      .then(res => setPatient(res.data))
-      .catch(() => setError('Failed to load patient details'))
-      .finally(() => setLoading(false));
-  };
+  const { data: patient, isLoading, isError, refetch } = useQuery({
+    queryKey: ['patient', id],
+    queryFn: () => api.get(`/patients/${id}`).then(r => r.data),
+  });
 
-  useEffect(() => { fetchPatient(); }, [id]);
+  const { data: loyalty } = useQuery({
+    queryKey: ['loyalty', id],
+    queryFn: () => api.get(`/loyalty/patient/${id}`).then(r => r.data),
+    enabled: activeTab === 'rewards' && !!id,
+  });
 
-  useEffect(() => {
-    if (activeTab === 'rewards' && id) {
-      api.get(`/loyalty/patient/${id}`).then(res => setLoyalty(res.data)).catch(() => {});
-      api.get(`/badges/patient/${id}`).then(res => setBadges(res.data)).catch(() => {});
-      api.get('/badges').then(res => setAllBadges(res.data)).catch(() => {});
-    }
-  }, [activeTab, id]);
+  const { data: patientBadges = [] } = useQuery({
+    queryKey: ['patient-badges', id],
+    queryFn: () => api.get(`/badges/patient/${id}`).then(r => r.data),
+    enabled: activeTab === 'rewards' && !!id,
+  });
 
-  const awardBadge = async (badgeId) => {
-    setAwarding(badgeId);
-    try {
-      await api.post('/badges/award', { patientId: id, badgeId });
-      toast.success('Badge awarded!');
-      const [loyaltyRes, badgesRes] = await Promise.all([
-        api.get(`/loyalty/patient/${id}`),
-        api.get(`/badges/patient/${id}`),
-      ]);
-      setLoyalty(loyaltyRes.data);
-      setBadges(badgesRes.data);
-    } catch (e) {
-      toast.error('Failed to award badge');
-    }
-    setAwarding(null);
-  };
+  const { data: allBadges = [] } = useQuery({
+    queryKey: ['badges'],
+    queryFn: () => api.get('/badges').then(r => r.data),
+    enabled: activeTab === 'rewards' && !!id,
+  });
 
-  const updateToothStatus = async (toothNumber, status) => {
-    playClick();
-    try {
-      await api.put(`/patients/${id}/teeth/${toothNumber}`, { status, notes: toothNote });
-      toast.success(`Tooth #${toothNumber} updated to ${status}`);
-      playSuccess();
-      fetchPatient();
-      setSelectedTooth(null);
-      setToothNote('');
-    } catch (e) {
+  const toothMutation = useMutation({
+    mutationFn: ({ toothNumber, status, notes }) =>
+      api.put(`/patients/${id}/teeth/${toothNumber}`, { status, notes }),
+    onMutate: async ({ toothNumber, status, notes }) => {
+      await queryClient.cancelQueries({ queryKey: ['patient', id] });
+      const previous = queryClient.getQueryData(['patient', id]);
+      queryClient.setQueryData(['patient', id], (old) => {
+        if (!old) return old;
+        const existingIndex = (old.teeth || []).findIndex(t => t.toothNumber === toothNumber);
+        const newTeeth = [...(old.teeth || [])];
+        if (existingIndex >= 0) {
+          newTeeth[existingIndex] = { ...newTeeth[existingIndex], status, notes };
+        } else {
+          newTeeth.push({ toothNumber, status, notes, id: `temp-${toothNumber}` });
+        }
+        return { ...old, teeth: newTeeth };
+      });
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['patient', id], context.previous);
       toast.error('Failed to update tooth');
       playError();
-    }
-  };
+    },
+    onSuccess: (data, variables) => {
+      toast.success(`Tooth #${variables.toothNumber} updated to ${variables.status}`);
+      playSuccess();
+      setSelectedTooth(null);
+      setToothNote('');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+    },
+  });
 
-  const submitTreatment = async () => {
-    playClick();
-    try {
-      const data = {
-        ...treatmentForm,
-        cost: treatmentForm.cost ? parseFloat(treatmentForm.cost) : null,
-        toothId: treatmentForm.toothId || null,
-      };
-      if (editTreatment) {
-        await api.put(`/treatments/${editTreatment.id}`, data);
-        toast.success('Treatment updated');
-      } else {
-        await api.post('/treatments', { ...data, patientId: id });
-        toast.success('Treatment added');
-      }
+  const treatmentMutation = useMutation({
+    mutationFn: ({ editId, data }) => {
+      if (editId) return api.put(`/treatments/${editId}`, data);
+      return api.post('/treatments', { ...data, patientId: id });
+    },
+    onMutate: async ({ editId, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['patient', id] });
+      const previous = queryClient.getQueryData(['patient', id]);
+      queryClient.setQueryData(['patient', id], (old) => {
+        if (!old) return old;
+        if (editId) {
+          return {
+            ...old,
+            treatments: (old.treatments || []).map(t =>
+              t.id === editId ? { ...t, ...data } : t
+            ),
+          };
+        }
+        return {
+          ...old,
+          treatments: [{ id: `temp-${Date.now()}`, ...data, patientId: id, dentist: { name: 'You' } }, ...(old.treatments || [])],
+        };
+      });
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['patient', id], context.previous);
+      toast.error(err.response?.data?.error || 'Failed to save treatment');
+      playError();
+    },
+    onSuccess: (data, variables) => {
+      toast.success(variables.editId ? 'Treatment updated' : 'Treatment added');
       playSuccess();
       setShowTreatmentForm(false);
       setEditTreatment(null);
       setTreatmentForm({ procedure: '', description: '', notes: '', cost: '', toothId: '' });
-      fetchPatient();
-    } catch (e) {
-      toast.error(e.response?.data?.error || 'Failed to save treatment');
-      playError();
-    }
-  };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+    },
+  });
 
-  const deleteTreatment = async (treatmentId) => {
-    if (!confirm('Delete this treatment?')) return;
-    try {
-      await api.delete(`/treatments/${treatmentId}`);
-      toast.success('Treatment deleted');
-      fetchPatient();
-    } catch (e) {
+  const deleteTreatmentMutation = useMutation({
+    mutationFn: (treatmentId) => api.delete(`/treatments/${treatmentId}`),
+    onMutate: async (treatmentId) => {
+      await queryClient.cancelQueries({ queryKey: ['patient', id] });
+      const previous = queryClient.getQueryData(['patient', id]);
+      queryClient.setQueryData(['patient', id], (old) => {
+        if (!old) return old;
+        return { ...old, treatments: (old.treatments || []).filter(t => t.id !== treatmentId) };
+      });
+      return { previous };
+    },
+    onError: (err, treatmentId, context) => {
+      queryClient.setQueryData(['patient', id], context.previous);
       toast.error('Failed to delete treatment');
-    }
-  };
+    },
+    onSuccess: () => {
+      toast.success('Treatment deleted');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+    },
+  });
 
-  const submitPrescription = async () => {
-    playClick();
-    try {
-      if (editPrescription) {
-        await api.put(`/prescriptions/${editPrescription.id}`, prescriptionForm);
-        toast.success('Prescription updated');
-      } else {
-        await api.post('/prescriptions', { ...prescriptionForm, patientId: id });
-        toast.success('Prescription added');
-      }
+  const prescriptionMutation = useMutation({
+    mutationFn: ({ editId, data }) => {
+      if (editId) return api.put(`/prescriptions/${editId}`, data);
+      return api.post('/prescriptions', { ...data, patientId: id });
+    },
+    onMutate: async ({ editId, data }) => {
+      await queryClient.cancelQueries({ queryKey: ['patient', id] });
+      const previous = queryClient.getQueryData(['patient', id]);
+      queryClient.setQueryData(['patient', id], (old) => {
+        if (!old) return old;
+        if (editId) {
+          return {
+            ...old,
+            prescriptions: (old.prescriptions || []).map(p =>
+              p.id === editId ? { ...p, ...data } : p
+            ),
+          };
+        }
+        return {
+          ...old,
+          prescriptions: [{ id: `temp-${Date.now()}`, ...data, patientId: id }, ...(old.prescriptions || [])],
+        };
+      });
+      return { previous };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['patient', id], context.previous);
+      toast.error(err.response?.data?.error || 'Failed to save prescription');
+      playError();
+    },
+    onSuccess: (data, variables) => {
+      toast.success(variables.editId ? 'Prescription updated' : 'Prescription added');
       playSuccess();
       setShowPrescriptionForm(false);
       setEditPrescription(null);
       setPrescriptionForm({ medication: '', dosage: '', frequency: 'Once daily', duration: '', notes: '', treatmentId: '' });
-      fetchPatient();
-    } catch (e) {
-      toast.error(e.response?.data?.error || 'Failed to save prescription');
-      playError();
-    }
-  };
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+    },
+  });
 
-  const deletePrescription = async (prescriptionId) => {
-    if (!confirm('Delete this prescription?')) return;
-    try {
-      await api.delete(`/prescriptions/${prescriptionId}`);
-      toast.success('Prescription deleted');
-      fetchPatient();
-    } catch (e) {
+  const deletePrescriptionMutation = useMutation({
+    mutationFn: (prescriptionId) => api.delete(`/prescriptions/${prescriptionId}`),
+    onMutate: async (prescriptionId) => {
+      await queryClient.cancelQueries({ queryKey: ['patient', id] });
+      const previous = queryClient.getQueryData(['patient', id]);
+      queryClient.setQueryData(['patient', id], (old) => {
+        if (!old) return old;
+        return { ...old, prescriptions: (old.prescriptions || []).filter(p => p.id !== prescriptionId) };
+      });
+      return { previous };
+    },
+    onError: (err, prescriptionId, context) => {
+      queryClient.setQueryData(['patient', id], context.previous);
       toast.error('Failed to delete prescription');
-    }
+    },
+    onSuccess: () => {
+      toast.success('Prescription deleted');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+    },
+  });
+
+  const awardBadgeMutation = useMutation({
+    mutationFn: (badgeId) => api.post('/badges/award', { patientId: id, badgeId }),
+    onSuccess: () => {
+      toast.success('Badge awarded!');
+      playSuccess();
+    },
+    onError: () => {
+      toast.error('Failed to award badge');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['loyalty', id] });
+      queryClient.invalidateQueries({ queryKey: ['patient-badges', id] });
+    },
+  });
+
+  const handleToothUpdate = (toothNumber, status) => {
+    playClick();
+    toothMutation.mutate({ toothNumber, status, notes: toothNote });
   };
 
-  if (loading) return <Layout><Header title="Patient Detail" /><Spinner className="py-20" /></Layout>;
-  if (error) return <Layout><Header title="Patient Detail" /><div className="p-6 text-center"><AlertTriangle size={36} className="mx-auto mb-3 text-red-400" /><p className="text-sm text-red-600 mb-3">{error}</p><button onClick={fetchPatient} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button></div></Layout>;
+  const submitTreatment = () => {
+    playClick();
+    const data = {
+      procedure: treatmentForm.procedure,
+      description: treatmentForm.description,
+      notes: treatmentForm.notes,
+      cost: treatmentForm.cost ? parseFloat(treatmentForm.cost) : null,
+      toothId: treatmentForm.toothId || null,
+    };
+    treatmentMutation.mutate({ editId: editTreatment?.id, data });
+  };
+
+  const handleDeleteTreatment = (treatmentId) => {
+    if (!confirm('Delete this treatment?')) return;
+    deleteTreatmentMutation.mutate(treatmentId);
+  };
+
+  const submitPrescription = () => {
+    playClick();
+    prescriptionMutation.mutate({ editId: editPrescription?.id, data: prescriptionForm });
+  };
+
+  const handleDeletePrescription = (prescriptionId) => {
+    if (!confirm('Delete this prescription?')) return;
+    deletePrescriptionMutation.mutate(prescriptionId);
+  };
+
+  const awardBadge = (badgeId) => {
+    setAwarding(badgeId);
+    awardBadgeMutation.mutate(badgeId);
+    setAwarding(null);
+  };
+
+  if (isLoading) return (
+    <Layout>
+      <Header title="Patient Detail" />
+      <div className="p-6 space-y-6">
+        <SkeletonLine width="6rem" height="0.875rem" />
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex items-center gap-4">
+            <SkeletonCircle size="4rem" />
+            <div className="space-y-2">
+              <SkeletonLine width="10rem" height="1.25rem" />
+              <SkeletonLine width="14rem" height="0.75rem" />
+            </div>
+            <div className="ml-auto space-y-2">
+              <SkeletonLine width="6rem" height="0.75rem" />
+              <SkeletonLine width="4rem" height="0.75rem" />
+              <SkeletonLine width="8rem" height="0.75rem" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-1 border-b border-slate-200">
+          {Array.from({ length: 7 }, (_, i) => (
+            <SkeletonLine key={i} width="4.5rem" height="2rem" className="rounded-t-lg" />
+          ))}
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="grid grid-cols-2 gap-6">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="space-y-2">
+                <SkeletonLine width="5rem" height="0.625rem" />
+                <SkeletonLine width="10rem" height="0.875rem" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+
+  if (isError) return (
+    <Layout>
+      <Header title="Patient Detail" />
+      <div className="p-6 text-center">
+        <AlertTriangle size={36} className="mx-auto mb-3 text-red-400" />
+        <p className="text-sm text-red-600 mb-3">Failed to load patient details</p>
+        <button onClick={refetch} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button>
+      </div>
+    </Layout>
+  );
 
   const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays', 'rewards'];
 
@@ -274,17 +438,19 @@ export default function PatientDetail() {
                           <h4 className="font-bold text-slate-900 text-sm">Update Tooth Status</h4>
                           <p className="text-xs text-slate-400">Currently: {selectedTooth.status}</p>
                         </div>
-                        <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
-                          className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-                          <X size={16} />
-                        </button>
+                        <Tooltip content="Close">
+                          <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
+                            className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                            <X size={16} />
+                          </button>
+                        </Tooltip>
                       </div>
                       <div className="grid grid-cols-4 gap-2 mb-3">
                         {TOOTH_STATUSES.map(s => {
                           const colors = STATUS_BUTTON_COLORS[s];
                           const isActive = selectedTooth.status === s;
                           return (
-                            <button key={s} onClick={() => updateToothStatus(selectedTooth.toothNumber, s)}
+                            <button key={s} onClick={() => handleToothUpdate(selectedTooth.toothNumber, s)}
                               className={`px-2 py-2 text-[11px] font-semibold rounded-xl border-2 transition-all duration-200 ${
                                 isActive
                                   ? `${colors.active} shadow-md scale-[1.02]`
@@ -366,16 +532,20 @@ export default function PatientDetail() {
                         {t.cost && <div className="text-xs text-green-600 mt-1 font-medium">₱{t.cost}</div>}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => {
-                          setEditTreatment(t);
-                          setTreatmentForm({ procedure: t.procedure, description: t.description || '', notes: t.notes || '', cost: t.cost || '', toothId: t.toothId || '' });
-                          setShowTreatmentForm(true);
-                        }} className="p-1.5 text-gray-400 hover:text-[#0F766E] rounded-lg hover:bg-white transition-colors">
-                          <Pencil size={14} />
-                        </button>
-                        <button onClick={() => deleteTreatment(t.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
-                          <Trash2 size={14} />
-                        </button>
+                        <Tooltip content="Edit">
+                          <button onClick={() => {
+                            setEditTreatment(t);
+                            setTreatmentForm({ procedure: t.procedure, description: t.description || '', notes: t.notes || '', cost: t.cost || '', toothId: t.toothId || '' });
+                            setShowTreatmentForm(true);
+                          }} className="p-1.5 text-gray-400 hover:text-[#0F766E] rounded-lg hover:bg-white transition-colors">
+                            <Pencil size={14} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Delete">
+                          <button onClick={() => handleDeleteTreatment(t.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                   ))}
@@ -387,7 +557,9 @@ export default function PatientDetail() {
                   <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-lg text-slate-900">{editTreatment ? 'Edit Treatment' : 'Add Treatment'}</h3>
-                      <button onClick={() => setShowTreatmentForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                      <Tooltip content="Close">
+                        <button onClick={() => setShowTreatmentForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                      </Tooltip>
                     </div>
                     <div className="space-y-3">
                       <div>
@@ -465,16 +637,20 @@ export default function PatientDetail() {
                         {p.notes && <div className="text-xs text-gray-500 mt-1 italic">{p.notes}</div>}
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => {
-                          setEditPrescription(p);
-                          setPrescriptionForm({ medication: p.medication, dosage: p.dosage, frequency: p.frequency, duration: p.duration, notes: p.notes || '', treatmentId: p.treatmentId || '' });
-                          setShowPrescriptionForm(true);
-                        }} className="p-1.5 text-gray-400 hover:text-[#0F766E] rounded-lg hover:bg-white transition-colors">
-                          <Pencil size={14} />
-                        </button>
-                        <button onClick={() => deletePrescription(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
-                          <Trash2 size={14} />
-                        </button>
+                        <Tooltip content="Edit">
+                          <button onClick={() => {
+                            setEditPrescription(p);
+                            setPrescriptionForm({ medication: p.medication, dosage: p.dosage, frequency: p.frequency, duration: p.duration, notes: p.notes || '', treatmentId: p.treatmentId || '' });
+                            setShowPrescriptionForm(true);
+                          }} className="p-1.5 text-gray-400 hover:text-[#0F766E] rounded-lg hover:bg-white transition-colors">
+                            <Pencil size={14} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Delete">
+                          <button onClick={() => handleDeletePrescription(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                   ))}
@@ -486,7 +662,9 @@ export default function PatientDetail() {
                   <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="font-bold text-lg text-slate-900">{editPrescription ? 'Edit Prescription' : 'Add Prescription'}</h3>
-                      <button onClick={() => setShowPrescriptionForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                      <Tooltip content="Close">
+                        <button onClick={() => setShowPrescriptionForm(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X size={18} /></button>
+                      </Tooltip>
                     </div>
                     <div className="space-y-3">
                       <div>
@@ -580,7 +758,7 @@ export default function PatientDetail() {
                 </div>
                 <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><Award size={20} /><span className="font-medium">Badges Earned</span></div>
-                  <div className="text-3xl font-bold">{badges.length}</div>
+                  <div className="text-3xl font-bold">{patientBadges.length}</div>
                   <div className="text-amber-100 text-sm mt-1">of {allBadges.length} available</div>
                 </div>
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white">
@@ -596,7 +774,7 @@ export default function PatientDetail() {
 
               <div>
                 <h3 className="font-bold text-slate-900 mb-3">Earned Badges</h3>
-                {badges.length === 0 ? (
+                {patientBadges.length === 0 ? (
                   <div className="text-center py-6">
                     <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
                       <Award size={20} className="text-slate-300" />
@@ -606,7 +784,7 @@ export default function PatientDetail() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {badges.map(pb => (
+                    {patientBadges.map(pb => (
                       <div key={pb.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
                         <div className="text-3xl mb-2">{pb.badge.icon}</div>
                         <div className="font-medium text-slate-900 text-sm">{pb.badge.name}</div>
@@ -622,7 +800,7 @@ export default function PatientDetail() {
                 <h3 className="font-bold text-slate-900 mb-3">Award Badge</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {allBadges.map(b => {
-                    const earned = badges.some(pb => pb.badgeId === b.id);
+                    const earned = patientBadges.some(pb => pb.badgeId === b.id);
                     return (
                       <button key={b.id} onClick={() => !earned && awardBadge(b.id)} disabled={earned || awarding === b.id}
                         className={`rounded-xl p-4 text-center transition-all ${earned ? 'bg-green-50 border-2 border-green-300 cursor-default' : 'bg-gray-50 border border-gray-200 hover:border-[#14B8A6] hover:bg-slate-50 cursor-pointer'}`}>

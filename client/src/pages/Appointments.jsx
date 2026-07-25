@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
-import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
+import Tooltip from '../components/Tooltip';
+import { SkeletonCard, SkeletonLine } from '../components/Skeleton';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -27,72 +29,92 @@ const NEXT_STATUS = {
   NO_SHOW:     [],
 };
 
+function AppointmentSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <SkeletonLine width="2rem" height="2rem" className="rounded-lg" />
+          <SkeletonLine width="16rem" height="1.5rem" />
+          <SkeletonLine width="2rem" height="2rem" className="rounded-lg" />
+        </div>
+        <div className="flex items-center gap-3">
+          <SkeletonLine width="8rem" height="2rem" className="rounded-lg" />
+          <SkeletonLine width="8rem" height="2rem" className="rounded-lg" />
+        </div>
+      </div>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="grid grid-cols-[80px_1fr] divide-x divide-slate-200">
+          <div className="bg-slate-50 space-y-0">
+            {Array.from({ length: 16 }, (_, i) => (
+              <div key={i} className="h-16 flex items-center justify-center border-b border-slate-200">
+                <SkeletonLine width="3rem" height="0.75rem" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-0">
+            {Array.from({ length: 16 }, (_, i) => (
+              <div key={i} className="h-16 border-b border-slate-100" />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3">
+        <SkeletonLine width="12rem" height="0.875rem" />
+        {Array.from({ length: 3 }, (_, i) => <SkeletonCard key={i} />)}
+      </div>
+    </div>
+  );
+}
+
 export default function Appointments() {
   const toast = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const canDelete = user?.role === 'ADMIN' || user?.role === 'ASSISTANT';
   const canEdit = ['ADMIN', 'ASSISTANT', 'DENTIST'].includes(user?.role);
-  const [appointments, setAppointments] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selected, setSelected] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
-  const [patients, setPatients] = useState([]);
-  const [dentists, setDentists] = useState([]);
-  const [rooms, setRooms] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('day');
-  const [monthAppointments, setMonthAppointments] = useState([]);
   const [form, setForm] = useState({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  const fetchData = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    const dateStr = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    Promise.all([
-      api.get(`/appointments?date=${dateStr}`),
-      api.get('/patients'),
-      api.get('/dashboard'),
-      api.get('/rooms'),
-    ]).then(([appts, pts, dash, rms]) => {
-      setAppointments(appts.data);
-      setPatients(pts.data);
-      setDentists(dash.data.dentists);
-      setRooms(rms.data);
-    }).catch(() => setError('Failed to load appointments'))
-      .finally(() => setLoading(false));
-  }, [selectedDate]);
+  const dateStr = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const { data: appointments = [], isLoading: loadingAppointments, error: appointmentsError } = useQuery({
+    queryKey: ['appointments', { date: dateStr }],
+    queryFn: () => api.get(`/appointments?date=${dateStr}`).then(r => r.data),
+  });
 
-  useEffect(() => {
-    if (viewMode === 'month') {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth() + 1;
-      api.get(`/appointments/month?year=${year}&month=${month}`)
-        .then(res => setMonthAppointments(res.data))
-        .catch(() => setMonthAppointments([]));
-    }
-  }, [viewMode, selectedDate, appointments]);
+  const { data: patients = [] } = useQuery({
+    queryKey: ['patients'],
+    queryFn: () => api.get('/patients').then(r => r.data),
+  });
 
-  const getMonthDays = () => {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days = [];
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let d = 1; d <= daysInMonth; d++) days.push(d);
-    return days;
-  };
+  const { data: dashboard } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => api.get('/dashboard').then(r => r.data),
+  });
 
-  const getAppointmentsForDay = (day) => {
-    if (!day) return [];
-    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return monthAppointments.filter(a => a.date?.split('T')[0] === dateStr);
-  };
+  const dentists = dashboard?.dentists || [];
+
+  const { data: rooms = [] } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: () => api.get('/rooms').then(r => r.data),
+  });
+
+  const year = selectedDate.getFullYear();
+  const month = selectedDate.getMonth() + 1;
+  const { data: monthAppointments = [] } = useQuery({
+    queryKey: ['appointments-month', { year, month }],
+    queryFn: () => api.get(`/appointments/month?year=${year}&month=${month}`).then(r => r.data),
+    enabled: viewMode === 'month',
+  });
+
+  const loading = loadingAppointments;
+  const error = appointmentsError ? 'Failed to load appointments' : null;
 
   useEffect(() => {
     if (selected) {
@@ -101,48 +123,136 @@ export default function Appointments() {
     }
   }, [appointments]);
 
+  const createMutation = useMutation({
+    mutationFn: (payload) => api.post('/appointments', payload).then(r => r.data),
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: ['appointments', { date: dateStr }] });
+      const previous = queryClient.getQueryData(['appointments', { date: dateStr }]);
+      const optimistic = { ...payload, id: `temp-${Date.now()}`, status: 'SCHEDULED', patient: patients.find(p => p.id === payload.patientId), dentist: dentists.find(d => d.id === payload.dentistId), room: rooms.find(r => r.id === payload.roomId) };
+      queryClient.setQueryData(['appointments', { date: dateStr }], (old) => [...(old || []), optimistic]);
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['appointments', { date: dateStr }], ctx.previous);
+      toast.error(err.response?.data?.error || 'Error creating appointment');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments-month'] });
+    },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => api.put(`/appointments/${id}`, { status }).then(r => r.data),
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: ['appointments', { date: dateStr }] });
+      const previous = queryClient.getQueryData(['appointments', { date: dateStr }]);
+      queryClient.setQueryData(['appointments', { date: dateStr }], (old) => (old || []).map(a => a.id === id ? { ...a, status } : a));
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['appointments', { date: dateStr }], ctx.previous);
+      toast.error('Error updating appointment');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments-month'] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/appointments/${id}`),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['appointments', { date: dateStr }] });
+      const previous = queryClient.getQueryData(['appointments', { date: dateStr }]);
+      queryClient.setQueryData(['appointments', { date: dateStr }], (old) => (old || []).filter(a => a.id !== id));
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['appointments', { date: dateStr }], ctx.previous);
+      toast.error('Error deleting appointment');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments-month'] });
+    },
+  });
+
+  const editMutation = useMutation({
+    mutationFn: ({ id, payload }) => api.put(`/appointments/${id}`, payload).then(r => r.data),
+    onMutate: async ({ id, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['appointments', { date: dateStr }] });
+      const previous = queryClient.getQueryData(['appointments', { date: dateStr }]);
+      queryClient.setQueryData(['appointments', { date: dateStr }], (old) => (old || []).map(a => a.id === id ? { ...a, ...payload } : a));
+      return { previous };
+    },
+    onError: (err, vars, ctx) => {
+      queryClient.setQueryData(['appointments', { date: dateStr }], ctx.previous);
+      toast.error('Error updating appointment');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments-month'] });
+    },
+  });
+
+  const getMonthDays = () => {
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    return days;
+  };
+
+  const getAppointmentsForDay = (day) => {
+    if (!day) return [];
+    const ds = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return monthAppointments.filter(a => a.date?.split('T')[0] === ds);
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
-    try {
-      const payload = { ...form, date: form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] };
-      if (!payload.dentistId) delete payload.dentistId;
-      if (!payload.roomId) delete payload.roomId;
-      const res = await api.post('/appointments', payload);
-      setAppointments([...appointments, res.data]);
-      setShowCreateModal(false);
-      setForm({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
-      toast.success('Appointment booked');
-    } catch (err) { toast.error(err.response?.data?.error || 'Error creating appointment'); }
+    const payload = { ...form, date: form.date || dateStr };
+    if (!payload.dentistId) delete payload.dentistId;
+    if (!payload.roomId) delete payload.roomId;
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        setShowCreateModal(false);
+        setForm({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
+        toast.success('Appointment booked');
+      },
+    });
   };
 
-  const handleStatusUpdate = async (id, status) => {
-    try {
-      const res = await api.put(`/appointments/${id}`, { status });
-      setAppointments(prev => prev.map(a => a.id === id ? res.data : a));
-      toast.success(`Appointment ${status.toLowerCase().replace('_', ' ')}`);
-    } catch (err) { toast.error('Error updating appointment'); }
+  const handleStatusUpdate = (id, status) => {
+    statusMutation.mutate({ id, status }, {
+      onSuccess: () => toast.success(`Appointment ${status.toLowerCase().replace('_', ' ')}`),
+    });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     if (!confirm('Delete this appointment?')) return;
-    try {
-      await api.delete(`/appointments/${id}`);
-      setAppointments(appointments.filter(a => a.id !== id));
-      setSelected(null);
-      toast.success('Appointment deleted');
-    } catch (err) { toast.error('Error deleting appointment'); }
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        setSelected(null);
+        toast.success('Appointment deleted');
+      },
+    });
   };
 
-  const handleEditSave = async () => {
-    try {
-      const payload = { ...editForm };
-      if (payload.dentistId === '') delete payload.dentistId;
-      if (payload.roomId === '') delete payload.roomId;
-      const res = await api.put(`/appointments/${selected.id}`, payload);
-      setAppointments(appointments.map(a => a.id === selected.id ? res.data : a));
-      setEditMode(false);
-      toast.success('Appointment updated');
-    } catch (err) { toast.error('Error updating appointment'); }
+  const handleEditSave = () => {
+    const payload = { ...editForm };
+    if (payload.dentistId === '') delete payload.dentistId;
+    if (payload.roomId === '') delete payload.roomId;
+    editMutation.mutate({ id: selected.id, payload }, {
+      onSuccess: () => {
+        setEditMode(false);
+        toast.success('Appointment updated');
+      },
+    });
   };
 
   const openDetail = (appt) => { setSelected(appt); setEditMode(false); setEditForm({}); };
@@ -156,26 +266,30 @@ export default function Appointments() {
       <Header title="Appointments" />
       <div className="p-6">
         {loading ? (
-          <Spinner className="py-20" />
+          <AppointmentSkeleton />
         ) : error ? (
           <div className="text-center py-20">
             <AlertTriangle size={48} className="mx-auto mb-4 text-red-400" />
             <h3 className="text-sm font-medium text-gray-700 mb-2">{error}</h3>
-            <button onClick={fetchData} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Retry</button>
+            <button onClick={() => queryClient.invalidateQueries({ queryKey: ['appointments'] })} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Retry</button>
           </div>
         ) : (
         <>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() - 1) : d.setDate(d.getDate() - 1); setSelectedDate(d); }}
-              className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft size={20} /></button>
+            <Tooltip content="Previous">
+              <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() - 1) : d.setDate(d.getDate() - 1); setSelectedDate(d); }}
+                className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft size={20} /></button>
+            </Tooltip>
             <h2 className="text-lg font-bold text-slate-900">
               {viewMode === 'month'
                 ? selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
                 : selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </h2>
-            <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() + 1) : d.setDate(d.getDate() + 1); setSelectedDate(d); }}
-              className="p-2 hover:bg-slate-100 rounded-lg"><ChevronRight size={20} /></button>
+            <Tooltip content="Next">
+              <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() + 1) : d.setDate(d.getDate() + 1); setSelectedDate(d); }}
+                className="p-2 hover:bg-slate-100 rounded-lg"><ChevronRight size={20} /></button>
+            </Tooltip>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex bg-slate-100 rounded-lg p-1">
@@ -301,9 +415,11 @@ export default function Appointments() {
                       </button>
                     ))}
                     {canDelete && appt.status !== 'COMPLETED' && appt.status !== 'CANCELLED' && (
-                      <button onClick={() => handleDelete(appt.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
-                        <Trash2 size={14} />
-                      </button>
+                      <Tooltip content="Delete">
+                        <button onClick={() => handleDelete(appt.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
+                          <Trash2 size={14} />
+                        </button>
+                      </Tooltip>
                     )}
                   </div>
                 </div>
@@ -325,13 +441,19 @@ export default function Appointments() {
                 </h2>
                 <div className="flex items-center gap-2">
                   {canEdit && !editMode && (
-                    <button onClick={() => { setEditMode(true); setEditForm({ date: selected.date?.split('T')[0], time: selected.time, duration: selected.duration, reason: selected.reason, notes: selected.notes || '', dentistId: selected.dentistId, roomId: selected.roomId }); }}
-                      className="p-2 text-[#0F766E] hover:bg-[#F0FDFA] rounded-lg"><Edit3 size={16} /></button>
+                    <Tooltip content="Edit">
+                      <button onClick={() => { setEditMode(true); setEditForm({ date: selected.date?.split('T')[0], time: selected.time, duration: selected.duration, reason: selected.reason, notes: selected.notes || '', dentistId: selected.dentistId, roomId: selected.roomId }); }}
+                        className="p-2 text-[#0F766E] hover:bg-[#F0FDFA] rounded-lg"><Edit3 size={16} /></button>
+                    </Tooltip>
                   )}
                   {canDelete && selected.status !== 'COMPLETED' && (
-                    <button onClick={() => handleDelete(selected.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                    <Tooltip content="Delete">
+                      <button onClick={() => handleDelete(selected.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                    </Tooltip>
                   )}
-                  <button onClick={() => { setSelected(null); setEditMode(false); }} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg"><X size={16} /></button>
+                  <Tooltip content="Close">
+                    <button onClick={() => { setSelected(null); setEditMode(false); }} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg"><X size={16} /></button>
+                  </Tooltip>
                 </div>
               </div>
 
