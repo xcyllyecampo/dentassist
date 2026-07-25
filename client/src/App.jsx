@@ -6,7 +6,6 @@ import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import FloatingAI from './components/FloatingAI';
 import Login from './pages/Login';
-import Spinner from './components/Spinner';
 import { ShieldOff, LogOut } from 'lucide-react';
 
 const queryClient = new QueryClient({
@@ -67,7 +66,7 @@ function AccountDeactivated() {
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Spinner /></div>;
+  if (loading) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-slate-100"><img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-10 object-contain" /><div className="flex gap-1.5">{[...Array(4)].map((_, i) => <div key={i} className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}</div></div>;
   if (!user) return <Navigate to="/login" />;
   if (user.active === false) return <AccountDeactivated />;
   if (roles && !roles.includes(user.role)) {
@@ -97,7 +96,7 @@ export default function App() {
         <NotificationProvider>
           <BrowserRouter>
           <FloatingAI />
-          <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Spinner /></div>}>
+          <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-slate-100"><img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-10 object-contain" /><div className="flex gap-1.5">{[...Array(4)].map((_, i) => <div key={i} className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}</div></div>}>
           <Routes>
             {/* Public */}
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />

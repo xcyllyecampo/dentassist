@@ -126,7 +126,7 @@ export default function Patients() {
                 {filtered.length === 0 ? (
                   <tr><td colSpan={5}><EmptyState icon={Users} title={search ? "No patients match your search" : "No patients yet"} description={search ? "Try a different search term" : "Add your first patient to get started"} /></td></tr>
                 ) : filtered.map((p) => (
-                  <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                  <tr key={p.id} className="border-b border-slate-200 hover:bg-slate-50/60 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         {p.user?.avatar ? (
