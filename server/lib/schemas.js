@@ -60,8 +60,8 @@ const patientSchemas = {
 
 const appointmentSchemas = {
   create: z.object({
-    patientId: uuid,
-    dentistId: uuid,
+    patientId: uuid.optional(),
+    dentistId: uuid.optional(),
     roomId: uuid.optional().nullable(),
     date: z.string().or(z.date()),
     time: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),

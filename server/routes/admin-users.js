@@ -191,6 +191,10 @@ router.delete("/:id", auth, roleGuard("ADMIN"), async (req, res) => {
       return res.status(403).json({ error: "Dentists cannot be deleted. Use the deactivate button instead." });
     }
 
+    if (user.role === "ADMIN") {
+      return res.status(403).json({ error: "Admin accounts cannot be deleted. Use the deactivate button instead." });
+    }
+
     if (user.role === "PATIENT") {
       const patient = await prisma.patient.findUnique({ where: { userId: user.id }, include: { xrayImages: { select: { filePath: true } } } });
       if (patient) {
