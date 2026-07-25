@@ -43,7 +43,7 @@ export default function TreatmentSupport() {
       });
       setResults(res.data);
     } catch (err) {
-      toast.error('Error getting suggestions. Make sure the AI service is running.');
+      toast.error('Error getting suggestions. Please try again.');
     }
     setLoading(false);
   };

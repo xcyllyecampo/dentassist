@@ -35,7 +35,7 @@ export default function OralScreening() {
       const res = await api.post('/ai/oral/screen', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
     } catch (err) {
-      toast.error('Error analyzing image. Make sure the AI service is running.');
+      toast.error('Error analyzing image. Please try again.');
     }
     setAnalyzing(false);
   };

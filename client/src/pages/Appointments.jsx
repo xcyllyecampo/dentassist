@@ -104,7 +104,10 @@ export default function Appointments() {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/appointments', { ...form, date: form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] });
+      const payload = { ...form, date: form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] };
+      if (!payload.dentistId) delete payload.dentistId;
+      if (!payload.roomId) delete payload.roomId;
+      const res = await api.post('/appointments', payload);
       setAppointments([...appointments, res.data]);
       setShowCreateModal(false);
       setForm({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
@@ -132,7 +135,10 @@ export default function Appointments() {
 
   const handleEditSave = async () => {
     try {
-      const res = await api.put(`/appointments/${selected.id}`, editForm);
+      const payload = { ...editForm };
+      if (payload.dentistId === '') delete payload.dentistId;
+      if (payload.roomId === '') delete payload.roomId;
+      const res = await api.put(`/appointments/${selected.id}`, payload);
       setAppointments(appointments.map(a => a.id === selected.id ? res.data : a));
       setEditMode(false);
       toast.success('Appointment updated');

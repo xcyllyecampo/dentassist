@@ -57,7 +57,7 @@ export default function XrayAnalysis() {
     try {
       const res = await api.post('/ai/xray/analyze', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setDirectAnalysis({ ...res.data, fileName: file.name });
-    } catch (err) { toast.error('Error analyzing image. Make sure the AI service is running.'); }
+    } catch (err) { toast.error('Error analyzing image. Please try again.'); }
     setAnalyzing(null);
   };
 

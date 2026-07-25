@@ -5,6 +5,8 @@ const password = z.string().min(6, "Password must be at least 6 characters").max
 const name = z.string().min(1, "Name is required").max(100);
 const phone = z.string().max(20).optional().nullable();
 const uuid = z.string().uuid("Invalid ID format");
+const optionalUuid = uuid.optional().or(z.literal('')).transform(v => v || undefined);
+const nullableOptionalUuid = uuid.optional().or(z.literal('')).nullable().transform(v => v || null);
 
 const roleEnum = z.enum(["ADMIN", "DENTIST", "ASSISTANT", "PATIENT"]);
 const appointmentStatusEnum = z.enum(["SCHEDULED", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED", "NO_SHOW"]);
@@ -60,9 +62,9 @@ const patientSchemas = {
 
 const appointmentSchemas = {
   create: z.object({
-    patientId: uuid.optional(),
-    dentistId: uuid.optional(),
-    roomId: uuid.optional().nullable(),
+    patientId: optionalUuid,
+    dentistId: optionalUuid,
+    roomId: nullableOptionalUuid,
     date: z.string().or(z.date()),
     time: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format"),
     duration: z.number().int().min(5).max(480).optional(),
@@ -71,7 +73,7 @@ const appointmentSchemas = {
   }),
   update: z.object({
     status: appointmentStatusEnum.optional(),
-    roomId: uuid.optional().nullable(),
+    roomId: nullableOptionalUuid,
     notes: z.string().max(2000).optional().nullable(),
     date: z.string().or(z.date()).optional(),
     time: z.string().regex(/^\d{2}:\d{2}$/, "Time must be in HH:MM format").optional(),
@@ -83,8 +85,8 @@ const appointmentSchemas = {
 const treatmentSchemas = {
   create: z.object({
     patientId: uuid,
-    toothId: uuid.optional().nullable(),
-    appointmentId: uuid.optional().nullable(),
+    toothId: nullableOptionalUuid,
+    appointmentId: nullableOptionalUuid,
     procedure: z.string().min(1, "Procedure is required").max(200),
     description: z.string().max(2000).optional().nullable(),
     notes: z.string().max(2000).optional().nullable(),
@@ -95,14 +97,14 @@ const treatmentSchemas = {
     description: z.string().max(2000).optional().nullable(),
     notes: z.string().max(2000).optional().nullable(),
     cost: z.number().min(0).max(1000000).optional().nullable(),
-    toothId: uuid.optional().nullable(),
+    toothId: nullableOptionalUuid,
   }),
 };
 
 const prescriptionSchemas = {
   create: z.object({
     patientId: uuid,
-    treatmentId: uuid.optional().nullable(),
+    treatmentId: nullableOptionalUuid,
     medication: z.string().min(1, "Medication is required").max(200),
     dosage: z.string().min(1, "Dosage is required").max(100),
     frequency: z.string().min(1, "Frequency is required").max(100),
@@ -144,13 +146,13 @@ const adminUserSchemas = {
 const queueSchemas = {
   create: z.object({
     patientId: uuid,
-    dentistId: uuid.optional().nullable(),
+    dentistId: nullableOptionalUuid,
   }),
   update: z.object({
     status: queueStatusEnum,
   }),
   selfCheckIn: z.object({
-    dentistId: uuid.optional().nullable(),
+    dentistId: nullableOptionalUuid,
   }),
 };
 

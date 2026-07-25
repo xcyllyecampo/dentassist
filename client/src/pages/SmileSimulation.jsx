@@ -62,7 +62,7 @@ export default function SmileSimulation() {
       const res = await api.post('/ai/smile/simulate', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setResult(res.data);
     } catch (err) {
-      toast.error('Error running simulation. Make sure the AI service is running.');
+      toast.error('Error running simulation. Please try again.');
     }
     setSimulating(false);
   };

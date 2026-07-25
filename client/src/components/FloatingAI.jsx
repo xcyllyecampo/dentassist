@@ -50,8 +50,8 @@ export default function FloatingAI() {
 
     try {
       const chatHistory = messages.slice(-10).map(m => ({
-        role: m.role === 'assistant' ? 'assistant' : 'user',
-        content: m.text,
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [m.text],
       }));
 
       const res = await api.post('/ai/chat', { message: msg, history: chatHistory });
@@ -60,7 +60,7 @@ export default function FloatingAI() {
     } catch (err) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: "Sorry, I couldn't reach the AI service. Please make sure it's running on port 8000.",
+        text: "Sorry, the AI assistant encountered an error. Please try again.",
       }]);
     }
     setTyping(false);
