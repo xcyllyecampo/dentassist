@@ -29,6 +29,7 @@ const prisma = globalForPrisma.__prisma || new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.__prisma = prisma;
 
 const app = express();
+app.set("trust proxy", 1);
 const server = http.createServer(app);
 
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000").split(",");

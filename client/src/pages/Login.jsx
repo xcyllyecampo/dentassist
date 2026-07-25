@@ -42,17 +42,7 @@ export default function Login() {
   useEffect(() => { updateIndicator(); }, [updateIndicator]);
 
   useEffect(() => {
-    fetch('/api/server-info')
-      .then(r => r.json())
-      .then(data => {
-        if (data.ip) {
-          const port = window.location.port;
-          setQrUrl(`${window.location.protocol}//${data.ip}${port ? ':' + port : ''}`);
-        } else {
-          setQrUrl(window.location.origin);
-        }
-      })
-      .catch(() => setQrUrl(window.location.origin));
+    setQrUrl(window.location.origin);
   }, []);
 
   useEffect(() => {
