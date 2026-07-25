@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import KioskLayout from './KioskLayout';
-import api from '../../lib/api';
+import api, { authUrl } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { playClick, playError } from '../../lib/sounds';
 import Spinner from '../../components/Spinner';
@@ -67,9 +67,13 @@ export default function KioskRecords() {
       {/* Patient info card */}
       <div className="kiosk-card p-4 mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white text-base font-bold shrink-0">
-            {patient.user?.name?.charAt(0)}
-          </div>
+          {patient.user?.avatar ? (
+            <img src={authUrl(patient.user.avatar)} alt={patient.user?.name} className="w-10 h-10 rounded-full object-cover border border-white/20 shrink-0" />
+          ) : (
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white text-base font-bold shrink-0">
+              {patient.user?.name?.charAt(0)}
+            </div>
+          )}
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-bold text-white truncate">{patient.user?.name}</h2>
             <p className="text-white/50 text-xs truncate">{patient.user?.email}</p>

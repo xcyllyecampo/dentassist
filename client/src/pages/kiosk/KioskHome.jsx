@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authUrl } from '../../lib/api';
 import { playClick } from '../../lib/sounds';
 import KioskLayout from './KioskLayout';
 import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight, CalendarPlus, LogOut } from 'lucide-react';
@@ -29,9 +30,13 @@ export default function KioskHome() {
         <div className="text-center mb-8 kiosk-in" style={{ animationDelay: '0.05s' }}>
           <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-12 mx-auto object-contain drop-shadow-xl mb-4" />
           <div className="flex items-center justify-center gap-3 mb-1">
-            <div className="w-10 h-10 bg-teal-500/20 border border-teal-500/30 rounded-full flex items-center justify-center text-teal-300 text-sm font-bold kiosk-display">
-              {user?.name?.charAt(0)}
-            </div>
+            {user?.avatar ? (
+              <img src={authUrl(user.avatar)} alt={user.name} className="w-10 h-10 rounded-full object-cover border border-teal-500/30" />
+            ) : (
+              <div className="w-10 h-10 bg-teal-500/20 border border-teal-500/30 rounded-full flex items-center justify-center text-teal-300 text-sm font-bold kiosk-display">
+                {user?.name?.charAt(0)}
+              </div>
+            )}
             <div className="text-left">
               <p className="text-white/40 text-xs font-medium">{getGreeting()},</p>
               <h2 className="kiosk-display text-2xl text-white leading-tight">{user?.name?.split(' ')[0]}</h2>

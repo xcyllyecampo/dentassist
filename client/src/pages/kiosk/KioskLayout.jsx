@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authUrl } from '../../lib/api';
 import { playClick } from '../../lib/sounds';
 import { ArrowLeft } from 'lucide-react';
 
@@ -28,9 +29,13 @@ export default function KioskLayout({ children, showBack = true, title }) {
 
         {user && !isHome && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500/20 border border-teal-500/30 rounded-full flex items-center justify-center text-teal-300 text-xs font-bold">
-              {user.name?.charAt(0)}
-            </div>
+            {user.avatar ? (
+              <img src={authUrl(user.avatar)} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-teal-500/30" />
+            ) : (
+              <div className="w-8 h-8 bg-teal-500/20 border border-teal-500/30 rounded-full flex items-center justify-center text-teal-300 text-xs font-bold">
+                {user.name?.charAt(0)}
+              </div>
+            )}
             <span className="text-white/50 text-xs font-medium">{user.name?.split(' ')[0]}</span>
           </div>
         )}
