@@ -6,7 +6,7 @@ import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Users, AlertTriangle, UserPlus, Heart, ArrowUpRight } from 'lucide-react';
+import { Plus, Search, Users, UserPlus } from 'lucide-react';
 
 export default function Patients() {
   const toast = useToast();
@@ -49,8 +49,6 @@ export default function Patients() {
     return [
       { label: 'Total Patients', value: patients.length, icon: Users, gradient: 'from-[#0F766E] to-[#0D6D65]' },
       { label: 'New This Month', value: patients.filter(p => new Date(p.createdAt) > thirtyDaysAgo).length, icon: UserPlus, gradient: 'from-blue-500 to-blue-600' },
-      { label: 'Male', value: patients.filter(p => p.gender === 'Male').length, icon: Users, gradient: 'from-violet-500 to-violet-600' },
-      { label: 'Female', value: patients.filter(p => p.gender === 'Female').length, icon: Heart, gradient: 'from-rose-500 to-rose-600' },
     ];
   }, [patients]);
 
@@ -59,7 +57,7 @@ export default function Patients() {
       <Header title="Patients" />
       <div className="p-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           {stats.map((s, i) => {
             const Icon = s.icon;
             return (
