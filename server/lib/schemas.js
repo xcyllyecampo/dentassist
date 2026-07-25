@@ -4,7 +4,7 @@ const email = z.string().email("Invalid email format").max(255);
 const password = z.string().min(6, "Password must be at least 6 characters").max(128);
 const name = z.string().min(1, "Name is required").max(100);
 const phone = z.string().max(20).optional().nullable();
-const uuid = z.string().uuid("Invalid ID format");
+const uuid = z.string().min(1, "ID is required");
 const optionalUuid = uuid.optional().or(z.literal('')).transform(v => v || undefined);
 const nullableOptionalUuid = uuid.optional().or(z.literal('')).nullable().transform(v => v || null);
 
