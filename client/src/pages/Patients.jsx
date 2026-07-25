@@ -6,7 +6,7 @@ import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Users, UserPlus, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Users, UserPlus, AlertTriangle, ArrowUpRight } from 'lucide-react';
 
 export default function Patients() {
   const toast = useToast();
