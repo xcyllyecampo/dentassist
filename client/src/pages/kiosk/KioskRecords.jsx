@@ -208,25 +208,25 @@ export default function KioskRecords() {
           return (
           <div>
             <h3 className="text-white font-bold mb-2 text-sm">Interactive Tooth Chart</h3>
-            <div className="flex gap-2 items-start mb-3">
-              <div className="grid grid-cols-8 gap-1 flex-[2] min-w-0">
+            <div className="mb-3">
+              <div className="grid grid-cols-8 gap-1.5 mb-3">
                 {allTeeth.map(tooth => (
                   <div key={tooth.id}
-                    className={`h-8 min-w-0 rounded flex items-center justify-center font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
+                    className={`h-11 min-w-0 rounded-lg flex items-center justify-center font-bold transition-all hover:scale-110 ${getStatusStyle(tooth.status)}`}>
                     <span className="text-xs">#{tooth.toothNumber}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex-1 max-w-[35%] rounded-lg overflow-hidden border border-white/10 shrink-0">
+              <div className="rounded-xl overflow-hidden border border-white/10 mb-3">
                 <img src="/images/numbering of tooth.png" alt="Tooth Numbering Guide" className="w-full h-auto" />
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2 text-[10px] text-white/60">
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-green-500/40 rounded" /> Healthy</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-teal-500/40 rounded" /> Filling</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-purple-500/40 rounded" /> Crown</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500/40 rounded" /> Decayed</span>
-              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-white/10 rounded" /> Missing</span>
+              <div className="flex flex-wrap gap-2 text-[10px] text-white/60">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-green-500/40 rounded" /> Healthy</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-teal-500/40 rounded" /> Filling</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-purple-500/40 rounded" /> Crown</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-red-500/40 rounded" /> Decayed</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-white/10 rounded" /> Missing</span>
+              </div>
             </div>
           </div>
           );
