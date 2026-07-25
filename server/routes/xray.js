@@ -82,7 +82,7 @@ router.post("/analyze/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), as
       const ext = image.filePath.match(/\.\w+$/)?.[0]?.toLowerCase() || ".jpg";
 
       const aiText = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.5-flash",
         contents: [
           { text: "You are a dental AI assistant specializing in radiograph analysis. Analyze this dental X-ray and provide findings in JSON format with: findings[] (area, type, confidence, severity, description), overall_assessment, recommendations[], disclaimer." },
           { inlineData: { mimeType: mimeMap[ext] || "image/jpeg", data: base64Image } },

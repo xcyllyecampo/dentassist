@@ -6,7 +6,7 @@ const multer = require("multer");
 
 const router = express.Router();
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+const GEMINI_MODEL = "gemini-3.5-flash";
 
 let genAI = null;
 function getGenAI() {
@@ -37,11 +37,24 @@ function parseAIJson(text) {
   return JSON.parse(cleaned);
 }
 
-async function generateContent(contents) {
+async function generateContent(contents, retries = 2) {
   const ai = getGenAI();
   if (!ai) throw new Error("Gemini API key not configured");
-  const response = await ai.models.generateContent({ model: GEMINI_MODEL, contents });
-  return response.text;
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({ model: GEMINI_MODEL, contents });
+      return response.text;
+    } catch (err) {
+      const isRetryable = err.message?.includes("429") || err.message?.includes("RESOURCE_EXHAUSTED") || err.message?.includes("503");
+      if (isRetryable && attempt < retries) {
+        const delay = Math.min(1000 * 2 ** attempt, 5000);
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
 }
 
 // ─── PROMPTS ───
@@ -516,7 +529,8 @@ router.post("/chat", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(
     res.json({ response: aiText, source: "gemini" });
   } catch (err) {
     console.error("Gemini unavailable, using mock chat:", err.message);
-    res.json({ response: mockChatResponse(req.body.message || "", clinicContext), source: "mock" });
+    const isQuota = err.message?.includes("429") || err.message?.includes("RESOURCE_EXHAUSTED");
+    res.json({ response: mockChatResponse(req.body.message || "", clinicContext), source: "mock", error: isQuota ? "quota_exceeded" : err.message?.substring(0, 200) });
   }
 });
 
@@ -540,7 +554,7 @@ router.post("/xray/analyze", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), u
     }
   } catch (err) {
     console.error("Gemini unavailable, using mock xray:", err.message);
-    res.json(MOCK.xray);
+    res.json({ ...MOCK.xray, error: err.message?.substring(0, 200) });
   }
 });
 
@@ -564,7 +578,7 @@ router.post("/oral/screen", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", "PA
     }
   } catch (err) {
     console.error("Gemini unavailable, using mock oral:", err.message);
-    res.json(MOCK.oral);
+    res.json({ ...MOCK.oral, error: err.message?.substring(0, 200) });
   }
 });
 
@@ -619,7 +633,7 @@ Respond with JSON:
     }
   } catch (err) {
     console.error("Gemini unavailable, using mock treatment:", err.message);
-    res.json(MOCK.treatment);
+    res.json({ ...MOCK.treatment, error: err.message?.substring(0, 200) });
   }
 });
 
@@ -656,7 +670,7 @@ router.post("/smile/simulate", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", 
     }
   } catch (err) {
     console.error("Gemini unavailable, using mock smile:", err.message);
-    res.json(MOCK.smile(req.body.treatment_type || "whitening"));
+    res.json({ ...MOCK.smile(req.body.treatment_type || "whitening"), error: err.message?.substring(0, 200) });
   }
 });
 

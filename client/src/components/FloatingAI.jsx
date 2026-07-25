@@ -60,7 +60,7 @@ export default function FloatingAI() {
     } catch (err) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        text: "Sorry, the AI assistant encountered an error. Please try again.",
+        text: "Sorry, the AI service is currently unavailable. Please try again later.",
       }]);
     }
     setTyping(false);
@@ -101,7 +101,7 @@ export default function FloatingAI() {
                 <span className={`text-[10px] px-2 py-0.5 rounded-full mr-2 ${
                   source === 'gemini' ? 'bg-green-500/20 text-green-300' : 'bg-amber-500/20 text-amber-300'
                 }`}>
-                  {source === 'gemini' ? 'DentAssist AI' : 'Smart Mode'}
+                  {source === 'gemini' ? 'AI-Powered' : 'Offline Mode'}
                 </span>
               )}
               <button onClick={() => setOpen(false)} className="p-1 hover:bg-[#0D6D65] rounded transition-colors">

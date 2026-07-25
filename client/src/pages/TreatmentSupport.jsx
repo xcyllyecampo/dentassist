@@ -122,7 +122,7 @@ export default function TreatmentSupport() {
               <h3 className="font-bold text-white">Recommendation Results</h3>
               {results && (
                 <span className={`text-xs px-3 py-1 rounded-full ${results.source === 'gemini' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {results.source === 'gemini' ? 'DentAssist AI' : 'Rule-Based'}
+                  {results.source === 'gemini' ? 'AI-Powered' : 'Demo Mode'}
                 </span>
               )}
             </div>
