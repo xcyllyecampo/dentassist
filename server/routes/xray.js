@@ -92,7 +92,10 @@ router.post("/analyze/:id", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), as
       let analysis;
       try {
         let cleaned = aiText.trim();
-        if (cleaned.startsWith("```")) cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].trim();
+        if (cleaned.startsWith("```")) {
+          const lastFence = cleaned.lastIndexOf("```");
+          cleaned = cleaned.substring(cleaned.indexOf("\n") + 1, lastFence > 0 ? lastFence : undefined).trim();
+        }
         analysis = JSON.parse(cleaned);
       } catch {
         analysis = { findings: [], overall_assessment: aiText, recommendations: [], disclaimer: "AI analysis." };

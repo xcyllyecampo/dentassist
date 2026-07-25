@@ -31,7 +31,8 @@ const upload = multer({
 function parseAIJson(text) {
   let cleaned = text.trim();
   if (cleaned.startsWith("```")) {
-    cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].trim();
+    const lastFence = cleaned.lastIndexOf("```");
+    cleaned = cleaned.substring(cleaned.indexOf("\n") + 1, lastFence > 0 ? lastFence : undefined).trim();
   }
   return JSON.parse(cleaned);
 }
@@ -488,10 +489,11 @@ function mockChatResponse(message, ctx) {
 // ─── ROUTES ───
 
 router.post("/chat", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(aiSchemas.chat), async (req, res) => {
+  let clinicContext = null;
   try {
     const prisma = req.app.get("prisma");
     const { message } = req.body;
-    const clinicContext = await getClinicContext(prisma);
+    clinicContext = await getClinicContext(prisma);
 
     let systemMsg = PROMPTS.dentalChat;
     if (clinicContext) {
