@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://dentassist-backend.onrender.com/api/$1" },
-    { "source": "/socket.io/(.*)", "destination": "https://dentassist-backend.onrender.com/socket.io/$1" }
+    { "source": "/socket.io/(.*)", "destination": "https://dentassist-backend.onrender.com/socket.io/$1" },
+    { "source": "/((?!api|socket.io|images|videos|favicon.ico).*)", "destination": "/index.html" }
   ]
 }
