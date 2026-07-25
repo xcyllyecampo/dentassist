@@ -63,10 +63,10 @@ export default function KioskSmileSimulation() {
       {/* Upload area */}
       {!preview && (
         <div className="flex flex-col items-center justify-center py-10">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-5 border border-white/20">
+          <div className="w-16 h-16 kiosk-card flex items-center justify-center mb-5">
             <Sparkles size={32} className="text-rose-400" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 text-center">Smile Analysis</h2>
+          <h2 className="kiosk-heading text-xl text-white mb-2 text-center">Smile Analysis</h2>
           <p className="text-white/60 text-sm mb-6 text-center px-4">
             Upload a smile photo and see how different treatments could transform your smile.
           </p>
@@ -100,8 +100,8 @@ export default function KioskSmileSimulation() {
       {/* Preview + results — stacked vertically */}
       {preview && (
         <div className="flex flex-col gap-4">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
-            <h3 className="text-white font-bold mb-3 text-sm">Your Smile Photo</h3>
+          <div className="kiosk-card p-4">
+            <h3 className="kiosk-heading text-white text-sm mb-3">Your Smile Photo</h3>
             <img src={preview} alt="Smile" className="w-full max-h-[340px] object-contain rounded-xl" />
             <button onClick={() => { playClick(); handleSimulate(); }} disabled={simulating}
               className="w-full mt-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white py-3 rounded-xl font-bold text-base hover:from-rose-600 hover:to-rose-700 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-rose-500/20 transition-all">
@@ -110,9 +110,9 @@ export default function KioskSmileSimulation() {
           </div>
 
           {result && (
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
+            <div className="kiosk-card p-4 kiosk-in">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-bold text-sm">Results</h3>
+                <h3 className="kiosk-heading text-white text-sm">Results</h3>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full ${result.source === 'gemini' ? 'bg-green-500/20 text-green-300 border border-green-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
                   {result.source === 'gemini' ? 'AI-Powered' : 'Demo Mode'}
                 </span>

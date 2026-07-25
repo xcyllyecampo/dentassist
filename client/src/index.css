@@ -243,3 +243,108 @@ body {
 .animate-ring-expand {
   animation: ring-expand 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
+
+/* === KIOSK DESIGN SYSTEM === */
+
+.kiosk-bg {
+  background: linear-gradient(160deg, #0A1628 0%, #0D2137 40%, #0B3B36 100%);
+}
+
+.kiosk-glow {
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.1) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  animation: kiosk-glow-drift 8s ease-in-out infinite;
+}
+
+.kiosk-glow-2 {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.06) 0%, transparent 70%);
+  filter: blur(60px);
+  pointer-events: none;
+  z-index: 0;
+  animation: kiosk-glow-drift 10s ease-in-out infinite reverse;
+}
+
+@keyframes kiosk-glow-drift {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(30px, -20px); }
+  66% { transform: translate(-20px, 15px); }
+}
+
+.kiosk-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kiosk-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.kiosk-hero {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.kiosk-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.kiosk-display {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.kiosk-heading {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@keyframes kiosk-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes kiosk-scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.kiosk-in {
+  animation: kiosk-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.kiosk-scale-in {
+  animation: kiosk-scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.kiosk-touch {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.kiosk-touch:active {
+  transform: scale(0.97) !important;
+}

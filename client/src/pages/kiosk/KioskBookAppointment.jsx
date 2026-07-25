@@ -161,7 +161,7 @@ export default function KioskBookAppointment() {
 
         {step === 1 && (
           <div>
-            <h2 className="text-xl font-bold text-white mb-2 text-center">What do you need?</h2>
+            <h2 className="kiosk-heading text-xl text-white mb-2 text-center">What do you need?</h2>
             <p className="text-white/50 text-sm text-center mb-6">Select your treatment type</p>
             <div className="grid grid-cols-2 gap-3">
               {TREATMENTS.map(function(t) {
@@ -186,7 +186,7 @@ export default function KioskBookAppointment() {
             <button onClick={function() { playClick(); setStep(1); }} className="flex items-center gap-1 text-white/60 hover:text-white text-sm mb-4">
               <ChevronLeft size={16} /> Back
             </button>
-            <h2 className="text-xl font-bold text-white mb-2 text-center">Choose a Dentist</h2>
+            <h2 className="kiosk-heading text-xl text-white mb-2 text-center">Choose a Dentist</h2>
             <p className="text-white/50 text-sm text-center mb-6">Pick your preferred dentist (optional)</p>
 
             <div className="space-y-2 mb-5">
@@ -246,7 +246,7 @@ export default function KioskBookAppointment() {
             <button onClick={function() { playClick(); setStep(2); }} className="flex items-center gap-1 text-white/60 hover:text-white text-sm mb-4">
               <ChevronLeft size={16} /> Back
             </button>
-            <h2 className="text-xl font-bold text-white mb-2 text-center">Pick a date</h2>
+            <h2 className="kiosk-heading text-xl text-white mb-2 text-center">Pick a date</h2>
             <p className="text-white/50 text-sm text-center mb-6">{treatment?.label} &mdash; {treatment?.duration} min</p>
 
             {/* Calendar grid */}
@@ -338,7 +338,7 @@ export default function KioskBookAppointment() {
             <button onClick={function() { playClick(); setStep(3); }} className="flex items-center gap-1 text-white/60 hover:text-white text-sm mb-4">
               <ChevronLeft size={16} /> Back
             </button>
-            <h2 className="text-xl font-bold text-white mb-6 text-center">Confirm Booking</h2>
+            <h2 className="kiosk-heading text-xl text-white mb-6 text-center">Confirm Booking</h2>
             <div className="bg-white/10 rounded-xl border border-white/20 p-5 space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-teal-500/30 rounded-lg flex items-center justify-center">
@@ -401,18 +401,18 @@ export default function KioskBookAppointment() {
               </div>
             </div>
             <button onClick={handleBook} disabled={submitting}
-              className="w-full mt-6 bg-white text-[#0F766E] font-bold py-4 rounded-xl text-lg hover:bg-white/90 transition-all active:scale-[0.98] disabled:opacity-50">
+              className="w-full mt-6 kiosk-touch bg-white text-[#0F766E] font-bold py-4 rounded-xl text-lg hover:bg-white/90 disabled:opacity-50 shadow-lg shadow-black/20">
               {submitting ? 'Booking...' : 'Confirm Appointment'}
             </button>
           </div>
         )}
 
         {step === 5 && (
-          <div className="text-center py-8">
-            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/30">
+          <div className="text-center py-8 kiosk-scale-in">
+            <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/30 shadow-[0_0_32px_rgba(16,185,129,0.3)]">
               <CheckCircle size={40} className="text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Appointment Booked!</h2>
+            <h2 className="kiosk-display text-2xl text-white mb-2">Appointment Booked!</h2>
             <p className="text-white/60 text-sm mb-1">{treatment?.label}</p>
             <p className="text-white/60 text-sm mb-2">
               {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} at {selectedTime}

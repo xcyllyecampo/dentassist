@@ -65,7 +65,7 @@ export default function KioskRecords() {
   return (
     <KioskLayout title="My Records">
       {/* Patient info card */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4 mb-3">
+      <div className="kiosk-card p-4 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white text-base font-bold shrink-0">
             {patient.user?.name?.charAt(0)}
@@ -98,7 +98,7 @@ export default function KioskRecords() {
       </div>
 
       {/* Tab content */}
-      <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
+      <div className="kiosk-card p-4">
         {activeTab === 'appointments' && (
           <div className="space-y-3">
             {patient.appointments?.length === 0 ? (
@@ -110,7 +110,7 @@ export default function KioskRecords() {
                 <p className="text-white/30 text-xs">Book your first appointment to get started</p>
               </div>
             ) : patient.appointments?.map(a => (
-              <div key={a.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+              <div key={a.id} className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="text-white font-medium">{new Date(a.date).toLocaleDateString()} at {a.time}</div>
@@ -159,7 +159,7 @@ export default function KioskRecords() {
                 <p className="text-white/30 text-xs">Your treatments will appear here after your first visit</p>
               </div>
             ) : patient.treatments?.map(t => (
-              <div key={t.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+              <div key={t.id} className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
                 <div className="text-white font-medium">{t.procedure}</div>
                 <div className="text-white/50 text-sm">{t.description} {t.dentist?.name && `· by ${t.dentist.name}`}</div>
                 {t.cost && <div className="text-green-400 text-sm mt-1 font-medium">₱{t.cost}</div>}
@@ -179,7 +179,7 @@ export default function KioskRecords() {
                 <p className="text-white/30 text-xs">Prescriptions from your dentist will show up here</p>
               </div>
             ) : patient.prescriptions?.map(p => (
-              <div key={p.id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+              <div key={p.id} className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
                 <div className="text-white font-medium">{p.medication}</div>
                 <div className="text-white/50 text-sm">{p.dosage} · {p.frequency} · {p.duration}</div>
               </div>

@@ -90,8 +90,8 @@ export default function KioskCheckIn() {
               </div>
             ))}
           </div>
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-teal-500 to-teal-400 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full transition-all duration-500 shadow-[0_0_12px_rgba(20,184,166,0.4)]" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
@@ -172,7 +172,7 @@ export default function KioskCheckIn() {
         {/* Step 1: Choose Treatment */}
         {!entry && step === 1 && (
           <div className="w-full">
-            <h2 className="text-lg font-bold text-white mb-1 text-center">What brings you in today?</h2>
+            <h2 className="kiosk-heading text-lg text-white mb-1 text-center">What brings you in today?</h2>
             <p className="text-white/50 text-center text-sm mb-4">Choose a treatment to continue</p>
 
             <div className="grid grid-cols-2 gap-2.5 mb-5">
@@ -210,7 +210,7 @@ export default function KioskCheckIn() {
         {/* Step 2: Choose Dentist */}
         {!entry && step === 2 && (
           <div className="w-full">
-            <h2 className="text-lg font-bold text-white mb-1 text-center">Choose a Dentist</h2>
+            <h2 className="kiosk-heading text-lg text-white mb-1 text-center">Choose a Dentist</h2>
             <p className="text-white/50 text-center text-sm mb-4">Pick your preferred dentist (optional)</p>
 
             <div className="grid grid-cols-2 gap-3 mb-5">
@@ -274,7 +274,7 @@ export default function KioskCheckIn() {
         {/* Step 3: Confirm */}
         {!entry && step === 3 && selectedTreatment && (
           <div className="w-full text-center">
-            <h2 className="text-lg font-bold text-white mb-4">Confirm Your Check-In</h2>
+            <h2 className="kiosk-heading text-lg text-white mb-4">Confirm Your Check-In</h2>
 
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-5 mb-5">
               <div className="flex items-center gap-3 mb-3">
@@ -344,11 +344,11 @@ export default function KioskCheckIn() {
 
         {/* Step 4: Success */}
         {step === 4 && (
-          <div className="text-center w-full">
-            <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mb-4 mx-auto border border-green-500/40">
+          <div className="text-center w-full kiosk-scale-in">
+            <div className="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mb-4 mx-auto border border-green-500/40 shadow-[0_0_24px_rgba(34,197,94,0.2)]">
               <CheckCircle size={32} className="text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-1">You're Checked In!</h2>
+            <h2 className="kiosk-display text-2xl text-white mb-1">You're Checked In!</h2>
             <p className="text-white/50 text-sm mb-6">Please remain in the waiting area.</p>
 
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-5 mb-5">

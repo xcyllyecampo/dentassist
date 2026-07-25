@@ -77,10 +77,10 @@ export default function KioskQueueStatus() {
 
         {!loading && !error && !myEntry && (
           <div className="text-center">
-            <div className="w-24 h-24 bg-white/10 backdrop-blur-lg rounded-3xl flex items-center justify-center mb-8 border border-white/20 mx-auto">
+            <div className="w-24 h-24 kiosk-card flex items-center justify-center mb-8 mx-auto">
               <Clock size={48} className="text-white/40" />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-3">Not in Queue</h2>
+            <h2 className="kiosk-display text-3xl text-white mb-3">Not in Queue</h2>
             <p className="text-white/60 text-lg mb-8">You haven't checked in yet.</p>
             <a href="/kiosk/check-in" onClick={() => playClick()} className="inline-flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-2xl font-bold text-lg hover:from-teal-600 hover:to-teal-700 transition-all shadow-lg shadow-teal-500/30">
               Check In Now
@@ -91,10 +91,10 @@ export default function KioskQueueStatus() {
         {!loading && !error && myEntry && (
           <>
             {/* My position card */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 w-full mb-6">
+            <div className="kiosk-card p-6 w-full mb-6">
               <div className="text-center mb-6">
                 <div className="text-white/50 text-sm uppercase tracking-wider mb-2">Your Position</div>
-                <div className="text-6xl font-bold text-white mb-2">#{myEntry.position}</div>
+                <div className="kiosk-display text-6xl text-white mb-2">#{myEntry.position}</div>
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium ${
                   myEntry.status === 'WAITING'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
@@ -112,9 +112,9 @@ export default function KioskQueueStatus() {
                       <span>Queue Progress</span>
                       <span>~{myEntry.estimatedWait || '?'} min wait</span>
                     </div>
-                    <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-3 bg-white/[0.06] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-1000"
+                        className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-1000 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
                         style={{ width: `${positionProgress}%` }}
                       />
                     </div>
@@ -134,14 +134,14 @@ export default function KioskQueueStatus() {
 
             {/* Queue stats */}
             <div className="grid grid-cols-2 gap-3 w-full">
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-5 text-center">
+              <div className="kiosk-card p-5 text-center">
                 <Users size={24} className="text-amber-400 mx-auto mb-2" />
-                <div className="text-3xl font-bold text-white">{waitingCount}</div>
+                <div className="kiosk-display text-3xl text-white">{waitingCount}</div>
                 <div className="text-white/50 text-sm">Waiting</div>
               </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl border border-white/20 p-5 text-center">
+              <div className="kiosk-card p-5 text-center">
                 <Loader size={24} className="text-green-400 mx-auto mb-2" />
-                <div className="text-3xl font-bold text-white">{servingCount}</div>
+                <div className="kiosk-display text-3xl text-white">{servingCount}</div>
                 <div className="text-white/50 text-sm">Now Serving</div>
               </div>
             </div>

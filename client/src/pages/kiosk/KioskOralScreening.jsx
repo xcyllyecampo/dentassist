@@ -55,10 +55,10 @@ export default function KioskOralScreening() {
       {/* Upload area */}
       {!preview && (
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-lg rounded-2xl flex items-center justify-center mb-5 border border-white/20">
+          <div className="w-16 h-16 kiosk-card flex items-center justify-center mb-5">
             <Camera size={32} className="text-blue-400" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2 text-center">AI Oral Check</h2>
+          <h2 className="kiosk-heading text-xl text-white mb-2 text-center">AI Oral Check</h2>
           <p className="text-white/60 text-sm mb-8 text-center px-4">
             Take a clear photo of the inside of your mouth. Our AI will analyze it and highlight any areas of concern.
           </p>
@@ -73,8 +73,8 @@ export default function KioskOralScreening() {
       {preview && (
         <div className="flex flex-col gap-4">
           {/* Photo panel */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
-            <h3 className="text-white font-bold mb-3 text-sm">Your Photo</h3>
+          <div className="kiosk-card p-4">
+            <h3 className="kiosk-heading text-white text-sm mb-3">Your Photo</h3>
             <img src={preview} alt="Oral" className="w-full max-h-[340px] object-contain rounded-xl" />
             <button
               onClick={() => { playClick(); handleAnalyze(); }}
@@ -97,9 +97,9 @@ export default function KioskOralScreening() {
 
           {/* Results panel */}
           {result && (
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-4">
+            <div className="kiosk-card p-4 kiosk-in">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-bold text-sm">Analysis Results</h3>
+                <h3 className="kiosk-heading text-white text-sm">Analysis Results</h3>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full ${result.source === 'gemini' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'}`}>
                   {result.source === 'gemini' ? 'AI-Powered' : 'Demo Mode'}
                 </span>
