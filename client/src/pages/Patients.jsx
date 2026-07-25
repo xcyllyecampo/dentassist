@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
@@ -6,7 +6,7 @@ import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
-import { Plus, Search, Eye, Users, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Users, AlertTriangle, UserPlus, Heart, ArrowUpRight } from 'lucide-react';
 
 export default function Patients() {
   const toast = useToast();
@@ -44,25 +44,55 @@ export default function Patients() {
     p.user?.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const stats = useMemo(() => {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return [
+      { label: 'Total Patients', value: patients.length, icon: Users, gradient: 'from-[#0F766E] to-[#0D6D65]' },
+      { label: 'New This Month', value: patients.filter(p => new Date(p.createdAt) > thirtyDaysAgo).length, icon: UserPlus, gradient: 'from-blue-500 to-blue-600' },
+      { label: 'Male', value: patients.filter(p => p.gender === 'Male').length, icon: Users, gradient: 'from-violet-500 to-violet-600' },
+      { label: 'Female', value: patients.filter(p => p.gender === 'Female').length, icon: Heart, gradient: 'from-rose-500 to-rose-600' },
+    ];
+  }, [patients]);
+
   return (
     <Layout>
       <Header title="Patients" />
       <div className="p-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {stats.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 card-premium">
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center shadow-lg shrink-0`}>
+                  <Icon size={22} className="text-white" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-900">{s.value}</div>
+                  <div className="text-xs text-slate-500 font-medium">{s.label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Search + Add */}
         <div className="flex items-center justify-between mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#14B8A6]" size={16} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#14B8A6]" size={16} />
             <input
-              type="text" placeholder="Search patients..."
+              type="text" placeholder="Search by name or email..."
               value={search} onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none w-80"
+              className="pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-none w-80 bg-white transition-all"
             />
           </div>
-          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-[#0F766E] text-white px-4 py-2 rounded-lg hover:bg-[#0D6D65] transition-colors text-sm font-medium">
+          <button onClick={() => setShowModal(true)} className="btn-premium flex items-center gap-2 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">
             <Plus size={16} /> Add Patient
           </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           {loading ? (
             <Spinner className="py-20" />
           ) : error ? (
@@ -72,73 +102,96 @@ export default function Patients() {
               <button onClick={fetchPatients} className="text-sm text-[#0F766E] hover:text-[#064E3B] font-medium">Retry</button>
             </div>
           ) : (
-          <table className="w-full min-w-[640px]">
-            <thead className="bg-slate-50 text-slate-900 text-sm">
-              <tr>
-                <th className="text-left px-6 py-3 font-medium">Name</th>
-                <th className="text-left px-6 py-3 font-medium">Email</th>
-                <th className="text-left px-6 py-3 font-medium">Phone</th>
-                <th className="text-left px-6 py-3 font-medium">Gender</th>
-                <th className="text-left px-6 py-3 font-medium">Blood Type</th>
-                <th className="text-right px-6 py-3 font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={6}><EmptyState icon={Users} title={search ? "No patients match your search" : "No patients yet"} description={search ? "Try a different search term" : "Add your first patient to get started"} /></td></tr>
-              ) : filtered.map((p) => (
-                <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      {p.user?.avatar ? (
-                        <img src={authUrl(p.user.avatar)} alt={p.user.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-slate-100" />
-                      ) : (
-                        <div className="w-8 h-8 bg-[#99F6E4] text-[#064E3B] rounded-full flex items-center justify-center text-sm font-bold">
-                          {p.user?.name?.charAt(0)?.toUpperCase()}
-                        </div>
-                      )}
-                      <span className="text-sm font-medium text-slate-900">{p.user?.name}</span>
-                      {p.createdAt && (Date.now() - new Date(p.createdAt).getTime() < 3 * 24 * 60 * 60 * 1000) && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-red-500 text-white">New</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{p.user?.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{p.user?.phone || 'N/A'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{p.gender || 'N/A'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{p.bloodType || 'N/A'}</td>
-                  <td className="px-6 py-4 text-right">
-                    <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1 text-[#0F766E] hover:text-[#064E3B] text-sm">
-                      <Eye size={14} /> View
-                    </Link>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-b border-slate-100">
+                  <th className="text-left px-6 py-3.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Patient</th>
+                  <th className="text-left px-6 py-3.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Contact</th>
+                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Gender</th>
+                  <th className="text-left px-4 py-3.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Blood</th>
+                  <th className="text-right px-6 py-3.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={5}><EmptyState icon={Users} title={search ? "No patients match your search" : "No patients yet"} description={search ? "Try a different search term" : "Add your first patient to get started"} /></td></tr>
+                ) : filtered.map((p) => (
+                  <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {p.user?.avatar ? (
+                          <img src={authUrl(p.user.avatar)} alt={p.user.name} className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100" />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-[#0F766E] to-[#0D6D65] text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-md shadow-[#0F766E]/10">
+                            {p.user?.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-900">{p.user?.name}</span>
+                            {p.createdAt && (Date.now() - new Date(p.createdAt).getTime() < 3 * 24 * 60 * 60 * 1000) && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-teal-50 text-[#0F766E] border border-teal-200">New</span>
+                            )}
+                          </div>
+                          <span className="text-xs text-slate-400">{p.user?.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{p.user?.phone || '—'}</td>
+                    <td className="px-4 py-4">
+                      {p.gender ? (
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${
+                          p.gender === 'Male' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                          p.gender === 'Female' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                          'bg-slate-50 text-slate-600 border border-slate-200'
+                        }`}>{p.gender}</span>
+                      ) : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="px-4 py-4">
+                      {p.bloodType ? (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 border border-red-200">{p.bloodType}</span>
+                      ) : <span className="text-slate-300">—</span>}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link to={`/patients/${p.id}`} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0F766E]/5 hover:bg-[#0F766E]/10 text-[#0F766E] rounded-lg text-xs font-semibold transition-colors">
+                        View <ArrowUpRight size={12} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           )}
         </div>
 
+        {/* Modal */}
         {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Add New Patient</h2>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Input label="Full Name" required value={form.name} onChange={v => setForm({...form, name: v})} />
-                  <Input label="Email" type="email" required value={form.email} onChange={v => setForm({...form, email: v})} />
-                  <Input label="Phone" value={form.phone} onChange={v => setForm({...form, phone: v})} />
-                  <Input label="Date of Birth" type="date" required value={form.dob} onChange={v => setForm({...form, dob: v})} />
-                  <Select label="Gender" value={form.gender} onChange={v => setForm({...form, gender: v})} options={['Male', 'Female', 'Other']} />
-                  <Select label="Blood Type" value={form.bloodType} onChange={v => setForm({...form, bloodType: v})} options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']} />
-                </div>
-                <TextArea label="Allergies" value={form.allergies} onChange={v => setForm({...form, allergies: v})} />
-                <TextArea label="Medical History" value={form.medicalHistory} onChange={v => setForm({...form, medicalHistory: v})} />
-                <div className="flex justify-end gap-3 pt-2">
-                  <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Create Patient</button>
-                </div>
-              </form>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="bg-gradient-to-r from-[#0F766E] to-[#0D6D65] px-6 py-4">
+                <h2 className="text-lg font-bold text-white">Add New Patient</h2>
+                <p className="text-teal-100 text-xs mt-0.5">Fill in the patient details below</p>
+              </div>
+              <div className="p-6 max-h-[calc(90vh-80px)] overflow-y-auto">
+                <form onSubmit={handleCreate} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input label="Full Name" required value={form.name} onChange={v => setForm({...form, name: v})} />
+                    <Input label="Email" type="email" required value={form.email} onChange={v => setForm({...form, email: v})} />
+                    <Input label="Phone" value={form.phone} onChange={v => setForm({...form, phone: v})} />
+                    <Input label="Date of Birth" type="date" required value={form.dob} onChange={v => setForm({...form, dob: v})} />
+                    <Select label="Gender" value={form.gender} onChange={v => setForm({...form, gender: v})} options={['Male', 'Female', 'Other']} />
+                    <Select label="Blood Type" value={form.bloodType} onChange={v => setForm({...form, bloodType: v})} options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']} />
+                  </div>
+                  <TextArea label="Allergies" value={form.allergies} onChange={v => setForm({...form, allergies: v})} />
+                  <TextArea label="Medical History" value={form.medicalHistory} onChange={v => setForm({...form, medicalHistory: v})} />
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-medium transition-colors">Cancel</button>
+                    <button type="submit" className="btn-premium px-5 py-2.5 text-white rounded-xl text-sm font-semibold">Create Patient</button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}
@@ -150,9 +203,9 @@ export default function Patients() {
 function Input({ label, type = 'text', required, value, onChange }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>
       <input type={type} required={required} value={value} onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
+        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-none bg-slate-50/50 transition-all" />
     </div>
   );
 }
@@ -160,9 +213,9 @@ function Input({ label, type = 'text', required, value, onChange }) {
 function Select({ label, value, onChange, options }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>
       <select value={value} onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
+        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-none bg-slate-50/50 transition-all">
         <option value="">Select</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
@@ -173,9 +226,9 @@ function Select({ label, value, onChange, options }) {
 function TextArea({ label, value, onChange }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">{label}</label>
       <textarea value={value} onChange={e => onChange(e.target.value)} rows={2}
-        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
+        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] focus:outline-none bg-slate-50/50 transition-all resize-none" />
     </div>
   );
 }
