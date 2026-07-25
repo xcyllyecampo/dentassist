@@ -8,6 +8,8 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: JWT_SECRET
         sync: false
       - key: JWT_REFRESH_SECRET
@@ -19,6 +21,6 @@ services:
       - key: SUPABASE_SERVICE_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: https://dentassist-frontend.vercel.app
+        sync: false
       - key: NODE_ENV
         value: production

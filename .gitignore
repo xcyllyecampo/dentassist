@@ -3,11 +3,9 @@ dist/
 .env
 .env.*
 !.env.example
-!.env.docker
 uploads/
 *.log
 .DS_Store
-__pycache__/
 server/generated/
 client/node_modules/
 client/dist/
