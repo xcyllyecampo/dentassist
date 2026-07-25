@@ -43,7 +43,7 @@ async function generateContent(contents, retries = 2) {
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const response = await ai.models.generateContent({ model: GEMINI_MODEL, contents });
+      const response = await ai.models.generateContent({ model: GEMINI_MODEL, contents, config: { thinkingConfig: { thinkingBudget: 0 } } });
       return response.text;
     } catch (err) {
       const isRetryable = err.message?.includes("429") || err.message?.includes("RESOURCE_EXHAUSTED") || err.message?.includes("503");
@@ -660,6 +660,19 @@ router.post("/smile/simulate", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", 
       const result = parseAIJson(aiText);
       result.source = "gemini";
       result.treatment_type = treatmentType;
+      if (result.current_analysis) {
+        if (!Array.isArray(result.current_analysis.observations)) result.current_analysis.observations = [];
+        if (typeof result.current_analysis.smile_score !== "number") result.current_analysis.smile_score = 50;
+      }
+      if (result.simulated_result) {
+        if (!Array.isArray(result.simulated_result.changes)) result.simulated_result.changes = [];
+        if (typeof result.simulated_result.smile_score !== "number") result.simulated_result.smile_score = 80;
+        if (typeof result.simulated_result.description !== "string") result.simulated_result.description = "";
+      }
+      if (!Array.isArray(result.procedures)) result.procedures = [];
+      if (typeof result.timeline !== "string") result.timeline = "";
+      if (typeof result.maintenance !== "string") result.maintenance = "";
+      if (typeof result.disclaimer !== "string") result.disclaimer = "";
       res.json(result);
     } catch {
       res.json({

@@ -153,7 +153,7 @@ export default function SmileSimulation() {
                   </div>
                 )}
 
-                {result.simulated_result?.changes?.length > 0 && (
+                {Array.isArray(result.simulated_result?.changes) && result.simulated_result.changes.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-bold text-slate-900 mb-2">Expected Changes</h4>
                     <ul className="space-y-1">
@@ -167,7 +167,7 @@ export default function SmileSimulation() {
                   </div>
                 )}
 
-                {result.current_analysis?.observations?.length > 0 && (
+                {Array.isArray(result.current_analysis?.observations) && result.current_analysis.observations.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-bold text-slate-900 mb-2">Current Observations</h4>
                     <div className="space-y-2">
@@ -185,7 +185,7 @@ export default function SmileSimulation() {
                   </div>
                 )}
 
-                {result.procedures?.length > 0 && (
+                {Array.isArray(result.procedures) && result.procedures.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-bold text-slate-900 mb-2">Recommended Procedures</h4>
                     <div className="space-y-2">

@@ -141,7 +141,7 @@ export default function KioskSmileSimulation() {
                 </div>
               )}
 
-              {result.simulated_result?.changes?.length > 0 && (
+              {Array.isArray(result.simulated_result?.changes) && result.simulated_result.changes.length > 0 && (
                 <div className="mb-3">
                   <h4 className="text-white font-bold mb-1.5 text-xs">Expected Changes</h4>
                   <ul className="space-y-1">
@@ -154,7 +154,7 @@ export default function KioskSmileSimulation() {
                 </div>
               )}
 
-              {result.procedures?.length > 0 && (
+              {Array.isArray(result.procedures) && result.procedures.length > 0 && (
                 <div className="mb-3">
                   <h4 className="text-white font-bold mb-1.5 text-xs">Recommended Procedures</h4>
                   {result.procedures.map((proc, i) => (
