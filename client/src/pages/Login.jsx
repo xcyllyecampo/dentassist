@@ -11,7 +11,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
   const [qrSize, setQrSize] = useState(240);
   const { login, register, user } = useAuth();
@@ -100,7 +99,7 @@ export default function Login() {
           {/* Tabs with sliding indicator */}
           <div className="relative mx-6 border-b border-slate-100">
             <div className="flex">
-              <button ref={loginTabRef} onClick={() => { playClick(); setAgreedToTerms(false); setError(''); setMode('login'); }}
+              <button ref={loginTabRef} onClick={() => { playClick(); setError(''); setMode('login'); }}
                 className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
                   isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
                 }`}>
@@ -169,20 +168,7 @@ export default function Login() {
               </div>
             </div>
 
-            {!isLogin && (
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input type="checkbox" checked={agreedToTerms}
-                    onChange={(e) => { playClick(); setAgreedToTerms(e.target.checked); }}
-                    className="mt-0.5 w-4 h-4 rounded border-slate-300 text-[#0F766E] focus:ring-[#0F766E]/30 cursor-pointer" />
-                  <span className="text-[11px] text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors">
-                    I have read and agree to the DentAssist Terms and Agreement and Privacy Policy, and I consent to the collection and processing of my personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173).
-                  </span>
-                </label>
-              </div>
-            )}
-
-            <button type="submit" disabled={loading || (!isLogin && !agreedToTerms)}
+            <button type="submit" disabled={loading}
               className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -191,39 +177,35 @@ export default function Login() {
                 </span>
               ) : isLogin ? 'Sign In' : 'Create Account'}
             </button>
-
-            <div className="text-center text-xs text-slate-400 mt-3 pt-3 border-t border-slate-100">
-              <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded-md font-mono text-[11px]">
-                Demo: admin@dentassist.com / password123
-              </span>
-            </div>
           </form>
         </div>
 
-        {/* QR Code Section */}
-        <div className="mt-4 glass-card rounded-3xl shadow-2xl shadow-black/30 p-5 md:p-6 text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <QrCode size={16} className="text-slate-500" />
-            <span className="text-slate-700 text-xs font-semibold uppercase tracking-wider">or scan to access on your phone</span>
-          </div>
-          <div className="flex justify-center w-full mb-3">
-            <div className="bg-white p-3 rounded-2xl" style={{ width: qrSize, height: qrSize }}>
-              {qrUrl ? (
-                <QRCodeSVG
-                  value={qrUrl}
-                  size={qrSize - 24}
-                  bgColor="#ffffff"
-                  fgColor="#0D6D65"
-                  level="M"
-                  includeMargin={false}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">Loading...</div>
-              )}
+        {/* QR Code Section - Login only */}
+        {isLogin && (
+          <div className="mt-4 glass-card rounded-3xl shadow-2xl shadow-black/30 p-5 md:p-6 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <QrCode size={16} className="text-slate-500" />
+              <span className="text-slate-700 text-xs font-semibold uppercase tracking-wider">or scan to access on your phone</span>
             </div>
+            <div className="flex justify-center w-full mb-3">
+              <div className="bg-white p-3 rounded-2xl" style={{ width: qrSize, height: qrSize }}>
+                {qrUrl ? (
+                  <QRCodeSVG
+                    value={qrUrl}
+                    size={qrSize - 24}
+                    bgColor="#ffffff"
+                    fgColor="#0D6D65"
+                    level="M"
+                    includeMargin={false}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">Loading...</div>
+                )}
+              </div>
+            </div>
+            <p className="text-slate-500 text-xs">Scan with your phone camera to open</p>
           </div>
-          <p className="text-slate-500 text-xs">Scan with your phone camera to open</p>
-        </div>
+        )}
       </div>
 
       {/* Welcome splash */}
