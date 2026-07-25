@@ -163,6 +163,17 @@ async function cleanupOrphanedPatients() {
 
 cleanupOrphanedPatients();
 
+app.use((err, _req, res, _next) => {
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ error: "File too large. Maximum size is 5MB." });
+  }
+  if (err.name === "MulterError") {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error("Unhandled error:", err);
+  res.status(err.status || 500).json({ error: err.message || "Internal server error" });
+});
+
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 module.exports = { app, server, io, prisma };

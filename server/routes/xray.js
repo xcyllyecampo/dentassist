@@ -1,6 +1,7 @@
 const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
 const multer = require("multer");
+const path = require("path");
 const crypto = require("crypto");
 const { uploadFile, deleteFile, getPublicUrl } = require("../lib/storage");
 
@@ -35,7 +36,8 @@ router.post("/upload", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.
     const prisma = req.app.get("prisma");
     const { patientId, fileType } = req.body;
 
-    const filename = `xray-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+    const ext = path.extname(req.file.originalname) || ".jpg";
+    const filename = `xray-${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
     await uploadFile(req.file.buffer, filename, req.file.mimetype);
     const fileUrl = getPublicUrl(filename);
 
@@ -49,8 +51,8 @@ router.post("/upload", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), upload.
     });
     res.status(201).json(image);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("POST /api/xray/upload error:", err);
+    res.status(500).json({ error: err.message || "Server error" });
   }
 });
 

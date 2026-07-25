@@ -1,5 +1,6 @@
 ﻿const express = require("express");
 const multer = require("multer");
+const path = require("path");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { auth, roleGuard } = require("../middleware/auth");
@@ -10,9 +11,14 @@ const { uploadFile, deleteFile, getPublicUrl } = require("../lib/storage");
 
 const router = express.Router();
 
+const AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (AVATAR_TYPES.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Only JPEG, PNG, and WebP images are allowed"));
+  },
 });
 
 router.get("/", auth, roleGuard("ADMIN"), async (req, res) => {
@@ -72,7 +78,8 @@ router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(adm
 
     let avatarUrl = null;
     if (req.file) {
-      const filename = `avatar-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+      const ext = path.extname(req.file.originalname) || ".jpg";
+      const filename = `avatar-${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
       await uploadFile(req.file.buffer, filename, req.file.mimetype);
       avatarUrl = getPublicUrl(filename);
     }
@@ -98,8 +105,8 @@ router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(adm
 
     res.status(201).json({ ...user, patient: patient ? { id: patient.id, dob: patient.dob, gender: patient.gender, bloodType: patient.bloodType } : null });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("POST /api/admin-users error:", err);
+    res.status(500).json({ error: err.message || "Server error" });
   }
 });
 
@@ -115,7 +122,8 @@ router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(a
     if (phone !== undefined) updateData.phone = phone;
     if (password) updateData.password = await bcrypt.hash(password, 10);
     if (req.file) {
-      const filename = `avatar-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
+      const ext = path.extname(req.file.originalname) || ".jpg";
+      const filename = `avatar-${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
       await uploadFile(req.file.buffer, filename, req.file.mimetype);
       updateData.avatar = getPublicUrl(filename);
     }
@@ -149,8 +157,8 @@ router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(a
 
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("PUT /api/admin-users error:", err);
+    res.status(500).json({ error: err.message || "Server error" });
   }
 });
 
