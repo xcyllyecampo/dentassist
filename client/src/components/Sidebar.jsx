@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import {
   LayoutDashboard, Users, Calendar, Clock, Activity,
-  Stethoscope, Image, BarChart3, CalendarClock,
-  Settings, LogOut, ChevronLeft, ChevronRight, Sparkles, ShieldCheck
+  Brain, BarChart3, CalendarClock,
+  Settings, LogOut, ChevronLeft, ChevronRight, ShieldCheck
 } from 'lucide-react';
 import { playClick, playWhoosh } from '../lib/sounds';
 
@@ -14,10 +14,7 @@ const navItems = [
   { to: '/appointments', icon: Calendar, label: 'Appointments', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'], badge: 'appointment' },
   { to: '/queue', icon: Clock, label: 'Queue', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'], badge: 'queue' },
   { to: '/records', icon: Activity, label: 'Records', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
-  { to: '/xray', icon: Image, label: 'X-Ray Analysis', roles: ['ADMIN', 'DENTIST'] },
-  { to: '/oral-screening', icon: Stethoscope, label: 'Oral Screening', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
-  { to: '/smile-simulation', icon: Sparkles, label: 'Smile Simulation', roles: ['ADMIN', 'DENTIST'] },
-  { to: '/treatment-support', icon: Settings, label: 'Treatment Support', roles: ['ADMIN', 'DENTIST'] },
+  { to: '/ai-diagnostics', icon: Brain, label: 'AI Diagnostics', roles: ['ADMIN', 'DENTIST', 'ASSISTANT'] },
   { to: '/analytics', icon: BarChart3, label: 'Analytics', roles: ['ADMIN', 'DENTIST'] },
   { to: '/schedules', icon: CalendarClock, label: 'Dentist Schedules', roles: ['ADMIN'] },
   { to: '/admin/manage-users', icon: ShieldCheck, label: 'Manage Users', roles: ['ADMIN'] },

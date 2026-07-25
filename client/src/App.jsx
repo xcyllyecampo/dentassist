@@ -24,11 +24,8 @@ const PatientDetail = lazy(() => import('./pages/PatientDetail'));
 const Appointments = lazy(() => import('./pages/Appointments'));
 const Queue = lazy(() => import('./pages/Queue'));
 const Records = lazy(() => import('./pages/Records'));
-const XrayAnalysis = lazy(() => import('./pages/XrayAnalysis'));
-const OralScreening = lazy(() => import('./pages/OralScreening'));
+const AiDiagnostics = lazy(() => import('./pages/AiDiagnostics'));
 const Analytics = lazy(() => import('./pages/Analytics'));
-const TreatmentSupport = lazy(() => import('./pages/TreatmentSupport'));
-const SmileSimulation = lazy(() => import('./pages/SmileSimulation'));
 const DentistSchedules = lazy(() => import('./pages/DentistSchedules'));
 const AdminManagement = lazy(() => import('./pages/AdminManagement'));
 const KioskHome = lazy(() => import('./pages/kiosk/KioskHome'));
@@ -108,11 +105,8 @@ export default function App() {
             <Route path="/appointments" element={<ProtectedRoute roles={STAFF_ROLES}><Appointments /></ProtectedRoute>} />
             <Route path="/queue" element={<ProtectedRoute roles={STAFF_ROLES}><Queue /></ProtectedRoute>} />
             <Route path="/records" element={<ProtectedRoute roles={STAFF_ROLES}><Records /></ProtectedRoute>} />
-            <Route path="/xray" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><XrayAnalysis /></ProtectedRoute>} />
-            <Route path="/oral-screening" element={<ProtectedRoute roles={STAFF_ROLES}><OralScreening /></ProtectedRoute>} />
+            <Route path="/ai-diagnostics" element={<ProtectedRoute roles={STAFF_ROLES}><AiDiagnostics /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><Analytics /></ProtectedRoute>} />
-            <Route path="/treatment-support" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><TreatmentSupport /></ProtectedRoute>} />
-            <Route path="/smile-simulation" element={<ProtectedRoute roles={["ADMIN", "DENTIST"]}><SmileSimulation /></ProtectedRoute>} />
             <Route path="/schedules" element={<ProtectedRoute roles={STAFF_ROLES}><DentistSchedules /></ProtectedRoute>} />
             <Route path="/admin/manage-users" element={<ProtectedRoute roles={["ADMIN"]}><AdminManagement /></ProtectedRoute>} />
 
