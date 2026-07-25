@@ -219,7 +219,7 @@ export default function KioskBookAppointment() {
                     {selectedDentist?.id === d.id && (
                       <div className="ml-auto">
                         <CheckCircle size={18} className="text-teal-400" />
-                      </div>
+                      </div>  
                     )}
                   </button>
                 );
