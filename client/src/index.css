@@ -534,9 +534,6 @@ body {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
   overflow-y: auto;
   will-change: transform;
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
@@ -544,6 +541,14 @@ body {
 
 .ai-reveal-overlay.expanded {
   transform: scale(1) translate(0, 0) !important;
+}
+
+.ai-reveal-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
 }
 
 .ai-reveal-dark {

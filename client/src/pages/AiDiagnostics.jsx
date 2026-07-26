@@ -209,8 +209,9 @@ export default function AiDiagnostics() {
         <div
           ref={overlayRef}
           className={`ai-reveal-overlay ${expanded ? 'expanded' : ''}`}
-          style={expanded ? bgStyle : { ...bgStyle, ...initialTransform }}
+          style={expanded ? {} : { ...initialTransform }}
         >
+          <div className="ai-reveal-bg" style={expanded ? bgStyle : { ...bgStyle, ...initialTransform }} />
           <div className="ai-reveal-dark" />
           <button className="ai-reveal-back" onClick={handleBack}>
             <ArrowLeft size={16} /> Back to tools
