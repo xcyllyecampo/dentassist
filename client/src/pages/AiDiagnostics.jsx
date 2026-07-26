@@ -171,7 +171,7 @@ export default function AiDiagnostics() {
   }, [view]);
 
   const bgStyle = revealCard
-    ? { backgroundImage: revealCard.gradient }
+    ? { backgroundImage: revealCard.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }
     : {};
 
   const initialTransform = cardRect
