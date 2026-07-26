@@ -95,8 +95,6 @@ function ServiceCard({ card, onReveal, isHovered, isAnyHovered, onHoverStart, on
 
   const Icon = card.icon;
 
-  const dimmed = isAnyHovered && !isHovered;
-
   return (
     <div
       ref={cardRef}
@@ -106,8 +104,7 @@ function ServiceCard({ card, onReveal, isHovered, isAnyHovered, onHoverStart, on
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        transform: isHovered ? 'scale(1.03) translateY(-6px)' : dimmed ? 'scale(0.98)' : '',
-        filter: isHovered ? 'saturate(1.1) brightness(1.05)' : dimmed ? 'brightness(0.6) saturate(0.5)' : '',
+        transform: isHovered ? 'scale(1.03) translateY(-6px)' : '',
         boxShadow: isHovered ? '0 25px 60px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.1)' : '',
         zIndex: isHovered ? 10 : 1,
       }}
@@ -117,7 +114,7 @@ function ServiceCard({ card, onReveal, isHovered, isAnyHovered, onHoverStart, on
         className="ai-card-bg"
         style={{ backgroundImage: card.image ? `url(${card.image})` : card.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }}
       />
-      <div className="ai-card-overlay" style={{ opacity: dimmed ? 0.6 : undefined }} />
+      <div className="ai-card-overlay" />
       <div className="ai-card-content">
         <div className="ai-card-icon-wrap">
           <Icon size={24} className="text-white" />
