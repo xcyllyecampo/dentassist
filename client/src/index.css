@@ -369,7 +369,7 @@ body {
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
-  aspect-ratio: 3 / 5;
+  aspect-ratio: 3 / 7;
   will-change: transform, filter;
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
               filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
@@ -395,23 +395,6 @@ body {
   background: linear-gradient(135deg, #14B8A6 0%, #0F766E 40%, #06B6D4 100%);
 }
 
-/* Sibling dimming when any card is hovered */
-.ai-cards-grid:hover .ai-service-card:not(:hover) {
-  transform: scale(0.98);
-  filter: brightness(0.85) saturate(0.7);
-}
-
-.ai-cards-grid:hover .ai-service-card:not(:hover) .ai-card-overlay {
-  opacity: 0.45;
-}
-
-/* Hovered card */
-.ai-service-card:hover {
-  transform: scale(1.03) translateY(-6px);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
 /* Background image layer */
 .ai-card-bg {
   position: absolute;
@@ -420,7 +403,7 @@ body {
   background-position: center;
   transition: transform 0.1s linear, filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
-  filter: saturate(0.85) brightness(0.85);
+  filter: saturate(0.7) brightness(0.6);
 }
 
 .ai-service-card:hover .ai-card-bg {
@@ -431,7 +414,7 @@ body {
 .ai-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.25) 100%);
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.4) 100%);
   transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 1;
 }
@@ -538,16 +521,11 @@ body {
   .ai-card-icon-wrap,
   .ai-card-title,
   .ai-card-subtitle,
-  .ai-card-active-badge,
-  .ai-cards-grid:hover .ai-service-card:not(:hover) {
+  .ai-card-active-badge {
     transition: opacity 0.2s ease !important;
     transform: none !important;
     filter: none !important;
     box-shadow: none !important;
-  }
-
-  .ai-cards-grid:hover .ai-service-card:not(:hover) .ai-card-overlay {
-    opacity: 0.45;
   }
 }
 

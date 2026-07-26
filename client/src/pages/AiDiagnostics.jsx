@@ -61,7 +61,7 @@ function Disclaimer({ text }) {
   );
 }
 
-function ServiceCard({ card, onReveal }) {
+function ServiceCard({ card, onReveal, isHovered, isAnyHovered, onHoverStart, onHoverEnd }) {
   const cardRef = useRef(null);
   const bgRef = useRef(null);
   const lastHovered = useRef(null);
@@ -79,11 +79,13 @@ function ServiceCard({ card, onReveal }) {
       lastHovered.current = card.id;
       playHover();
     }
-  }, [card.id]);
+    onHoverStart?.(card.id);
+  }, [card.id, onHoverStart]);
 
   const handleMouseLeave = useCallback(() => {
     if (bgRef.current) bgRef.current.style.transform = 'translate(0, 0) scale(1.08)';
-  }, []);
+    onHoverEnd?.();
+  }, [onHoverEnd]);
 
   const handleClick = useCallback(() => {
     if (!cardRef.current) return;
@@ -93,6 +95,8 @@ function ServiceCard({ card, onReveal }) {
 
   const Icon = card.icon;
 
+  const dimmed = isAnyHovered && !isHovered;
+
   return (
     <div
       ref={cardRef}
@@ -101,13 +105,19 @@ function ServiceCard({ card, onReveal }) {
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      style={{
+        transform: isHovered ? 'scale(1.03) translateY(-6px)' : dimmed ? 'scale(0.98)' : '',
+        filter: isHovered ? 'saturate(1.1) brightness(1.05)' : dimmed ? 'brightness(0.6) saturate(0.5)' : '',
+        boxShadow: isHovered ? '0 25px 60px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.1)' : '',
+        zIndex: isHovered ? 10 : 1,
+      }}
     >
       <div
         ref={bgRef}
         className="ai-card-bg"
         style={{ backgroundImage: card.image ? `url(${card.image})` : card.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }}
       />
-      <div className="ai-card-overlay" />
+      <div className="ai-card-overlay" style={{ opacity: dimmed ? 0.6 : undefined }} />
       <div className="ai-card-content">
         <div className="ai-card-icon-wrap">
           <Icon size={24} className="text-white" />
@@ -125,6 +135,7 @@ export default function AiDiagnostics() {
   const [cardRect, setCardRect] = useState(null);
   const [expanded, setExpanded] = useState(false);
   const [panelReady, setPanelReady] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(null);
   const toast = useToast();
   const overlayRef = useRef(null);
 
@@ -178,9 +189,20 @@ export default function AiDiagnostics() {
       <Layout>
         <Header title="AI Diagnostics" subtitle="Select an AI-powered tool to get started" />
         <div className="p-4 md:p-6">
-          <div className="ai-cards-grid">
+          <div
+            className="ai-cards-grid"
+            onMouseLeave={() => setHoveredCard(null)}
+          >
             {CARDS.map((card) => (
-              <ServiceCard key={card.id} card={card} onReveal={handleReveal} />
+              <ServiceCard
+                key={card.id}
+                card={card}
+                onReveal={handleReveal}
+                isHovered={hoveredCard === card.id}
+                isAnyHovered={hoveredCard !== null}
+                onHoverStart={(id) => setHoveredCard(id)}
+                onHoverEnd={() => setHoveredCard(null)}
+              />
             ))}
           </div>
         </div>
