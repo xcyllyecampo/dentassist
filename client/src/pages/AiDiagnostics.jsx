@@ -3,17 +3,17 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
-import { playHover } from '../lib/sounds';
+import { playHover, playReveal } from '../lib/sounds';
 import {
   Camera, Brain, AlertTriangle, CheckCircle, Loader, Image, Upload,
-  Sparkles, Stethoscope, TrendingUp, Clock, ScanFace, Pill
+  Sparkles, Stethoscope, TrendingUp, Clock, ScanFace, Pill, ArrowLeft
 } from 'lucide-react';
 
 const CARDS = [
-  { id: 'xray', label: 'X-Ray Analysis', subtitle: 'AI-powered cavity, bone loss & impacted tooth detection from dental radiographs', icon: Image, gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)', image: '/images/xray-bg.jpg' },
-  { id: 'oral', label: 'Oral Screening', subtitle: 'Instant oral health assessment with AI vision — identify gum disease, lesions & more', icon: ScanFace, gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)', image: '/images/oral-bg.jpg' },
-  { id: 'smile', label: 'Smile Simulation', subtitle: 'Visualize your smile transformation — whitening, veneers & alignment previews', icon: Sparkles, gradient: 'linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%)', image: '/images/smile-bg.jpg' },
-  { id: 'treatment', label: 'Treatment Support', subtitle: 'Symptom-based diagnosis with AI treatment recommendations, costs & timelines', icon: Pill, gradient: 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #f59e0b 100%)', image: '/images/treatment-bg.jpg' },
+  { id: 'xray', label: 'X-Ray Analysis', subtitle: 'AI-powered cavity, bone loss & impacted tooth detection from dental radiographs', icon: Image, gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)', image: '/images/xray-bg.png' },
+  { id: 'oral', label: 'Oral Screening', subtitle: 'Instant oral health assessment with AI vision — identify gum disease, lesions & more', icon: ScanFace, gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)', image: '/images/oral-bg.png' },
+  { id: 'smile', label: 'Smile Simulation', subtitle: 'Visualize your smile transformation — whitening, veneers & alignment previews', icon: Sparkles, gradient: 'linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%)', image: '/images/smile-bg.png' },
+  { id: 'treatment', label: 'Treatment Support', subtitle: 'Symptom-based diagnosis with AI treatment recommendations, costs & timelines', icon: Pill, gradient: 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #f59e0b 100%)', image: '/images/treatment-bg.png' },
 ];
 
 const TREATMENT_TYPES = [
@@ -61,7 +61,7 @@ function Disclaimer({ text }) {
   );
 }
 
-function ServiceCard({ card, isActive, onActivate }) {
+function ServiceCard({ card, onReveal }) {
   const cardRef = useRef(null);
   const bgRef = useRef(null);
   const lastHovered = useRef(null);
@@ -85,14 +85,19 @@ function ServiceCard({ card, isActive, onActivate }) {
     if (bgRef.current) bgRef.current.style.transform = 'translate(0, 0) scale(1.08)';
   }, []);
 
+  const handleClick = useCallback(() => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    onReveal(card, { top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+  }, [card, onReveal]);
+
   const Icon = card.icon;
 
   return (
     <div
       ref={cardRef}
       className="ai-service-card"
-      data-active={isActive}
-      onClick={() => onActivate(card.id)}
+      onClick={handleClick}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -103,7 +108,6 @@ function ServiceCard({ card, isActive, onActivate }) {
         style={{ backgroundImage: card.image ? `url(${card.image})` : card.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }}
       />
       <div className="ai-card-overlay" />
-      <div className="ai-card-active-badge">Active</div>
       <div className="ai-card-content">
         <div className="ai-card-icon-wrap">
           <Icon size={24} className="text-white" />
@@ -116,32 +120,92 @@ function ServiceCard({ card, isActive, onActivate }) {
 }
 
 export default function AiDiagnostics() {
-  const [activeTab, setActiveTab] = useState('xray');
+  const [view, setView] = useState('grid');
+  const [revealCard, setRevealCard] = useState(null);
+  const [cardRect, setCardRect] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [panelReady, setPanelReady] = useState(false);
   const toast = useToast();
+  const overlayRef = useRef(null);
+
+  const handleReveal = useCallback((card, rect) => {
+    setRevealCard(card);
+    setCardRect(rect);
+    setView('tool');
+    setExpanded(false);
+    setPanelReady(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setExpanded(true);
+        playReveal();
+        setTimeout(() => setPanelReady(true), 200);
+      });
+    });
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setPanelReady(false);
+    setExpanded(false);
+    setTimeout(() => {
+      setView('grid');
+      setRevealCard(null);
+      setCardRect(null);
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    if (view === 'tool') {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [view]);
+
+  const bgStyle = revealCard
+    ? { backgroundImage: revealCard.image ? `url(${revealCard.image})` : revealCard.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : {};
+
+  const initialTransform = cardRect
+    ? {
+        transform: `translate(${cardRect.left}px, ${cardRect.top}px) scale(${cardRect.width / window.innerWidth}, ${cardRect.height / window.innerHeight})`,
+        transformOrigin: 'top left',
+      }
+    : {};
 
   return (
-    <Layout>
-      <Header title="AI Diagnostics" subtitle="Select an AI-powered tool to get started" />
-      <div className="p-4 md:p-6">
-        <div className="ai-cards-grid mb-8">
-          {CARDS.map((card) => (
-            <ServiceCard
-              key={card.id}
-              card={card}
-              isActive={activeTab === card.id}
-              onActivate={setActiveTab}
-            />
-          ))}
+    <>
+      <Layout>
+        <Header title="AI Diagnostics" subtitle="Select an AI-powered tool to get started" />
+        <div className="p-4 md:p-6">
+          <div className="ai-cards-grid">
+            {CARDS.map((card) => (
+              <ServiceCard key={card.id} card={card} onReveal={handleReveal} />
+            ))}
+          </div>
         </div>
+      </Layout>
 
-        <div className="animate-fade-in">
-          {activeTab === 'xray' && <XrayTab toast={toast} />}
-          {activeTab === 'oral' && <OralTab toast={toast} />}
-          {activeTab === 'smile' && <SmileTab toast={toast} />}
-          {activeTab === 'treatment' && <TreatmentTab toast={toast} />}
+      {view === 'tool' && revealCard && (
+        <div
+          ref={overlayRef}
+          className={`ai-reveal-overlay ${expanded ? 'expanded' : ''}`}
+          style={expanded ? bgStyle : { ...bgStyle, ...initialTransform }}
+        >
+          <div className="ai-reveal-dark" />
+          <button className="ai-reveal-back" onClick={handleBack}>
+            <ArrowLeft size={16} /> Back to tools
+          </button>
+          <div className="ai-reveal-title">{revealCard.label}</div>
+          <div className={`ai-reveal-panel ${panelReady ? '' : 'pointer-events-none'}`}>
+            {revealCard.id === 'xray' && <XrayTab toast={toast} />}
+            {revealCard.id === 'oral' && <OralTab toast={toast} />}
+            {revealCard.id === 'smile' && <SmileTab toast={toast} />}
+            {revealCard.id === 'treatment' && <TreatmentTab toast={toast} />}
+          </div>
         </div>
-      </div>
-    </Layout>
+      )}
+    </>
   );
 }
 

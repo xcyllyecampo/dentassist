@@ -4,6 +4,7 @@ function getCtx() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
 }
 
@@ -91,4 +92,33 @@ export function playCallPatient() {
   setTimeout(() => playTone(659, 0.12, 'sine'), 100);
   setTimeout(() => playTone(784, 0.12, 'sine'), 200);
   setTimeout(() => playTone(1047, 0.2, 'sine'), 300);
+}
+
+export function playReveal() {
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(800, ctx.currentTime + 0.04);
+    osc2.frequency.exponentialRampToValueAtTime(1400, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(0.06, ctx.currentTime + 0.04);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.04);
+    osc2.stop(ctx.currentTime + 0.14);
+  } catch (e) {}
 }

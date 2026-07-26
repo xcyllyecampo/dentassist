@@ -550,3 +550,131 @@ body {
     opacity: 0.45;
   }
 }
+
+/* === VALORANT-STYLE REVEAL OVERLAY === */
+.ai-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-size: cover;
+  background-position: center;
+  overflow-y: auto;
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ai-reveal-overlay.expanded {
+  transform: scale(1) translate(0, 0) !important;
+}
+
+.ai-reveal-dark {
+  position: fixed;
+  inset: 0;
+  z-index: 51;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.ai-reveal-overlay.expanded .ai-reveal-dark {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ai-reveal-panel {
+  position: relative;
+  z-index: 52;
+  max-width: 960px;
+  width: calc(100% - 48px);
+  margin: 80px auto 60px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(24px) scale(0.97);
+  transition: opacity 0.4s ease 0.15s, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+
+.ai-reveal-overlay.expanded .ai-reveal-panel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.ai-reveal-panel::-webkit-scrollbar { width: 6px; }
+.ai-reveal-panel::-webkit-scrollbar-track { background: transparent; }
+.ai-reveal-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+
+.ai-reveal-back {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 53;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  opacity: 0;
+  transform: translateX(-12px);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.ai-reveal-overlay.expanded .ai-reveal-back {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 0.3s;
+}
+
+.ai-reveal-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateX(-2px);
+}
+
+.ai-reveal-title {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 53;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: opacity 0.4s ease 0.25s, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+  white-space: nowrap;
+}
+
+.ai-reveal-overlay.expanded .ai-reveal-title {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Reduced motion for reveal */
+@media (prefers-reduced-motion: reduce) {
+  .ai-reveal-overlay,
+  .ai-reveal-dark,
+  .ai-reveal-panel,
+  .ai-reveal-back,
+  .ai-reveal-title {
+    transition: opacity 0.15s ease !important;
+    transform: none !important;
+  }
+}
