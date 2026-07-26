@@ -131,6 +131,7 @@ export default function AiDiagnostics() {
   const [revealCard, setRevealCard] = useState(null);
   const [cardRect, setCardRect] = useState(null);
   const [expanded, setExpanded] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [panelReady, setPanelReady] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
   const toast = useToast();
@@ -153,12 +154,14 @@ export default function AiDiagnostics() {
 
   const handleBack = useCallback(() => {
     setPanelReady(false);
+    setClosing(true);
     setExpanded(false);
     setTimeout(() => {
       setView('grid');
       setRevealCard(null);
       setCardRect(null);
-    }, 500);
+      setClosing(false);
+    }, 400);
   }, []);
 
   useEffect(() => {
@@ -209,9 +212,15 @@ export default function AiDiagnostics() {
         <div
           ref={overlayRef}
           className={`ai-reveal-overlay ${expanded ? 'expanded' : ''}`}
-          style={expanded ? {} : { ...initialTransform }}
+          style={closing
+            ? { opacity: 0, pointerEvents: 'none' }
+            : expanded ? {} : { ...initialTransform }
+          }
         >
-          <div className="ai-reveal-bg" style={expanded ? bgStyle : { ...bgStyle, ...initialTransform }} />
+          <div className="ai-reveal-bg" style={closing
+            ? { opacity: 0 }
+            : expanded ? bgStyle : { ...bgStyle, ...initialTransform }
+          } />
           <div className="ai-reveal-dark" />
           <button className="ai-reveal-back" onClick={handleBack}>
             <ArrowLeft size={16} /> Back to tools
