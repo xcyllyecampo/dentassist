@@ -10,10 +10,10 @@ import {
 } from 'lucide-react';
 
 const CARDS = [
-  { id: 'xray', label: 'X-Ray Analysis', subtitle: 'AI-powered cavity, bone loss & impacted tooth detection from dental radiographs', icon: Image, gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)' },
-  { id: 'oral', label: 'Oral Screening', subtitle: 'Instant oral health assessment with AI vision — identify gum disease, lesions & more', icon: ScanFace, gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)' },
-  { id: 'smile', label: 'Smile Simulation', subtitle: 'Visualize your smile transformation — whitening, veneers & alignment previews', icon: Sparkles, gradient: 'linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%)' },
-  { id: 'treatment', label: 'Treatment Support', subtitle: 'Symptom-based diagnosis with AI treatment recommendations, costs & timelines', icon: Pill, gradient: 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #f59e0b 100%)' },
+  { id: 'xray', label: 'X-Ray Analysis', subtitle: 'AI-powered cavity, bone loss & impacted tooth detection from dental radiographs', icon: Image, gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)', image: '/images/xray-bg.png' },
+  { id: 'oral', label: 'Oral Screening', subtitle: 'Instant oral health assessment with AI vision — identify gum disease, lesions & more', icon: ScanFace, gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)', image: '/images/oral-bg.png' },
+  { id: 'smile', label: 'Smile Simulation', subtitle: 'Visualize your smile transformation — whitening, veneers & alignment previews', icon: Sparkles, gradient: 'linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%)', image: '/images/smile-bg.png' },
+  { id: 'treatment', label: 'Treatment Support', subtitle: 'Symptom-based diagnosis with AI treatment recommendations, costs & timelines', icon: Pill, gradient: 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #f59e0b 100%)', image: '/images/treatment-bg.png' },
 ];
 
 const TREATMENT_TYPES = [
@@ -112,7 +112,7 @@ function ServiceCard({ card, onReveal, isHovered, isAnyHovered, onHoverStart, on
       <div
         ref={bgRef}
         className="ai-card-bg"
-        style={{ backgroundImage: card.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }}
+        style={{ backgroundImage: card.image ? `url(${card.image})` : card.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }}
       />
       <div className="ai-card-overlay" />
       <div className="ai-card-content">
@@ -171,7 +171,7 @@ export default function AiDiagnostics() {
   }, [view]);
 
   const bgStyle = revealCard
-    ? { backgroundImage: revealCard.image ? `url(${revealCard.image})` : revealCard.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }
+    ? { backgroundImage: revealCard.gradient }
     : {};
 
   const initialTransform = cardRect
