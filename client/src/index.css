@@ -555,7 +555,7 @@ body {
 .ai-reveal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 100;
   background-size: cover;
   background-position: center;
   overflow-y: auto;
@@ -570,7 +570,7 @@ body {
 .ai-reveal-dark {
   position: fixed;
   inset: 0;
-  z-index: 51;
+  z-index: 101;
   background: rgba(0, 0, 0, 0.45);
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -584,7 +584,7 @@ body {
 
 .ai-reveal-panel {
   position: relative;
-  z-index: 52;
+  z-index: 102;
   max-width: 960px;
   width: calc(100% - 48px);
   margin: 80px auto 60px;
@@ -613,7 +613,7 @@ body {
   position: fixed;
   top: 20px;
   left: 20px;
-  z-index: 53;
+  z-index: 103;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -650,7 +650,7 @@ body {
   top: 22px;
   left: 50%;
   transform: translateX(-50%) translateY(-10px);
-  z-index: 53;
+  z-index: 103;
   font-family: 'DM Sans', sans-serif;
   font-size: 20px;
   font-weight: 700;
