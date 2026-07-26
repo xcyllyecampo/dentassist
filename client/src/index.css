@@ -348,3 +348,205 @@ body {
 .kiosk-touch:active {
   transform: scale(0.97) !important;
 }
+
+/* === AI DIAGNOSTICS SERVICE CARDS === */
+.ai-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1024px) {
+  .ai-cards-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .ai-cards-grid { grid-template-columns: 1fr; }
+}
+
+.ai-service-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 3 / 4;
+  will-change: transform, filter;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ai-service-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(135deg, transparent 0%, transparent 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 3;
+  transition: background 0.4s ease;
+}
+
+.ai-service-card:hover::before {
+  background: linear-gradient(135deg, #14B8A6 0%, #0F766E 40%, #06B6D4 100%);
+}
+
+/* Sibling dimming when any card is hovered */
+.ai-cards-grid:hover .ai-service-card:not(:hover) {
+  transform: scale(0.98);
+  filter: brightness(0.85) saturate(0.7);
+}
+
+.ai-cards-grid:hover .ai-service-card:not(:hover) .ai-card-overlay {
+  opacity: 0.45;
+}
+
+/* Hovered card */
+.ai-service-card:hover {
+  transform: scale(1.03) translateY(-6px);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Background image layer */
+.ai-card-bg {
+  position: absolute;
+  inset: -8px;
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.1s linear, filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  filter: saturate(0.85) brightness(0.85);
+}
+
+.ai-service-card:hover .ai-card-bg {
+  filter: saturate(1.1) brightness(1.05);
+}
+
+/* Dark overlay */
+.ai-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.25) 100%);
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 1;
+}
+
+.ai-service-card:hover .ai-card-overlay {
+  opacity: 0.05;
+}
+
+/* Content container */
+.ai-card-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+}
+
+.ai-card-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ai-service-card:hover .ai-card-icon-wrap {
+  transform: scale(1.08) rotate(2deg);
+  box-shadow: 0 0 24px rgba(20, 184, 166, 0.35);
+}
+
+.ai-card-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.ai-service-card:hover .ai-card-title {
+  transform: translateY(-8px);
+  opacity: 1;
+}
+
+.ai-card-subtitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 6px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ai-service-card:hover .ai-card-subtitle {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ai-card-active-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  background: rgba(20, 184, 166, 0.9);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.ai-service-card[data-active="true"] .ai-card-active-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .ai-service-card,
+  .ai-card-bg,
+  .ai-card-overlay,
+  .ai-card-icon-wrap,
+  .ai-card-title,
+  .ai-card-subtitle,
+  .ai-card-active-badge,
+  .ai-cards-grid:hover .ai-service-card:not(:hover) {
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+    filter: none !important;
+    box-shadow: none !important;
+  }
+
+  .ai-cards-grid:hover .ai-service-card:not(:hover) .ai-card-overlay {
+    opacity: 0.45;
+  }
+}

@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
+import { playHover } from '../lib/sounds';
 import {
   Camera, Brain, AlertTriangle, CheckCircle, Loader, Image, Upload,
-  Sparkles, Stethoscope, TrendingUp, Clock
+  Sparkles, Stethoscope, TrendingUp, Clock, ScanFace, Pill
 } from 'lucide-react';
 
-const TABS = [
-  { id: 'xray', label: 'X-Ray Analysis', icon: Image },
-  { id: 'oral', label: 'Oral Screening', icon: Stethoscope },
-  { id: 'smile', label: 'Smile Simulation', icon: Sparkles },
-  { id: 'treatment', label: 'Treatment Support', icon: Brain },
+const CARDS = [
+  { id: 'xray', label: 'X-Ray Analysis', subtitle: 'AI-powered cavity, bone loss & impacted tooth detection from dental radiographs', icon: Image, gradient: 'linear-gradient(135deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)', image: '/images/xray-bg.jpg' },
+  { id: 'oral', label: 'Oral Screening', subtitle: 'Instant oral health assessment with AI vision — identify gum disease, lesions & more', icon: ScanFace, gradient: 'linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%)', image: '/images/oral-bg.jpg' },
+  { id: 'smile', label: 'Smile Simulation', subtitle: 'Visualize your smile transformation — whitening, veneers & alignment previews', icon: Sparkles, gradient: 'linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%)', image: '/images/smile-bg.jpg' },
+  { id: 'treatment', label: 'Treatment Support', subtitle: 'Symptom-based diagnosis with AI treatment recommendations, costs & timelines', icon: Pill, gradient: 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #f59e0b 100%)', image: '/images/treatment-bg.jpg' },
 ];
 
 const TREATMENT_TYPES = [
@@ -60,38 +61,85 @@ function Disclaimer({ text }) {
   );
 }
 
+function ServiceCard({ card, isActive, onActivate }) {
+  const cardRef = useRef(null);
+  const bgRef = useRef(null);
+  const lastHovered = useRef(null);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!cardRef.current || !bgRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 16;
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 16;
+    bgRef.current.style.transform = `translate(${-x}px, ${-y}px) scale(1.08)`;
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    if (lastHovered.current !== card.id) {
+      lastHovered.current = card.id;
+      playHover();
+    }
+  }, [card.id]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (bgRef.current) bgRef.current.style.transform = 'translate(0, 0) scale(1.08)';
+  }, []);
+
+  const Icon = card.icon;
+
+  return (
+    <div
+      ref={cardRef}
+      className="ai-service-card"
+      data-active={isActive}
+      onClick={() => onActivate(card.id)}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div
+        ref={bgRef}
+        className="ai-card-bg"
+        style={{ backgroundImage: card.image ? `url(${card.image})` : card.gradient, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      />
+      <div className="ai-card-overlay" />
+      <div className="ai-card-active-badge">Active</div>
+      <div className="ai-card-content">
+        <div className="ai-card-icon-wrap">
+          <Icon size={24} className="text-white" />
+        </div>
+        <h3 className="ai-card-title">{card.label}</h3>
+        <p className="ai-card-subtitle">{card.subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function AiDiagnostics() {
   const [activeTab, setActiveTab] = useState('xray');
   const toast = useToast();
 
   return (
     <Layout>
-      <Header title="AI Diagnostics" subtitle="AI-powered analysis and treatment tools" />
-      <div className="p-6">
-        <div className="flex items-center gap-1 bg-white rounded-xl border border-slate-200 p-1 mb-6 overflow-x-auto">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#0F766E] text-white shadow-sm'
-                    : 'text-gray-500 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
+      <Header title="AI Diagnostics" subtitle="Select an AI-powered tool to get started" />
+      <div className="p-4 md:p-6">
+        <div className="ai-cards-grid mb-8">
+          {CARDS.map((card) => (
+            <ServiceCard
+              key={card.id}
+              card={card}
+              isActive={activeTab === card.id}
+              onActivate={setActiveTab}
+            />
+          ))}
         </div>
 
-        {activeTab === 'xray' && <XrayTab toast={toast} />}
-        {activeTab === 'oral' && <OralTab toast={toast} />}
-        {activeTab === 'smile' && <SmileTab toast={toast} />}
-        {activeTab === 'treatment' && <TreatmentTab toast={toast} />}
+        <div className="animate-fade-in">
+          {activeTab === 'xray' && <XrayTab toast={toast} />}
+          {activeTab === 'oral' && <OralTab toast={toast} />}
+          {activeTab === 'smile' && <SmileTab toast={toast} />}
+          {activeTab === 'treatment' && <TreatmentTab toast={toast} />}
+        </div>
       </div>
     </Layout>
   );
