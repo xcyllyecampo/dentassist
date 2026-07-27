@@ -35,8 +35,6 @@ const KioskRecords = lazy(() => import('./pages/kiosk/KioskRecords'));
 const KioskOralScreening = lazy(() => import('./pages/kiosk/KioskOralScreening'));
 const KioskSmileSimulation = lazy(() => import('./pages/kiosk/KioskSmileSimulation'));
 const KioskBookAppointment = lazy(() => import('./pages/kiosk/KioskBookAppointment'));
-const TermsOfService = lazy(() => import('./pages/TermsOfService'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
 const STAFF_ROLES = ["ADMIN", "DENTIST", "ASSISTANT"];
 
@@ -99,8 +97,6 @@ export default function App() {
           <Routes>
             {/* Public */}
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
 
             {/* Staff routes */}
             <Route path="/dashboard" element={<ProtectedRoute roles={STAFF_ROLES}><Dashboard /></ProtectedRoute>} />

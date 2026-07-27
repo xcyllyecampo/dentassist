@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, Eye, EyeOff, QrCode, AlertCircle } from 'lucide-react';
+import { LogIn, UserPlus, Eye, EyeOff, QrCode, AlertCircle, X, FileText, Shield } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
@@ -30,6 +30,39 @@ const validateField = (name, value) => {
   return '';
 };
 
+const tosSections = [
+  { title: '1. Acceptance of Terms', content: 'Welcome to DentASSIST. By accessing or using DentASSIST, you agree to comply with these Terms of Service. If you do not agree, you must discontinue use. DentASSIST is a dental clinic management platform for appointment scheduling, patient management, AI-assisted dental screening, and clinic operations.' },
+  { title: '2. Eligibility', content: 'You must be legally capable of entering into agreements under Philippine law. Patients under 18 must use the application with parental or guardian consent.' },
+  { title: '3. User Accounts', content: 'Users are responsible for maintaining password confidentiality, protecting login credentials, providing accurate information, and updating personal information. The clinic may suspend accounts involved in fraudulent or unauthorized activities.' },
+  { title: '4. Services', content: 'DentASSIST may provide: appointment booking, queue management, patient records, dental treatment history, AI-assisted oral screening, AI-assisted smile simulation, AI-assisted X-ray analysis, treatment support recommendations, notifications, and loyalty rewards. Services may change without notice.' },
+  { title: '5. AI Disclaimer', content: 'DentASSIST uses AI to assist dentists. AI outputs are informational only, not medical diagnoses, not medical advice, and not a substitute for licensed dental professionals. Only a licensed dentist may provide a final diagnosis and treatment plan. Patients should never rely solely on AI-generated recommendations.', highlight: true },
+  { title: '6. Medical Disclaimer', content: 'DentASSIST does not provide emergency medical services. If you experience severe pain, bleeding, swelling, trauma, or any medical emergency, seek immediate care from a licensed healthcare provider.' },
+  { title: '7. User Responsibilities', content: 'Users agree NOT to: submit false information, access another person\'s account, upload malicious software, attempt unauthorized access, disrupt clinic operations, or use the application for illegal purposes.' },
+  { title: '8. Appointments', content: 'Appointments submitted through DentASSIST are requests. Confirmation depends on dentist availability, clinic operating hours, and clinic approval. The clinic may reschedule or cancel appointments when necessary.' },
+  { title: '9. Intellectual Property', content: 'All content including the DentASSIST name, logos, software, UI, graphics, source code, and AI workflows remain the property of DentASSIST or its licensors. Users may not copy, modify, distribute, or reverse engineer the application.' },
+  { title: '10. Limitation of Liability', content: 'DentASSIST shall not be liable for delayed appointments, internet interruptions, device failures, data loss from user negligence, incorrect user information, or AI prediction inaccuracies, to the maximum extent permitted under Philippine law.' },
+  { title: '11. Account Termination', content: 'Accounts may be suspended or terminated if users violate these Terms, abuse clinic staff, attempt unauthorized access, or commit fraud.' },
+  { title: '12. Governing Law', content: 'These Terms are governed by the laws of the Republic of the Philippines. Disputes are subject to the jurisdiction of appropriate Philippine courts.' },
+  { title: '13. Changes', content: 'DentASSIST may modify these Terms at any time. Continued use after updates constitutes acceptance of the revised Terms.' },
+  { title: '14. Contact', content: 'For questions regarding these Terms, contact your dental clinic directly through the official contact information provided.' },
+];
+
+const privacySections = [
+  { title: '1. Information We Collect', content: 'We may collect: personal information (name, birthdate, gender, contact, email, address), dental information (dental history, treatment records, X-ray images, AI screening results, prescriptions), account information (encrypted password, login history, role), and device information (browser, IP, OS).' },
+  { title: '2. How We Use Information', content: 'We use your information to: manage appointments, maintain patient records, improve clinic operations, provide AI-assisted dental analysis, generate treatment recommendations, improve performance, send notifications, and comply with legal obligations.' },
+  { title: '3. AI Processing', content: 'DentASSIST uses AI to analyze dental X-rays, oral images, and smile simulations. AI outputs are reviewed by licensed dental professionals before clinical decisions. AI-generated information should not be interpreted as medical diagnoses.', highlight: true },
+  { title: '4. Legal Basis', content: 'Personal information is processed based on: your consent, performance of healthcare services, compliance with legal obligations, and legitimate interests of the clinic.' },
+  { title: '5. Data Sharing', content: 'We do not sell your personal information. Information may be shared with licensed dentists, authorized assistants, clinic administrators, technology providers necessary to operate DentASSIST, and government authorities when required by Philippine law.' },
+  { title: '6. Data Security', content: 'We use reasonable safeguards including encrypted passwords, authentication controls, role-based access, secure database storage, secure communications, audit logging, and regular backups. No system is 100% secure.' },
+  { title: '7. Data Retention', content: 'Patient records are retained only as long as necessary to provide healthcare services, meet legal requirements, resolve disputes, and maintain clinic records. Records may be securely deleted or anonymized after the retention period.' },
+  { title: '8. Your Rights', content: 'Under the Data Privacy Act, you may: be informed, access your data, correct inaccuracies, object to processing, request deletion (subject to legal retention), request data portability, and file a complaint with the National Privacy Commission.' },
+  { title: '9. Cookies', content: 'DentASSIST may use cookies for login sessions, security, preferences, analytics, and performance. You may disable cookies in your browser, though some features may not function properly.' },
+  { title: "10. Children's Privacy", content: 'Patients under 18 should use DentASSIST with parental or guardian consent.' },
+  { title: '11. Third-Party Services', content: 'DentASSIST may integrate with cloud database providers, AI service providers, notification services, and payment gateways. These providers process information under their own privacy policies.' },
+  { title: '12. Changes', content: 'This Privacy Policy may be updated periodically. Material changes will be communicated through the application.' },
+  { title: '13. Contact', content: 'For privacy concerns or data requests, contact your dental clinic or its designated Data Protection Officer using the official contact information provided.' },
+];
+
 export default function Login() {
   const [mode, setMode] = useState('login');
   const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '', role: 'PATIENT' });
@@ -52,7 +85,9 @@ export default function Login() {
   const [touched, setTouched] = useState({});
   const [fieldErrors, setFieldErrors] = useState({});
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [termsTouched, setTermsTouched] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [modalChecked, setModalChecked] = useState(false);
+  const termsModalRef = useRef(null);
 
   useEffect(() => {
     return () => { if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current); };
@@ -89,6 +124,16 @@ export default function Login() {
     }
   }, [mode]);
 
+  useEffect(() => {
+    if (showTermsModal) {
+      document.body.style.overflow = 'hidden';
+      setModalChecked(false);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showTermsModal]);
+
   const handleBlur = (fieldName) => {
     setTouched((prev) => ({ ...prev, [fieldName]: true }));
     const err = validateField(fieldName, form[fieldName]);
@@ -110,7 +155,6 @@ export default function Login() {
     setTouched({});
     setFieldErrors({});
     setAgreedToTerms(false);
-    setTermsTouched(false);
   };
 
   const validateAll = () => {
@@ -126,13 +170,6 @@ export default function Login() {
       if (err) hasError = true;
     });
 
-    if (!isLogin) {
-      if (!agreedToTerms) {
-        setTermsTouched(true);
-        hasError = true;
-      }
-    }
-
     setTouched((prev) => ({ ...prev, ...newTouched }));
     setFieldErrors((prev) => ({ ...prev, ...newErrors }));
     return hasError;
@@ -141,6 +178,11 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!isLogin && !agreedToTerms) {
+      setShowTermsModal(true);
+      return;
+    }
 
     if (validateAll()) return;
 
@@ -164,6 +206,11 @@ export default function Login() {
     }
   };
 
+  const handleAgree = () => {
+    setAgreedToTerms(true);
+    setShowTermsModal(false);
+  };
+
   const renderError = (fieldName) => {
     if (touched[fieldName] && fieldErrors[fieldName]) {
       return (
@@ -182,11 +229,12 @@ export default function Login() {
         : 'border-slate-200'
     }`;
 
+  const canSubmit = isLogin || agreedToTerms;
+
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
-      <video autoPlay loop muted playsInline
+      <video autoPlay loop muted playsInline preload="auto"
         className="absolute inset-0 w-full h-full object-cover"
-        poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%230f172a' width='1920' height='1080'/%3E%3C/svg%3E"
         src="/videos/DentASSISTadvertisementvideo.mp4" />
 
       <div className="absolute inset-0 bg-black/40" />
@@ -289,58 +337,40 @@ export default function Login() {
               {renderError('password')}
             </div>
 
-            {!isLogin && (
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <div className="relative flex items-center mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={agreedToTerms}
-                      onChange={(e) => {
-                        setAgreedToTerms(e.target.checked);
-                        if (e.target.checked) setTermsTouched(true);
-                      }}
-                      onBlur={() => setTermsTouched(true)}
-                      className="peer sr-only"
-                    />
-                    <div className={`w-[18px] h-[18px] rounded-md border-2 flex items-center justify-center transition-all ${
-                      agreedToTerms
-                        ? 'bg-[#0F766E] border-[#0F766E]'
-                        : termsTouched && !agreedToTerms
-                          ? 'border-rose-400 bg-rose-50/50'
-                          : 'border-slate-300 bg-white group-hover:border-[#14B8A6]'
-                    }`}>
-                      {agreedToTerms && (
-                        <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="2 6 5 9 10 3" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-500 leading-relaxed">
-                    I agree to the{' '}
-                    <span role="link" tabIndex={0} onClick={(e) => { e.stopPropagation(); navigate('/terms'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); navigate('/terms'); } }} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2 cursor-pointer">Terms of Service</span>
-                    {' '}and{' '}
-                    <span role="link" tabIndex={0} onClick={(e) => { e.stopPropagation(); navigate('/privacy'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); navigate('/privacy'); } }} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2 cursor-pointer">Privacy Policy</span>
+            <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <button type="submit" disabled={loading || !canSubmit}
+                className={`w-full py-3 rounded-xl font-semibold text-sm mt-2 transition-all ${
+                  canSubmit
+                    ? 'btn-premium text-white disabled:opacity-50'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}>
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                    Please wait...
                   </span>
-                </label>
-                {termsTouched && !agreedToTerms && (
-                  <p className="text-rose-500 text-xs mt-1.5 ml-[30px] flex items-center gap-1 animate-scale-in">
-                    <AlertCircle size={12} /> You must agree to the terms to continue
+                ) : isLogin ? 'Sign In' : 'Create Account'}
+              </button>
+            </div>
+
+            {!isLogin && (
+              <div className="text-center -mt-1">
+                {agreedToTerms ? (
+                  <p className="text-xs text-[#0F766E] font-medium flex items-center justify-center gap-1">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2 6 5 9 10 3" /></svg>
+                    Terms and Privacy Policy agreed
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400">
+                    You must agree to the{' '}
+                    <button type="button" onClick={() => { playClick(); setShowTermsModal(true); }}
+                      className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2 cursor-pointer">
+                      Terms of Service and Privacy Policy
+                    </button>
                   </p>
                 )}
               </div>
             )}
-
-            <button type="submit" disabled={loading}
-              className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
-                  Please wait...
-                </span>
-              ) : isLogin ? 'Sign In' : 'Create Account'}
-            </button>
           </form>
         </div>
 
@@ -371,6 +401,126 @@ export default function Login() {
           </div>
         )}
       </div>
+
+      {/* Terms & Privacy Policy Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) { playClick(); setShowTermsModal(false); } }}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div ref={termsModalRef}
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scale-in overflow-hidden">
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#0F766E]/10 flex items-center justify-center">
+                  <FileText size={16} className="text-[#0F766E]" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Terms of Service & Privacy Policy</h2>
+                  <p className="text-xs text-slate-400">Last Updated: July 27, 2026</p>
+                </div>
+              </div>
+              <button onClick={() => { playClick(); setShowTermsModal(false); }}
+                className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body - Two Column Scroll */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left: Terms of Service */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <FileText size={16} className="text-[#0F766E]" />
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Terms of Service</h3>
+                  </div>
+                  <div className="space-y-4">
+                    {tosSections.map((section, i) => (
+                      <div key={i}>
+                        <h4 className={`text-xs font-bold mb-1.5 ${section.highlight ? 'text-amber-600' : 'text-slate-800'}`}>
+                          {section.title}
+                        </h4>
+                        {section.highlight && (
+                          <p className="text-[11px] text-amber-600 font-medium mb-1">&#9888; Important — please read carefully</p>
+                        )}
+                        <p className="text-xs text-slate-500 leading-relaxed">{section.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: Privacy Policy */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield size={16} className="text-[#0F766E]" />
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Privacy Policy</h3>
+                  </div>
+                  <div className="mb-4 p-3 bg-[#0F766E]/5 border border-[#0F766E]/15 rounded-xl text-xs text-slate-500 leading-relaxed">
+                    DentASSIST respects your privacy and protects your personal information in accordance with the <strong className="text-slate-700">Data Privacy Act of 2012 (RA 10173)</strong> and the <strong className="text-slate-700">National Privacy Commission</strong>.
+                  </div>
+                  <div className="space-y-4">
+                    {privacySections.map((section, i) => (
+                      <div key={i}>
+                        <h4 className={`text-xs font-bold mb-1.5 ${section.highlight ? 'text-amber-600' : 'text-slate-800'}`}>
+                          {section.title}
+                        </h4>
+                        {section.highlight && (
+                          <p className="text-[11px] text-amber-600 font-medium mb-1">&#9888; AI processing disclosure</p>
+                        )}
+                        <p className="text-xs text-slate-500 leading-relaxed">{section.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer - Checkbox + Agree Button */}
+            <div className="border-t border-slate-200 px-6 py-4 shrink-0 bg-slate-50/80">
+              <label className="flex items-start gap-3 cursor-pointer group mb-3">
+                <div className="relative flex items-center mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={modalChecked}
+                    onChange={(e) => setModalChecked(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className={`w-[18px] h-[18px] rounded-md border-2 flex items-center justify-center transition-all ${
+                    modalChecked
+                      ? 'bg-[#0F766E] border-[#0F766E]'
+                      : 'border-slate-300 bg-white group-hover:border-[#14B8A6]'
+                  }`}>
+                    {modalChecked && (
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="2 6 5 9 10 3" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+                <span className="text-xs text-slate-600 leading-relaxed">
+                  I have read and agree to the <strong className="text-slate-800">Terms of Service</strong> and <strong className="text-slate-800">Privacy Policy</strong>
+                </span>
+              </label>
+              <div className="flex items-center justify-end gap-3">
+                <button type="button" onClick={() => { playClick(); setShowTermsModal(false); }}
+                  className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors rounded-lg hover:bg-slate-100">
+                  Cancel
+                </button>
+                <button type="button" disabled={!modalChecked} onClick={() => { playClick(); handleAgree(); }}
+                  className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    modalChecked
+                      ? 'btn-premium text-white'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}>
+                  I Agree
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Welcome splash */}
       {welcomeUser && (
