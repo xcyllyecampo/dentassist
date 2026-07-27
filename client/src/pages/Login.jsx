@@ -241,6 +241,7 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-[403px] animate-slide-up">
         <div className="mb-5 text-center">
+          <p className="text-white/60 text-xs font-semibold tracking-[0.2em] uppercase mb-3">Your AI-Powered Dental Assistant</p>
           <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-[115px] mx-auto object-contain drop-shadow-lg" />
         </div>
         <div className="glass-card rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
