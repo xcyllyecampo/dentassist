@@ -1,9 +1,32 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, UserPlus, Eye, EyeOff, QrCode } from 'lucide-react';
+import { LogIn, UserPlus, Eye, EyeOff, QrCode, AlertCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
+
+const validateField = (name, value) => {
+  if (!value || (typeof value === 'string' && value.trim() === '')) {
+    return `${name === 'name' ? 'Full name' : name === 'phone' ? 'Phone number' : name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+  }
+  switch (name) {
+    case 'email':
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Enter a valid email address';
+      break;
+    case 'password':
+      if (value.length < 6) return 'Password must be at least 6 characters';
+      break;
+    case 'name':
+      if (value.trim().length < 2) return 'Name must be at least 2 characters';
+      break;
+    case 'phone':
+      if (!/^[\d\s\-+()]{7,}$/.test(value.trim())) return 'Enter a valid phone number';
+      break;
+    default:
+      break;
+  }
+  return '';
+};
 
 export default function Login() {
   const [mode, setMode] = useState('login');
@@ -23,6 +46,11 @@ export default function Login() {
   const [welcomeUser, setWelcomeUser] = useState(null);
   const navTimeoutRef = useRef(null);
   const isLogin = mode === 'login';
+
+  const [touched, setTouched] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [termsTouched, setTermsTouched] = useState(false);
 
   useEffect(() => {
     return () => { if (navTimeoutRef.current) clearTimeout(navTimeoutRef.current); };
@@ -59,9 +87,61 @@ export default function Login() {
     }
   }, [mode]);
 
+  const handleBlur = (fieldName) => {
+    setTouched((prev) => ({ ...prev, [fieldName]: true }));
+    const err = validateField(fieldName, form[fieldName]);
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: err }));
+  };
+
+  const handleChange = (fieldName, value) => {
+    setForm((prev) => ({ ...prev, [fieldName]: value }));
+    if (touched[fieldName]) {
+      const err = validateField(fieldName, value);
+      setFieldErrors((prev) => ({ ...prev, [fieldName]: err }));
+    }
+  };
+
+  const handleModeSwitch = (newMode) => {
+    playClick();
+    setError('');
+    setMode(newMode);
+    setTouched({});
+    setFieldErrors({});
+    setAgreedToTerms(false);
+    setTermsTouched(false);
+  };
+
+  const validateAll = () => {
+    const fields = isLogin ? ['email', 'password'] : ['name', 'phone', 'email', 'password'];
+    const newTouched = {};
+    const newErrors = {};
+    let hasError = false;
+
+    fields.forEach((f) => {
+      newTouched[f] = true;
+      const err = validateField(f, form[f]);
+      newErrors[f] = err;
+      if (err) hasError = true;
+    });
+
+    if (!isLogin) {
+      if (!agreedToTerms) {
+        setTermsTouched(true);
+        hasError = true;
+      }
+    }
+
+    setTouched((prev) => ({ ...prev, ...newTouched }));
+    setFieldErrors((prev) => ({ ...prev, ...newErrors }));
+    return hasError;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (validateAll()) return;
+
     setLoading(true);
     try {
       let res;
@@ -82,6 +162,24 @@ export default function Login() {
     }
   };
 
+  const renderError = (fieldName) => {
+    if (touched[fieldName] && fieldErrors[fieldName]) {
+      return (
+        <p className="text-rose-500 text-xs mt-1 flex items-center gap-1 animate-scale-in">
+          <AlertCircle size={12} /> {fieldErrors[fieldName]}
+        </p>
+      );
+    }
+    return null;
+  };
+
+  const inputClass = (fieldName) =>
+    `w-full px-4 py-2.5 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all ${
+      touched[fieldName] && fieldErrors[fieldName]
+        ? 'border-rose-400 bg-rose-50/50'
+        : 'border-slate-200'
+    }`;
+
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
       <video autoPlay loop muted playsInline
@@ -99,13 +197,13 @@ export default function Login() {
           {/* Tabs with sliding indicator */}
           <div className="relative mx-6 border-b border-slate-100">
             <div className="flex">
-              <button ref={loginTabRef} onClick={() => { playClick(); setError(''); setMode('login'); }}
+              <button ref={loginTabRef} onClick={() => handleModeSwitch('login')}
                 className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
                   isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
                 }`}>
                 <LogIn size={15} className="inline mr-1.5" /> Sign In
               </button>
-              <button ref={registerTabRef} onClick={() => { playClick(); setError(''); setMode('register'); }}
+              <button ref={registerTabRef} onClick={() => handleModeSwitch('register')}
                 className={`flex-1 py-3 text-sm font-semibold transition-colors duration-200 ${
                   !isLogin ? 'text-[#0F766E]' : 'text-slate-400 hover:text-slate-600'
                 }`}>
@@ -120,53 +218,104 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
               <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl border border-rose-100 animate-scale-in flex items-center gap-2 mb-4">
-                <span className="text-rose-400">⚠</span> {error}
+                <AlertCircle size={16} className="text-rose-400 shrink-0" /> {error}
               </div>
             )}
 
             {!isLogin && (
               <div className="animate-slide-up">
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Full Name</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Full Name</label>
                 <input type="text" required value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  onBlur={() => handleBlur('name')}
                   ref={nameRef}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
-                  placeholder="" />
+                  className={inputClass('name')}
+                  placeholder="Juan Dela Cruz" />
+                {renderError('name')}
               </div>
             )}
 
             {!isLogin && (
               <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Phone Number</label>
+                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Phone Number</label>
                 <input type="tel" required value={form.phone || ''}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  onBlur={() => handleBlur('phone')}
+                  className={inputClass('phone')}
                   placeholder="XXX-XXX-XXXX" />
+                {renderError('phone')}
               </div>
             )}
 
             <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Email</label>
               <input type="email" required value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => handleChange('email', e.target.value)}
+                onBlur={() => handleBlur('email')}
                 ref={emailRef}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all"
+                className={inputClass('email')}
                 placeholder="you@example.com" />
+              {renderError('email')}
             </div>
 
             <div className="animate-slide-up" style={{ animationDelay: '0.15s' }}>
-              <label className="block text-xs font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Password</label>
+              <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Password</label>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} required value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/30 focus:border-[#14B8A6] focus:outline-none text-sm transition-all pr-10"
+                  onChange={(e) => handleChange('password', e.target.value)}
+                  onBlur={() => handleBlur('password')}
+                  className={`${inputClass('password')} pr-10`}
                   placeholder="••••••••" />
                 <button type="button" onClick={() => { playClick(); setShowPassword(!showPassword); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              {renderError('password')}
             </div>
+
+            {!isLogin && (
+              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <div className="relative flex items-center mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => {
+                        setAgreedToTerms(e.target.checked);
+                        if (e.target.checked) setTermsTouched(true);
+                      }}
+                      onBlur={() => setTermsTouched(true)}
+                      className="peer sr-only"
+                    />
+                    <div className={`w-[18px] h-[18px] rounded-md border-2 flex items-center justify-center transition-all ${
+                      agreedToTerms
+                        ? 'bg-[#0F766E] border-[#0F766E]'
+                        : termsTouched && !agreedToTerms
+                          ? 'border-rose-400 bg-rose-50/50'
+                          : 'border-slate-300 bg-white group-hover:border-[#14B8A6]'
+                    }`}>
+                      {agreedToTerms && (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="2 6 5 9 10 3" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-500 leading-relaxed">
+                    I agree to the{' '}
+                    <a href="#" onClick={(e) => e.stopPropagation()} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2">Terms of Service</a>
+                    {' '}and{' '}
+                    <a href="#" onClick={(e) => e.stopPropagation()} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2">Privacy Policy</a>
+                  </span>
+                </label>
+                {termsTouched && !agreedToTerms && (
+                  <p className="text-rose-500 text-xs mt-1.5 ml-[30px] flex items-center gap-1 animate-scale-in">
+                    <AlertCircle size={12} /> You must agree to the terms to continue
+                  </p>
+                )}
+              </div>
+            )}
 
             <button type="submit" disabled={loading}
               className="w-full btn-premium text-white py-3 rounded-xl font-semibold text-sm disabled:opacity-50 mt-2">
