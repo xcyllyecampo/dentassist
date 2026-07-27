@@ -6,8 +6,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
 const validateField = (name, value) => {
+  const fieldLabels = { firstName: 'First name', lastName: 'Last name', phone: 'Phone number' };
   if (!value || (typeof value === 'string' && value.trim() === '')) {
-    return `${name === 'name' ? 'Full name' : name === 'phone' ? 'Phone number' : name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+    return `${fieldLabels[name] || name.charAt(0).toUpperCase() + name.slice(1)} is required`;
   }
   switch (name) {
     case 'email':
@@ -16,8 +17,9 @@ const validateField = (name, value) => {
     case 'password':
       if (value.length < 6) return 'Password must be at least 6 characters';
       break;
-    case 'name':
-      if (value.trim().length < 2) return 'Name must be at least 2 characters';
+    case 'firstName':
+    case 'lastName':
+      if (value.trim().length < 2) return 'Must be at least 2 characters';
       break;
     case 'phone':
       if (!/^[\d\s\-+()]{7,}$/.test(value.trim())) return 'Enter a valid phone number';
@@ -30,7 +32,7 @@ const validateField = (name, value) => {
 
 export default function Login() {
   const [mode, setMode] = useState('login');
-  const [form, setForm] = useState({ email: '', password: '', name: '', role: 'PATIENT' });
+  const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '', role: 'PATIENT' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -112,7 +114,7 @@ export default function Login() {
   };
 
   const validateAll = () => {
-    const fields = isLogin ? ['email', 'password'] : ['name', 'phone', 'email', 'password'];
+    const fields = isLogin ? ['email', 'password'] : ['firstName', 'lastName', 'phone', 'email', 'password'];
     const newTouched = {};
     const newErrors = {};
     let hasError = false;
@@ -148,7 +150,7 @@ export default function Login() {
       if (mode === 'login') {
         res = await login(form.email, form.password);
       } else {
-        res = await register(form);
+        res = await register({ ...form, name: `${form.firstName} ${form.lastName}` });
       }
       playSuccess();
       setWelcomeUser(res.user);
@@ -224,14 +226,27 @@ export default function Login() {
 
             {!isLogin && (
               <div className="animate-slide-up">
-                <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Full Name</label>
-                <input type="text" required value={form.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  onBlur={() => handleBlur('name')}
-                  ref={nameRef}
-                  className={inputClass('name')}
-                  placeholder="Juan Dela Cruz" />
-                {renderError('name')}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">First Name</label>
+                    <input type="text" required value={form.firstName}
+                      onChange={(e) => handleChange('firstName', e.target.value)}
+                      onBlur={() => handleBlur('firstName')}
+                      ref={nameRef}
+                      className={inputClass('firstName')}
+                      placeholder="Juan" />
+                    {renderError('firstName')}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Last Name</label>
+                    <input type="text" required value={form.lastName}
+                      onChange={(e) => handleChange('lastName', e.target.value)}
+                      onBlur={() => handleBlur('lastName')}
+                      className={inputClass('lastName')}
+                      placeholder="Dela Cruz" />
+                    {renderError('lastName')}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -304,9 +319,9 @@ export default function Login() {
                   </div>
                   <span className="text-xs text-slate-500 leading-relaxed">
                     I agree to the{' '}
-                    <a href="#" onClick={(e) => e.stopPropagation()} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2">Terms of Service</a>
+                    <span role="link" tabIndex={0} onClick={(e) => { e.stopPropagation(); navigate('/terms'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); navigate('/terms'); } }} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2 cursor-pointer">Terms of Service</span>
                     {' '}and{' '}
-                    <a href="#" onClick={(e) => e.stopPropagation()} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2">Privacy Policy</a>
+                    <span role="link" tabIndex={0} onClick={(e) => { e.stopPropagation(); navigate('/privacy'); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); navigate('/privacy'); } }} className="font-semibold text-[#0F766E] hover:text-[#0D6D65] underline underline-offset-2 cursor-pointer">Privacy Policy</span>
                   </span>
                 </label>
                 {termsTouched && !agreedToTerms && (
