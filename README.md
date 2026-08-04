@@ -170,9 +170,13 @@ App runs at: `http://localhost:5173` (client) and `http://localhost:5000` (API)
 - `POST /api/auth/register` - Register
 - `POST /api/auth/refresh` - Refresh access token
 - `POST /api/auth/logout` - Logout
+- `POST /api/auth/forgot-password` - Request password reset link
+- `POST /api/auth/reset-password` - Reset password with token
 - `GET /api/auth/me` - Get current user
 
 ### Patients
+- `GET /api/patients/me` - Current patient's own profile
+- `PUT /api/patients/me` - Patient self-service profile update
 - `GET /api/patients` - List patients
 - `GET /api/patients/:id` - Patient detail
 - `POST /api/patients` - Create patient
@@ -182,11 +186,15 @@ App runs at: `http://localhost:5173` (client) and `http://localhost:5000` (API)
 
 ### Appointments
 - `GET /api/appointments?date=YYYY-MM-DD` - List by date
+- `GET /api/appointments/available-slots?date=YYYY-MM-DD&dentistId=` - Available slots (dentist-aware)
+- `GET /api/appointments/my` - Current patient's appointments
 - `POST /api/appointments` - Create appointment
 - `PUT /api/appointments/:id` - Update appointment
+- `PUT /api/appointments/:id/check-in` - Check in
 - `PUT /api/appointments/:id/cancel` - Cancel appointment
 
 ### Queue
+- `GET /api/queue` - Live queue (Platinum-priority, effective positions)
 - `POST /api/queue/self-check-in` - Patient self check-in
 - `GET /api/queue/my-entry` - Get own queue position
 
@@ -210,13 +218,36 @@ App runs at: `http://localhost:5173` (client) and `http://localhost:5000` (API)
 - `DELETE /api/admin-users/:id` - Delete user
 - `PUT /api/admin-users/:id/toggle-active` - Activate/deactivate user
 
+### Rewards
+- `GET /api/loyalty` - Loyalty overview (staff)
+- `GET /api/loyalty/patient/:patientId` - Patient loyalty (tier/nextTier/pointsToNextTier)
+- `GET /api/loyalty/my` - Current patient's loyalty
+- `POST /api/loyalty/earn` - Add points (staff)
+- `GET /api/badges` - Badge catalog
+- `GET /api/badges/patient/:patientId` - Patient's earned badges
+- `GET /api/badges/my` - Current patient's earned badges
+- `POST /api/badges/award` - Award a badge (staff)
+- `GET /api/perks/my` - Current patient's eligible perks
+- `POST /api/perks/claim` - Claim a perk (claim code)
+- `GET /api/perks/claims` - Pending perk claims (staff)
+- `PUT /api/perks/:id/apply` - Mark claim applied (staff)
+
+### Payments
+- `POST /api/payments` - Record a payment (staff)
+- `GET /api/payments` - Recent payments (staff)
+- `GET /api/payments/patient/:patientId` - Patient payment history
+
 ### Other
-- `GET /api/analytics/dashboard` - Dashboard statistics
+- `GET /api/dashboard` - Dashboard statistics (revenue = payments today)
+- `GET /api/analytics/daily` - Daily stats
+- `GET /api/analytics/revenue?days=7` - Revenue trend
+- `GET /api/analytics/procedures` - Top procedures
+- `GET /api/analytics/returning-patients` - Returning patients
+- `GET /api/analytics/peak-hours` - Peak hours
 - `GET /api/dentist-schedules/dentists` - List active dentists
+- `GET /api/rooms` - Clinic rooms
 - `GET /api/server-info` - Server info (for QR code)
 - `GET /api/notifications` - User notifications
-- `GET /api/loyalty` - Patient loyalty points
-- `GET /api/badges` - Achievement badges
 
 ## Backup
 

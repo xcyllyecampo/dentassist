@@ -169,15 +169,23 @@ async function main() {
   }
 
   const badges = [
-    { name: "First Visit", description: "Completed your first dental visit", icon: "🎉", category: "Milestone", threshold: 1 },
-    { name: "Regular Visitor", description: "Attended 3 or more appointments", icon: "⭐", category: "Loyalty", threshold: 3 },
-    { name: "Committed Patient", description: "Completed 5 or more treatments", icon: "🏆", category: "Achievement", threshold: 5 },
-    { name: "Streak Master", description: "Maintained a 3-month visit streak", icon: "🔥", category: "Dedication", threshold: 3 },
+    { name: "First Visit", description: "Completed your first dental visit", icon: "🎉", category: "Milestone", threshold: 1, points: 20 },
+    { name: "Regular Visitor", description: "Attended 3 or more visits", icon: "⭐", category: "Loyalty", threshold: 3, points: 40 },
+    { name: "Loyal Patient", description: "Attended 10 visits", icon: "💎", category: "Loyalty", threshold: 10, points: 80 },
+    { name: "VIP Patient", description: "Attended 20 visits", icon: "👑", category: "Loyalty", threshold: 20, points: 150 },
+    { name: "Committed Patient", description: "Completed 5 treatments", icon: "🏆", category: "Achievement", threshold: 5, points: 50 },
+    { name: "Cavity-Free Checkup", description: "3 checkups with no decay found", icon: "🦷", category: "Achievement", threshold: 3, points: 30 },
+    { name: "Whiter Smile", description: "Had a whitening treatment", icon: "✨", category: "Achievement", threshold: 1, points: 25 },
+    { name: "Full Assessment", description: "Had a comprehensive dental exam", icon: "📋", category: "Achievement", threshold: 1, points: 25 },
+    { name: "Streak Master", description: "Visited 3 months in a row", icon: "🔥", category: "Dedication", threshold: 3, points: 40 },
+    { name: "Early Bird", description: "3 appointments before 10 AM", icon: "🌅", category: "Habit", threshold: 3, points: 20 },
+    { name: "Ahead of Schedule", description: "Booked 3 appointments 7+ days ahead", icon: "📅", category: "Habit", threshold: 3, points: 30 },
+    { name: "Friend Referral", description: "Referred a friend to the clinic", icon: "🤝", category: "Referral", threshold: 1, points: 50 },
   ];
   for (const b of badges) {
     await prisma.badge.upsert({
       where: { name: b.name },
-      update: {},
+      update: { description: b.description, icon: b.icon, category: b.category, threshold: b.threshold, points: b.points },
       create: b,
     });
   }
@@ -204,6 +212,47 @@ async function main() {
     }
   }
 
+  const platinumUser = await prisma.user.upsert({
+    where: { email: "platinum@email.com" },
+    update: {},
+    create: { email: "platinum@email.com", password, name: "Diamond Reyes", role: "PATIENT", phone: "09170000000" },
+  });
+  const platinumPatient = await prisma.patient.findUnique({ where: { userId: platinumUser.id } })
+    || await prisma.patient.create({
+      data: {
+        userId: platinumUser.id,
+        dob: new Date("1990-05-20"),
+        gender: "Female",
+        bloodType: "A+",
+        address: "456 Bonifacio Avenue, Quezon City, Metro Manila",
+        emergencyContact: "Ramon Reyes - 09171119999",
+      },
+    });
+  const platinumTeethCount = await prisma.tooth.count({ where: { patientId: platinumPatient.id } });
+  if (platinumTeethCount === 0) {
+    const teethData = Array.from({ length: 32 }, (_, i) => ({
+      patientId: platinumPatient.id,
+      toothNumber: i + 1,
+      status: i === 3 || i === 14 ? "FILLING" : i === 17 ? "CROWN" : "HEALTHY",
+    }));
+    await prisma.tooth.createMany({ data: teethData });
+  }
+  const platinumLoyalty = await prisma.loyaltyPoints.upsert({
+    where: { patientId: platinumPatient.id },
+    update: { points: 620, tier: "Platinum" },
+    create: { patientId: platinumPatient.id, points: 620, tier: "Platinum" },
+  });
+  const demoBadgeNames = ["First Visit", "Regular Visitor", "Committed Patient", "Streak Master", "Early Bird"];
+  for (const name of demoBadgeNames) {
+    const badge = await prisma.badge.findUnique({ where: { name } });
+    if (!badge) continue;
+    await prisma.patientBadge.upsert({
+      where: { patientId_badgeId: { patientId: platinumPatient.id, badgeId: badge.id } },
+      update: {},
+      create: { patientId: platinumPatient.id, badgeId: badge.id },
+    });
+  }
+
   console.log("\nDatabase seeded successfully!");
   console.log("Login credentials:");
   console.log("  Admin:    admin@dentassist.com / password123");
@@ -211,6 +260,7 @@ async function main() {
   console.log("  Dentist:  dr.reyes@dentassist.com / password123");
   console.log("  Assistant: angela@dentassist.com / password123");
   console.log("  Patient:  miguel@email.com / password123");
+  console.log("  Patient:  platinum@email.com / password123 (Platinum rank demo)");
 
   rl.close();
 }

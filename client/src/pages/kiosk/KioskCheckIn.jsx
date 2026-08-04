@@ -110,7 +110,7 @@ export default function KioskCheckIn() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-white/50 text-xs mb-1">Position</div>
-                  <div className="text-4xl font-bold text-white">#{entry.position}</div>
+                  <div className="text-4xl font-bold text-white">#{entry.effectivePosition ?? entry.position}</div>
                 </div>
                 <div>
                   <div className="text-white/50 text-xs mb-1">Est. Wait</div>
@@ -355,7 +355,7 @@ export default function KioskCheckIn() {
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <div className="text-white/50 text-xs mb-1">Position</div>
-                  <div className="text-4xl font-bold text-white">#{entry?.position}</div>
+                  <div className="text-4xl font-bold text-white">#{entry?.effectivePosition ?? entry?.position}</div>
                 </div>
                 <div>
                   <div className="text-white/50 text-xs mb-1">Est. Wait</div>

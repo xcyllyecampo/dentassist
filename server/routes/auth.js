@@ -7,6 +7,7 @@ const validate = require("../middleware/validate");
 const { authSchemas } = require("../lib/schemas");
 const { strictAuthLimiter, authLimiter } = require("../middleware/rateLimit");
 const { notifyAllStaff } = require("../lib/notify");
+const { sendWelcomeEmail, sendPasswordResetEmail } = require("../lib/mailer");
 
 const router = express.Router();
 
@@ -49,6 +50,8 @@ router.post("/register", authLimiter, validate(authSchemas.register), async (req
       const io = req.app.get("io");
       notifyAllStaff(prisma, io, { type: "patient", message: `New patient registered: ${name}` });
     }
+
+    await sendWelcomeEmail(user.email, user.name);
 
     const { accessToken, refreshToken } = await generateTokens(user, prisma);
     res.status(201).json({
@@ -127,6 +130,59 @@ router.post("/logout", auth, async (req, res) => {
       await prisma.refreshToken.deleteMany({ where: { token: refreshToken } });
     }
     res.json({ message: "Logged out" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/forgot-password", authLimiter, validate(authSchemas.forgotPassword), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const { email } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.json({ message: "If that email exists, a reset link has been sent" });
+    }
+
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await prisma.passwordResetToken.create({
+      data: { userId: user.id, token, expiresAt },
+    });
+
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    const link = `${clientUrl}/reset-password?token=${token}`;
+    await sendPasswordResetEmail(user.email, user.name, link);
+
+    res.json({ message: "If that email exists, a reset link has been sent" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.post("/reset-password", authLimiter, validate(authSchemas.resetPassword), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const { token, password } = req.body;
+
+    const stored = await prisma.passwordResetToken.findUnique({ where: { token } });
+    if (!stored) return res.status(400).json({ error: "Invalid or expired reset link" });
+    if (new Date() > stored.expiresAt) {
+      await prisma.passwordResetToken.delete({ where: { id: stored.id } });
+      return res.status(400).json({ error: "Reset link has expired. Please request a new one." });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+    await prisma.user.update({ where: { id: stored.userId }, data: { password: hashed } });
+    await prisma.passwordResetToken.deleteMany({ where: { userId: stored.userId } });
+    await prisma.refreshToken.deleteMany({ where: { userId: stored.userId } });
+
+    res.json({ message: "Password reset successful. You can now log in." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

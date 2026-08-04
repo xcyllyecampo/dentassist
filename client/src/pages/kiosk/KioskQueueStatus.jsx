@@ -88,8 +88,8 @@ export default function KioskQueueStatus() {
   const waitingCount = queueEntries?.filter(e => e.status === 'WAITING').length || 0;
   const servingCount = queueEntries?.filter(e => e.status === 'IN_PROGRESS').length || 0;
 
-  const positionProgress = myEntry && myEntry.position > 0
-    ? Math.max(0, 100 - (myEntry.position * 15))
+  const positionProgress = myEntry && (myEntry.effectivePosition ?? myEntry.position) > 0
+    ? Math.max(0, 100 - ((myEntry.effectivePosition ?? myEntry.position) * 15))
     : 0;
 
   if (loading) return <KioskQueueSkeleton />;
@@ -126,7 +126,7 @@ export default function KioskQueueStatus() {
             <div className="kiosk-card p-6 w-full mb-6">
               <div className="text-center mb-6">
                 <div className="text-white/50 text-sm uppercase tracking-wider mb-2">Your Position</div>
-                <div className="kiosk-display text-6xl text-white mb-2">#{myEntry.position}</div>
+                <div className="kiosk-display text-6xl text-white mb-2">#{myEntry.effectivePosition ?? myEntry.position}</div>
                 <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium ${
                   myEntry.status === 'WAITING'
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
@@ -135,6 +135,11 @@ export default function KioskQueueStatus() {
                   {myEntry.status === 'WAITING' ? <Clock size={14} /> : <Loader size={14} className="animate-spin" />}
                   {myEntry.status === 'WAITING' ? 'Waiting' : 'Now Serving'}
                 </div>
+                {myEntry.isPlatinum && (
+                  <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs font-bold">
+                    ⚡ Platinum Priority — you jump ahead of the regular line
+                  </div>
+                )}
               </div>
 
               {myEntry.status === 'WAITING' && (

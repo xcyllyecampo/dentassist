@@ -15,4 +15,14 @@ async function notifyAllStaff(prisma, io, { type, message }) {
   }
 }
 
-module.exports = { notifyAllStaff };
+async function notifyPatient(prisma, io, userId, { type, message }) {
+  try {
+    if (!userId) return;
+    await prisma.notification.create({ data: { userId, type, message } });
+    if (io) io.to(`user-${userId}`).emit("notification", { type, message });
+  } catch (err) {
+    console.error("notifyPatient error:", err);
+  }
+}
+
+module.exports = { notifyAllStaff, notifyPatient };

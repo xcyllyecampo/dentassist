@@ -71,6 +71,7 @@ model User {
   xrayUploads      XrayImage[]
   refreshTokens    RefreshToken[]
   notifications    Notification[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Patient {
@@ -96,6 +97,8 @@ model Patient {
   queueEntries  QueueEntry[]
   patientBadges PatientBadge[]
   loyaltyPoints LoyaltyPoints?
+  perkUsages    PerkUsage[]
+  payments      Payment[]
 }
 
 model Tooth {
@@ -131,6 +134,7 @@ model Appointment {
   updatedAt   DateTime          @updatedAt
 
   treatments Treatment[]
+  payments   Payment[]
 }
 
 model Room {
@@ -244,6 +248,7 @@ model Badge {
   icon        String
   category    String
   threshold   Int      @default(1)
+  points      Int      @default(10)
   createdAt   DateTime @default(now())
 
   patientBadges PatientBadge[]
@@ -279,4 +284,56 @@ model PointTransaction {
   description     String
   type            String   @default("EARNED")
   createdAt       DateTime @default(now())
+}
+
+enum PerkStatus {
+  REQUESTED
+  APPLIED
+  EXPIRED
+}
+
+model PerkUsage {
+  id        String     @id @default(cuid())
+  patientId String
+  patient   Patient    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  perk      String
+  status    PerkStatus @default(REQUESTED)
+  claimCode String
+  usedAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime   @default(now())
+
+  @@index([patientId, perk])
+}
+
+enum PaymentMethod {
+  CASH
+  GCASH
+  CARD
+  HMO
+  PHILHEALTH
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  patientId     String
+  patient       Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  appointment   Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  amount        Float
+  method        PaymentMethod @default(CASH)
+  status        String        @default("PAID")
+  paidAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  @@index([paidAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

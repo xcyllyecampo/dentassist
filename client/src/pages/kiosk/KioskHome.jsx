@@ -1,9 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authUrl } from '../../lib/api';
+import api from '../../lib/api';
+import { useQuery } from '@tanstack/react-query';
 import { playClick } from '../../lib/sounds';
 import KioskLayout from './KioskLayout';
-import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight, CalendarPlus, LogOut } from 'lucide-react';
+import { rankInfo, tierProgress } from '../../lib/ranks';
+import { ClipboardCheck, ScanFace, Clock, FolderOpen, Sparkles, ArrowRight, CalendarPlus, LogOut, Star } from 'lucide-react';
 
 const FEATURES = [
   { id: 'queue', path: '/kiosk/queue', icon: Clock, label: 'Queue Status', subtitle: 'Your position & wait', gradient: 'from-amber-400 to-amber-500' },
@@ -15,6 +18,17 @@ const FEATURES = [
 export default function KioskHome() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const { data: loyalty } = useQuery({
+    queryKey: ['kiosk-loyalty'],
+    queryFn: () => api.get('/loyalty/my').then(r => r.data || null),
+    retry: false,
+  });
+
+  const tier = loyalty?.tier || 'Bronze';
+  const rank = rankInfo(tier);
+  const progress = tierProgress(loyalty?.points);
+  const toNext = loyalty?.pointsToNextTier ?? 0;
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -43,6 +57,30 @@ export default function KioskHome() {
             </div>
           </div>
           <p className="text-white/30 text-sm mt-3">How can we help you today?</p>
+
+          {loyalty && (
+            <button
+              onClick={() => { playClick(); navigate('/kiosk/records'); }}
+              className="kiosk-touch w-full max-w-sm mx-auto mt-4 flex items-center gap-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] rounded-2xl p-3 text-left transition-all"
+            >
+              <img src={rank.image} alt={rank.label} className="w-12 h-12 rounded-full object-cover" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="kiosk-heading text-white text-sm font-bold">{rank.label} Member</span>
+                  <span className="flex items-center gap-1 text-white/60 text-xs"><Star size={12} className="text-amber-400" /> {loyalty.points || 0} pts</span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-purple-500" style={{ width: `${progress}%` }} />
+                  </div>
+                  <span className="text-white/40 text-[10px] whitespace-nowrap">
+                    {rank.next ? `${toNext} pts to ${rank.next}` : 'Max rank!'}
+                  </span>
+                </div>
+              </div>
+              <ArrowRight size={16} className="text-white/30 shrink-0" />
+            </button>
+          )}
         </div>
 
         {/* Hero cards */}

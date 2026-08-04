@@ -72,9 +72,11 @@ app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/ai", require("./routes/ai"));
 app.use("/api/loyalty", require("./routes/loyalty"));
 app.use("/api/badges", require("./routes/badges"));
+app.use("/api/perks", require("./routes/perks"));
 app.use("/api/dentist-schedules", require("./routes/dentist-schedules"));
 app.use("/api/admin-users", require("./routes/admin-users"));
 app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/payments", require("./routes/payments"));
 
 app.get("/api/server-info", (req, res) => {
   const os = require("os");
@@ -108,6 +110,9 @@ io.on("connection", (socket) => {
   socket.on("join-twin", () => socket.join("twin"));
   socket.on("join-notifications", () => {
     if (userId && userRole !== "PATIENT") socket.join("notifications");
+  });
+  socket.on("join-user", () => {
+    if (userId) socket.join(`user-${userId}`);
   });
   socket.on("disconnect", () => console.log("Client disconnected:", socket.id));
 });

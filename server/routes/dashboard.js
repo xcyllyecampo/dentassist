@@ -34,7 +34,7 @@ router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, re
       prisma.appointment.count({
         where: { date: { gte: today, lt: tomorrow }, status: "COMPLETED" },
       }),
-      prisma.treatment.aggregate({ _sum: { cost: true }, where: { createdAt: { gte: today } } }),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { paidAt: { gte: today, lt: tomorrow } } }),
       prisma.room.findMany({ orderBy: { number: "asc" } }),
       prisma.queueEntry.count({ where: { status: "WAITING" } }),
       prisma.appointment.findMany({
@@ -56,7 +56,7 @@ router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, re
       totalPatients,
       todayAppointments,
       completedToday,
-      totalRevenue: totalRevenue._sum.cost || 0,
+      totalRevenue: totalRevenue._sum.amount || 0,
       roomStatus,
       queueCount,
       recentAppointments,

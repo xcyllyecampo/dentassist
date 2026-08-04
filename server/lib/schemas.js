@@ -28,6 +28,13 @@ const authSchemas = {
   refresh: z.object({
     refreshToken: z.string().min(1, "Refresh token required"),
   }),
+  forgotPassword: z.object({
+    email,
+  }),
+  resetPassword: z.object({
+    token: z.string().min(1, "Token required"),
+    password,
+  }),
 };
 
 const patientSchemas = {
@@ -57,6 +64,15 @@ const patientSchemas = {
   updateTooth: z.object({
     status: toothStatusEnum.optional(),
     notes: z.string().max(1000).optional().nullable(),
+  }),
+};
+
+const paymentSchemas = {
+  create: z.object({
+    patientId: uuid,
+    appointmentId: optionalUuid,
+    amount: z.coerce.number().positive("Amount must be greater than 0"),
+    method: z.enum(["CASH", "GCASH", "CARD", "HMO", "PHILHEALTH"]).default("CASH"),
   }),
 };
 
@@ -222,6 +238,7 @@ module.exports = {
   dentistScheduleSchemas,
   loyaltySchemas,
   badgeSchemas,
+  paymentSchemas,
   aiSchemas,
   toothStatusEnum,
   roleEnum,

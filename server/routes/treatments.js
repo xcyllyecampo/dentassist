@@ -2,6 +2,8 @@ const express = require("express");
 const { auth, roleGuard } = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const { treatmentSchemas } = require("../lib/schemas");
+const { rewardVisit } = require("../lib/rewards");
+const { sendVisitCompletedEmail } = require("../lib/mailer");
 
 const router = express.Router();
 
@@ -27,6 +29,7 @@ router.get("/patient/:patientId", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT
 router.post("/", auth, roleGuard("DENTIST"), validate(treatmentSchemas.create), async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
+    const io = req.app.get("io");
     const { patientId, toothId, appointmentId, procedure, description, notes, cost } = req.body;
 
     const treatment = await prisma.treatment.create({
@@ -42,6 +45,18 @@ router.post("/", auth, roleGuard("DENTIST"), validate(treatmentSchemas.create), 
       },
       include: { dentist: { select: { name: true } }, tooth: true },
     });
+
+    if (!appointmentId) {
+      const patient = await prisma.patient.findUnique({
+        where: { id: patientId },
+        include: { user: { select: { email: true, name: true } } },
+      });
+      await rewardVisit(prisma, patientId, { io, source: "walk-in visit" });
+      if (patient?.user?.email) {
+        sendVisitCompletedEmail(patient.user.email, patient.user.name || "Patient");
+      }
+    }
+
     res.status(201).json(treatment);
   } catch (err) {
     console.error(err);

@@ -5,6 +5,8 @@ const { auth, roleGuard } = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const { appointmentSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
+const { rewardVisit } = require("../lib/rewards");
+const { sendVisitCompletedEmail } = require("../lib/mailer");
 
 const roomsAwaitingCleanup = new Map();
 
@@ -37,7 +39,7 @@ router.get("/month", auth, async (req, res) => {
 router.get("/available-slots", auth, async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
-    const { date } = req.query;
+    const { date, dentistId } = req.query;
     if (!date) return res.status(400).json({ error: "Date is required" });
     const start = new Date(date);
     start.setHours(0, 0, 0, 0);
@@ -45,7 +47,11 @@ router.get("/available-slots", auth, async (req, res) => {
     end.setDate(end.getDate() + 1);
 
     const booked = await prisma.appointment.findMany({
-      where: { date: { gte: start, lt: end }, status: { notIn: ["CANCELLED", "NO_SHOW"] } },
+      where: {
+        date: { gte: start, lt: end },
+        status: { notIn: ["CANCELLED", "NO_SHOW"] },
+        ...(dentistId ? { dentistId } : {}),
+      },
       select: { time: true, dentistId: true, roomId: true },
     });
 
@@ -259,11 +265,21 @@ router.post("/", auth, validate(appointmentSchemas.create), async (req, res) => 
     const appointment = await prisma.appointment.create({
       data: { patientId, dentistId, roomId, date: new Date(date), time, duration: apptDuration, reason, notes },
       include: {
-        patient: { include: { user: { select: { name: true } } } },
+        patient: { include: { user: { select: { name: true, email: true } } } },
         dentist: { select: { name: true } },
         room: true,
       },
     });
+
+    if (appointment.patient?.user?.email) {
+      const { sendAppointmentConfirmationEmail } = require("../lib/mailer");
+      sendAppointmentConfirmationEmail(appointment.patient.user.email, appointment.patient.user.name || "Patient", {
+        date,
+        time,
+        dentist: appointment.dentist?.name,
+        reason,
+      });
+    }
 
     if (roomId) {
       await prisma.room.update({ where: { id: roomId }, data: { status: "OCCUPIED" } });
@@ -284,6 +300,12 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
     const io = req.app.get("io");
     const { status, roomId, notes, date, time, duration, reason } = req.body;
 
+    const current = await prisma.appointment.findUnique({
+      where: { id: req.params.id },
+      include: { patient: { include: { user: { select: { id: true, name: true, email: true } } } } },
+    });
+    if (!current) return res.status(404).json({ error: "Appointment not found" });
+
     const updateData = {};
     if (status !== undefined) updateData.status = status;
     if (roomId !== undefined) updateData.roomId = roomId || null;
@@ -294,7 +316,6 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
     if (reason !== undefined) updateData.reason = reason;
 
     if (time !== undefined || date !== undefined || roomId !== undefined) {
-      const current = await prisma.appointment.findUnique({ where: { id: req.params.id } });
       const checkDate = date ? new Date(date) : current.date;
       checkDate.setHours(0, 0, 0, 0);
       const checkEnd = new Date(checkDate);
@@ -350,6 +371,28 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
       }
     }
 
+    if (status === "COMPLETED" && current.status !== "COMPLETED") {
+      await rewardVisit(prisma, current.patientId, { io, source: "appointment visit" });
+      if (current.patient?.user?.email) {
+        sendVisitCompletedEmail(current.patient.user.email, current.patient.user.name || "Patient");
+      }
+    }
+
+    const patientEmail = current.patient?.user?.email;
+    if (patientEmail && (time !== undefined || date !== undefined)) {
+      const { sendAppointmentUpdateEmail } = require("../lib/mailer");
+      sendAppointmentUpdateEmail(patientEmail, current.patient?.user?.name || "Patient", {
+        subject: "Your appointment was updated",
+        message: `Your appointment has been rescheduled to ${new Date(date || current.date).toLocaleDateString()} at ${time || current.time}.`,
+      });
+    } else if (patientEmail && status === "CONFIRMED" && current.status !== "CONFIRMED") {
+      const { sendAppointmentUpdateEmail } = require("../lib/mailer");
+      sendAppointmentUpdateEmail(patientEmail, current.patient?.user?.name || "Patient", {
+        subject: "Your appointment is confirmed",
+        message: "The clinic has confirmed your appointment. See you soon!",
+      });
+    }
+
     notifyAllStaff(prisma, io, { type: "appointment", message: `Appointment updated: ${appointment.patient?.user?.name || "Patient"} - ${appointment.status}` });
     res.json(appointment);
   } catch (err) {
@@ -365,7 +408,7 @@ router.put("/:id/cancel", auth, async (req, res) => {
 
     const appointment = await prisma.appointment.findUnique({
       where: { id: req.params.id },
-      include: { patient: { include: { user: { select: { name: true } } } } },
+      include: { patient: { include: { user: { select: { name: true, email: true } } } } },
     });
     if (!appointment) return res.status(404).json({ error: "Appointment not found" });
 
@@ -389,6 +432,14 @@ router.put("/:id/cancel", auth, async (req, res) => {
       await prisma.room.update({ where: { id: updated.roomId }, data: { status: "CLEANING" } });
       io.to("twin").emit("room-update", { roomId: updated.roomId, status: "CLEANING" });
       roomsAwaitingCleanup.set(updated.roomId, Date.now());
+    }
+
+    if (appointment.patient?.user?.email) {
+      const { sendAppointmentUpdateEmail } = require("../lib/mailer");
+      sendAppointmentUpdateEmail(appointment.patient.user.email, appointment.patient.user.name || "Patient", {
+        subject: "Your appointment was cancelled",
+        message: `Your appointment on ${new Date(appointment.date).toLocaleDateString()} at ${appointment.time} has been cancelled. Book a new one anytime on the kiosk.`,
+      });
     }
 
     notifyAllStaff(prisma, io, { type: "appointment", message: `Appointment cancelled: ${updated.patient?.user?.name || "Patient"} - ${new Date(updated.date).toLocaleDateString()} at ${updated.time}` });

@@ -6,10 +6,11 @@ import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
 import { SkeletonLine, SkeletonCircle } from '../components/Skeleton';
 import Tooltip from '../components/Tooltip';
-import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, Calendar, Stethoscope, Pill, Image, Smile } from 'lucide-react';
+import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, Calendar, Stethoscope, Pill, Image, Smile, Wallet, CreditCard } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { playClick, playSuccess, playError } from '../lib/sounds';
+import { rankInfo } from '../lib/ranks';
 
 const TOOTH_STATUSES = ['HEALTHY', 'FILLING', 'CROWN', 'DECAYED', 'MISSING', 'IMPLANT', 'BRIDGE', 'TREATED'];
 const STATUS_COLORS = {
@@ -76,6 +77,30 @@ export default function PatientDetail() {
     queryKey: ['badges'],
     queryFn: () => api.get('/badges').then(r => r.data),
     enabled: activeTab === 'rewards' && !!id,
+  });
+
+  const { data: payments = [] } = useQuery({
+    queryKey: ['patient-payments', id],
+    queryFn: () => api.get(`/payments/patient/${id}`).then(r => r.data),
+    enabled: activeTab === 'payments' && !!id,
+  });
+
+  const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'CASH', appointmentId: '' });
+
+  const paymentMutation = useMutation({
+    mutationFn: (body) => api.post('/payments', { ...body, patientId: id }),
+    onSuccess: () => {
+      toast.success('Payment recorded');
+      playSuccess();
+      setPaymentForm({ amount: '', method: 'CASH', appointmentId: '' });
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.error || 'Failed to record payment');
+      playError();
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['patient-payments', id] });
+    },
   });
 
   const toothMutation = useMutation({
@@ -345,7 +370,7 @@ export default function PatientDetail() {
     </Layout>
   );
 
-  const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays', 'rewards'];
+  const tabs = ['overview', 'teeth', 'appointments', 'treatments', 'prescriptions', 'x-rays', 'payments', 'rewards'];
 
   return (
     <Layout>
@@ -748,13 +773,94 @@ export default function PatientDetail() {
             </div>
           )}
 
+          {activeTab === 'payments' && (
+            <div className="space-y-6">
+              <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+                <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2"><Wallet size={16} className="text-[#0F766E]" /> Record Payment</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Amount (₱)</label>
+                    <input type="number" min="0" step="0.01" value={paymentForm.amount}
+                      onChange={(e) => setPaymentForm(p => ({ ...p, amount: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E]/30 focus:outline-none"
+                      placeholder="0.00" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Method</label>
+                    <select value={paymentForm.method}
+                      onChange={(e) => setPaymentForm(p => ({ ...p, method: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#0F766E]/30 focus:outline-none">
+                      {['CASH', 'GCASH', 'CARD', 'HMO', 'PHILHEALTH'].map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">Appointment (optional)</label>
+                    <select value={paymentForm.appointmentId}
+                      onChange={(e) => setPaymentForm(p => ({ ...p, appointmentId: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-[#0F766E]/30 focus:outline-none">
+                      <option value="">None</option>
+                      {patient.appointments?.map(a => (
+                        <option key={a.id} value={a.id}>{new Date(a.date).toLocaleDateString()} — {a.reason}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => paymentMutation.mutate({ amount: parseFloat(paymentForm.amount), method: paymentForm.method, appointmentId: paymentForm.appointmentId || undefined })}
+                    disabled={paymentMutation.isPending || !paymentForm.amount || parseFloat(paymentForm.amount) <= 0}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0F766E] text-white text-sm font-medium rounded-lg hover:bg-[#0D6D65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                    <CreditCard size={14} /> {paymentMutation.isPending ? 'Saving...' : 'Record'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-slate-900 mb-3">Payment History</h3>
+                {payments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Wallet size={20} className="text-slate-300" />
+                    </div>
+                    <p className="text-slate-500 font-medium mb-1">No payments recorded</p>
+                    <p className="text-slate-400 text-xs">Recorded payments will appear here</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                          <th className="px-4 py-3 font-semibold">Date</th>
+                          <th className="px-4 py-3 font-semibold">Method</th>
+                          <th className="px-4 py-3 font-semibold">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map(p => (
+                          <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
+                            <td className="px-4 py-3 text-slate-700">{new Date(p.paidAt).toLocaleDateString()} {new Date(p.paidAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-0.5 rounded-full bg-[#F0FDFA] text-[#0D6D65] text-xs font-medium">{p.method}</span>
+                            </td>
+                            <td className="px-4 py-3 font-medium text-green-600">₱{p.amount.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'rewards' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-[#0F766E] to-[#0F766E] rounded-xl p-5 text-white">
-                  <div className="flex items-center gap-2 mb-2"><Star size={20} /><span className="font-medium">Loyalty Points</span></div>
-                  <div className="text-3xl font-bold">{loyalty?.points || 0}</div>
-                  <div className="text-[#F0FDFA] text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
+                <div className="bg-gradient-to-br from-[#0F766E] to-[#0F766E] rounded-xl p-5 text-white flex items-center gap-4">
+                  <img src={rankInfo(loyalty?.tier).image} alt={rankInfo(loyalty?.tier).label} className="w-16 h-16 rounded-full object-cover border-2 border-white/30 shrink-0" />
+                  <div>
+                    <div className="flex items-center gap-2 mb-2"><Star size={20} /><span className="font-medium">Loyalty Points</span></div>
+                    <div className="text-3xl font-bold">{loyalty?.points || 0}</div>
+                    <div className="text-[#F0FDFA] text-sm mt-1">Tier: {loyalty?.tier || 'Bronze'}</div>
+                  </div>
                 </div>
                 <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><Award size={20} /><span className="font-medium">Badges Earned</span></div>
@@ -764,10 +870,10 @@ export default function PatientDetail() {
                 <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-2"><TrendingUp size={20} /><span className="font-medium">Next Tier</span></div>
                   <div className="text-lg font-bold mt-1">
-                    {loyalty?.tier === 'Bronze' ? 'Silver (50 pts)' : loyalty?.tier === 'Silver' ? 'Gold (200 pts)' : loyalty?.tier === 'Gold' ? 'Platinum (500 pts)' : 'Max Tier!'}
+                    {loyalty?.nextTier ? `${loyalty.nextTier} (${loyalty.nextTier === 'Silver' ? 50 : loyalty.nextTier === 'Gold' ? 200 : 500} pts)` : 'Max Tier!'}
                   </div>
                   <div className="text-green-100 text-sm mt-1">
-                    {loyalty?.tier !== 'Platinum' && `${Math.max(0, (loyalty?.tier === 'Bronze' ? 50 : loyalty?.tier === 'Silver' ? 200 : 500) - (loyalty?.points || 0))} pts to go`}
+                    {loyalty?.pointsToNextTier > 0 && `${loyalty.pointsToNextTier} pts to go`}
                   </div>
                 </div>
               </div>
@@ -810,7 +916,7 @@ export default function PatientDetail() {
                         {earned ? (
                           <div className="flex items-center justify-center gap-1 text-green-600 text-xs mt-2"><Check size={12} /> Earned</div>
                         ) : (
-                          <div className="text-xs text-[#0F766E] mt-2">{b.threshold} pts</div>
+                          <div className="text-xs text-[#0F766E] mt-2">{b.points || b.threshold} pts</div>
                         )}
                       </button>
                     );

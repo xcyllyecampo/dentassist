@@ -15,10 +15,10 @@ router.get("/daily", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (re
       prisma.patient.count(),
       prisma.appointment.count({ where: { date: { gte: today, lt: tomorrow } } }),
       prisma.appointment.count({ where: { date: { gte: today, lt: tomorrow }, status: "COMPLETED" } }),
-      prisma.treatment.aggregate({ _sum: { cost: true }, where: { createdAt: { gte: today } } }),
+      prisma.payment.aggregate({ _sum: { amount: true }, where: { paidAt: { gte: today, lt: tomorrow } } }),
     ]);
 
-    res.json({ patientCount, appointmentCount, completedCount, revenue: revenue._sum.cost || 0 });
+    res.json({ patientCount, appointmentCount, completedCount, revenue: revenue._sum.amount || 0 });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
@@ -47,9 +47,9 @@ router.get("/revenue", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (
     since.setDate(since.getDate() - (days - 1));
     since.setHours(0, 0, 0, 0);
 
-    const treatments = await prisma.treatment.findMany({
-      where: { createdAt: { gte: since } },
-      select: { cost: true, createdAt: true },
+    const payments = await prisma.payment.findMany({
+      where: { paidAt: { gte: since } },
+      select: { amount: true, paidAt: true },
     });
 
     const data = [];
@@ -60,9 +60,9 @@ router.get("/revenue", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (
       const dateStr = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split("T")[0];
       const nextDay = new Date(date);
       nextDay.setDate(nextDay.getDate() + 1);
-      const dayRevenue = treatments
-        .filter(t => t.createdAt >= date && t.createdAt < nextDay)
-        .reduce((sum, t) => sum + (t.cost || 0), 0);
+      const dayRevenue = payments
+        .filter(t => t.paidAt >= date && t.paidAt < nextDay)
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
       data.push({ date: dateStr, revenue: dayRevenue });
     }
 

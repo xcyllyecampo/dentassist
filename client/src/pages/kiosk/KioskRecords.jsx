@@ -3,14 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import KioskLayout from './KioskLayout';
 import api, { authUrl } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
-import { playClick, playError } from '../../lib/sounds';
-import { AlertTriangle, Calendar, Stethoscope, Pill, Circle, XCircle, Loader } from 'lucide-react';
+import { playClick, playError, playSuccess } from '../../lib/sounds';
+import { AlertTriangle, Calendar, Stethoscope, Pill, Circle, XCircle, Loader, Star, Gift, BadgeCheck, Ticket } from 'lucide-react';
+import { rankInfo, tierProgress } from '../../lib/ranks';
 
 const TABS = [
   { id: 'appointments', label: 'Appointments', icon: Calendar },
   { id: 'treatments', label: 'Treatments', icon: Stethoscope },
   { id: 'prescriptions', label: 'Prescriptions', icon: Pill },
   { id: 'teeth', label: 'Teeth', icon: Circle },
+  { id: 'rewards', label: 'Rewards', icon: Star },
 ];
 
 function KioskSkeleton() {
@@ -54,6 +56,39 @@ export default function KioskRecords() {
   const { data: patient, isLoading, error, refetch } = useQuery({
     queryKey: ['kiosk-patient'],
     queryFn: () => api.get('/patients/me').then(r => r.data),
+  });
+
+  const { data: loyalty } = useQuery({
+    queryKey: ['kiosk-loyalty'],
+    queryFn: () => api.get('/loyalty/my').then(r => r.data || null),
+    retry: false,
+  });
+
+  const { data: badges } = useQuery({
+    queryKey: ['kiosk-badges'],
+    queryFn: () => api.get('/badges/my').then(r => r.data || []),
+    retry: false,
+  });
+
+  const { data: perks } = useQuery({
+    queryKey: ['kiosk-perks'],
+    queryFn: () => api.get('/perks/my').then(r => r.data || null),
+    retry: false,
+  });
+
+  const [claimedPerk, setClaimedPerk] = useState(null);
+
+  const claimMutation = useMutation({
+    mutationFn: (perk) => api.post('/perks/claim', { perk }).then(r => r.data),
+    onSuccess: (data) => {
+      setClaimedPerk(data);
+      playSuccess();
+      queryClient.invalidateQueries({ queryKey: ['kiosk-perks'] });
+    },
+    onError: (err) => {
+      playError();
+      toast.error(err.response?.data?.error || 'Failed to claim perk');
+    },
   });
 
   const cancelMutation = useMutation({
@@ -268,6 +303,116 @@ export default function KioskRecords() {
               </div>
             </div>
           </div>
+          );
+        })()}
+
+        {activeTab === 'rewards' && (() => {
+          if (!loyalty) {
+            return (
+              <div className="text-center py-10">
+                <Star size={32} className="mx-auto mb-3 text-white/30" />
+                <p className="text-white/50">Rewards will appear here</p>
+              </div>
+            );
+          }
+
+          const rank = rankInfo(loyalty.tier);
+          const progress = tierProgress(loyalty.points);
+          const toNext = loyalty.pointsToNextTier ?? 0;
+
+          return (
+            <div className="space-y-4">
+              {claimedPerk && (
+                <div className="p-4 rounded-2xl border border-amber-400/40 bg-amber-500/10 text-center">
+                  <div className="flex items-center justify-center gap-2 text-amber-300 font-bold mb-1">
+                    <Ticket size={18} /> {claimedPerk.perkLabel} claimed!
+                  </div>
+                  <p className="text-white/60 text-xs mb-3">Show this code to the front desk to use your perk</p>
+                  <div className="text-5xl font-black tracking-[0.4em] text-white bg-white/10 rounded-2xl py-4 mb-3">
+                    {claimedPerk.claimCode}
+                  </div>
+                  <div className="text-white/40 text-[10px]">Expires at the end of today</div>
+                  <button
+                    onClick={() => { playClick(); setClaimedPerk(null); }}
+                    className="kiosk-touch mt-4 w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
+
+              {!claimedPerk && (
+                <>
+                  <div className="p-4 rounded-2xl border border-white/[0.08] bg-white/[0.04] flex items-center gap-4">
+                    <img src={rank.image} alt={rank.label} className="w-16 h-16 rounded-full object-cover border border-white/20 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="kiosk-heading text-white font-bold">{rank.label} Member</div>
+                      <div className="text-white/50 text-xs mb-2">{loyalty.points || 0} points</div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-white/[0.08] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-purple-500" style={{ width: `${progress}%` }} />
+                        </div>
+                        <span className="text-white/40 text-[10px] whitespace-nowrap">
+                          {rank.next ? `${toNext} pts to ${rank.next}` : 'Max rank!'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                      <Gift size={15} className="text-amber-400" /> Your perks
+                    </h3>
+                    {perks?.perks?.length === 0 ? (
+                      <div className="text-white/40 text-xs p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] text-center">
+                        Earn {50 - (loyalty.points || 0)} more points to unlock your first perk
+                      </div>
+                    ) : perks?.perks?.map(p => (
+                      <div key={p.key} className="flex items-center justify-between gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/[0.06] mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-sm font-medium">{p.label}</div>
+                          <div className="text-white/40 text-xs">{p.remaining} of {p.capPerYear} left this year</div>
+                        </div>
+                        <button
+                          onClick={() => claimMutation.mutate(p.key)}
+                          disabled={claimMutation.isPending || p.remaining <= 0}
+                          className={`kiosk-touch px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                            p.remaining > 0
+                              ? 'bg-amber-500/90 hover:bg-amber-400 text-black'
+                              : 'bg-white/5 text-white/30 cursor-not-allowed'
+                          }`}
+                        >
+                          {claimMutation.isPending ? 'Claiming...' : p.remaining > 0 ? 'Use' : 'Used up'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <h3 className="flex items-center gap-2 text-white font-bold text-sm mb-2">
+                      <BadgeCheck size={15} className="text-teal-400" /> Badges earned
+                    </h3>
+                    {badges?.length === 0 ? (
+                      <div className="text-white/40 text-xs p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] text-center">
+                        Complete visits and special milestones to earn badges
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {badges?.map(b => (
+                          <div key={b.id} className="flex items-center gap-2.5 p-3 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+                            <span className="text-2xl">{b.badge.icon}</span>
+                            <div className="min-w-0">
+                              <div className="text-white text-xs font-medium truncate">{b.badge.name}</div>
+                              <div className="text-white/40 text-[10px]">{b.badge.points} pts · {new Date(b.earnedAt).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           );
         })()}
       </div>

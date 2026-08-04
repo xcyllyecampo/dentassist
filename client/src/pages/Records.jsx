@@ -8,13 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import api, { authUrl } from '../lib/api';
 import { Search, Activity, AlertTriangle, Award, Calendar, Stethoscope, FileText, ArrowRight, Users, ShieldCheck, Sparkles } from 'lucide-react';
 
-const TIER_COLORS = {
-  Bronze: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-400' },
-  Silver: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300', dot: 'bg-slate-400' },
-  Gold: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200', dot: 'bg-yellow-500' },
-  Platinum: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200', dot: 'bg-purple-500' },
-};
-
 export default function Records() {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();

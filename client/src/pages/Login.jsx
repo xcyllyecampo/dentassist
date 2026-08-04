@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, UserPlus, Eye, EyeOff, QrCode, AlertCircle, X, FileText, Shield } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
@@ -339,6 +339,15 @@ export default function Login() {
             </div>
 
             <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div className="flex items-center justify-between mt-1 mb-3">
+                <span />
+                {isLogin && (
+                  <Link to="/forgot-password"
+                    className="text-xs text-slate-500 hover:text-[#0F766E] font-medium transition-colors">
+                    Forgot password?
+                  </Link>
+                )}
+              </div>
               <button type="submit" disabled={loading || !canSubmit}
                 className={`w-full py-3 rounded-xl font-semibold text-sm mt-2 transition-all ${
                   canSubmit

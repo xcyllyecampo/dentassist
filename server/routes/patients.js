@@ -5,6 +5,7 @@ const { deleteFile } = require("../lib/storage");
 const validate = require("../middleware/validate");
 const { patientSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
+const { sendAccountCreatedEmail } = require("../lib/mailer");
 
 const router = express.Router();
 
@@ -103,7 +104,29 @@ router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(pati
     const io = req.app.get("io");
     notifyAllStaff(prisma, io, { type: "patient", message: `New patient registered: ${patient.user?.name || name}` });
 
+    await sendAccountCreatedEmail(email, name, tempPassword);
+
     res.status(201).json({ ...patient, tempPassword });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.put("/me", auth, validate(patientSchemas.update), async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const { dob, gender, bloodType, address, allergies, medicalHistory, emergencyContact, insuranceInfo } = req.body;
+
+    const existing = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+    if (!existing) return res.status(404).json({ error: "Patient profile not found" });
+
+    const patient = await prisma.patient.update({
+      where: { id: existing.id },
+      data: { dob: dob ? new Date(dob) : undefined, gender, bloodType, address, allergies, medicalHistory, emergencyContact, insuranceInfo },
+      include: { user: { select: { name: true, email: true, phone: true, avatar: true } } },
+    });
+    res.json(patient);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

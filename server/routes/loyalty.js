@@ -3,6 +3,19 @@ const router = express.Router();
 const { auth, roleGuard } = require("../middleware/auth");
 const validate = require("../middleware/validate");
 const { loyaltySchemas } = require("../lib/schemas");
+const { computeTier, nextTier, pointsToNext } = require("../lib/tiers");
+const { addPoints, getOrCreateLoyalty } = require("../lib/rewards");
+
+function withNextTier(loyalty) {
+  if (!loyalty) return null;
+  const points = loyalty.points || 0;
+  return {
+    ...loyalty,
+    tier: loyalty.tier || computeTier(points),
+    nextTier: nextTier(points),
+    pointsToNextTier: pointsToNext(points),
+  };
+}
 
 router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, res) => {
   try {
@@ -16,7 +29,7 @@ router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, re
         transactions: { orderBy: { createdAt: "desc" }, take: 20 },
       },
     });
-    res.json(points);
+    res.json(points.map(withNextTier));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Server error" });
@@ -26,19 +39,41 @@ router.get("/", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), async (req, re
 router.get("/patient/:patientId", auth, async (req, res) => {
   try {
     const prisma = req.app.get("prisma");
-    let points = await prisma.loyaltyPoints.findUnique({
-      where: { patientId: req.params.patientId },
+    const { patientId } = req.params;
+
+    if (req.user.role === "PATIENT") {
+      const patient = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+      if (!patient || patient.id !== patientId) {
+        return res.status(403).json({ error: "You can only view your own rewards" });
+      }
+    }
+
+    const points = await prisma.loyaltyPoints.findUnique({
+      where: { patientId },
       include: {
         transactions: { orderBy: { createdAt: "desc" }, take: 20 },
       },
     });
-    if (!points) {
-      points = await prisma.loyaltyPoints.create({
-        data: { patientId: req.params.patientId, points: 0, tier: "Bronze" },
-        include: { transactions: true },
-      });
-    }
-    res.json(points);
+    res.json(withNextTier(points));
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/my", auth, async (req, res) => {
+  try {
+    const prisma = req.app.get("prisma");
+    const patient = await prisma.patient.findUnique({ where: { userId: req.user.id } });
+    if (!patient) return res.status(404).json({ error: "Patient profile not found" });
+
+    const points = await prisma.loyaltyPoints.findUnique({
+      where: { patientId: patient.id },
+      include: {
+        transactions: { orderBy: { createdAt: "desc" }, take: 20 },
+      },
+    });
+    res.json(withNextTier(points));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Server error" });
@@ -49,26 +84,9 @@ router.post("/earn", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(
   try {
     const prisma = req.app.get("prisma");
     const { patientId, amount, description } = req.body;
-    let loyalty = await prisma.loyaltyPoints.findUnique({ where: { patientId } });
-    if (!loyalty) {
-      loyalty = await prisma.loyaltyPoints.create({ data: { patientId, points: 0, tier: "Bronze" } });
-    }
-    const newTotal = loyalty.points + amount;
-    let tier = "Bronze";
-    if (newTotal >= 500) tier = "Platinum";
-    else if (newTotal >= 200) tier = "Gold";
-    else if (newTotal >= 50) tier = "Silver";
-
-    const updated = await prisma.loyaltyPoints.update({
-      where: { id: loyalty.id },
-      data: {
-        points: newTotal,
-        tier,
-        transactions: { create: { amount, description, type: "EARNED" } },
-      },
-      include: { transactions: { orderBy: { createdAt: "desc" }, take: 20 } },
-    });
-    res.json(updated);
+    await getOrCreateLoyalty(prisma, patientId);
+    const updated = await addPoints(prisma, patientId, amount, description);
+    res.json(withNextTier(updated));
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Server error" });
