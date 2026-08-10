@@ -118,7 +118,7 @@ export default function Header({ title, onMenuClick }) {
       }}>
       <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-4 min-w-0">
-            <button onClick={() => { playClick(); onMenuClick?.(); }}
+            <button aria-label="Open menu" onClick={() => { playClick(); onMenuClick?.(); }}
               className="md:hidden p-2 hover:bg-teal-50 rounded-xl text-[#374151] hover:text-[#0F766E] transition-all duration-200 shrink-0">
               <Menu size={20} />
             </button>
@@ -130,7 +130,7 @@ export default function Header({ title, onMenuClick }) {
           {/* Notification bell */}
           {user?.role !== 'PATIENT' && (
           <div className="relative" ref={notifRef}>
-            <button onClick={() => { playClick(); setNotifOpen(!notifOpen); }}
+            <button aria-label="Notifications" onClick={() => { playClick(); setNotifOpen(!notifOpen); }}
               className="relative p-2.5 hover:bg-teal-50 rounded-xl transition-all duration-200 text-[#374151] hover:text-[#0F766E] group active:scale-95">
               <Bell size={20} className={`transition-all duration-200 ${notifOpen ? 'rotate-12 scale-110 text-[#0F766E]' : ''}`} />
               {unreadCount > 0 && (
@@ -218,8 +218,9 @@ export default function Header({ title, onMenuClick }) {
                         {items.map(n => {
                           const Icon = typeIcons[n.type] || Bell;
                           return (
-                            <div key={n.id} onClick={() => handleNotifClick(n)}
-                              className={`flex items-start gap-3 px-4 py-3 border-b border-slate-50 cursor-pointer transition-all duration-150 hover:bg-slate-50 active:bg-slate-100 ${
+                            <div key={n.id} onClick={() => handleNotifClick(n)} role="button" tabIndex={0}
+                              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleNotifClick(n); }}
+                              className={`flex items-start gap-3 px-4 py-3 border-b border-slate-50 cursor-pointer transition-all duration-150 hover:bg-slate-50 active:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0F766E]/30 ${
                                 !n.read ? 'bg-[#0F766E]/[0.04]' : ''
                               }`}>
                               <div className={`mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[n.type] || 'text-slate-400 bg-slate-50'}`}>
@@ -246,7 +247,7 @@ export default function Header({ title, onMenuClick }) {
 
           {/* User dropdown */}
           <div className="relative" ref={dropdownRef}>
-            <button onClick={() => { playClick(); setDropdownOpen(!dropdownOpen); }}
+            <button aria-label="Account menu" onClick={() => { playClick(); setDropdownOpen(!dropdownOpen); }}
               className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl hover:bg-teal-50 transition-all duration-200 group active:scale-95">
               <div className="w-9 h-9 bg-gradient-to-br from-[#0F766E] to-[#0D6D65] text-white rounded-xl flex items-center justify-center text-sm font-bold shadow-lg shadow-[#0F766E]/20 group-hover:shadow-[#0F766E]/30 transition-shadow">
                 {user?.name?.charAt(0)}

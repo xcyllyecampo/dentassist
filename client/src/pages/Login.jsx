@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, UserPlus, Eye, EyeOff, QrCode, AlertCircle, X, FileText, Shield } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { formatPhone } from '../lib/phone';
 import { playClick, playSuccess, playError } from '../lib/sounds';
 
 const validateField = (name, value) => {
@@ -303,10 +304,10 @@ export default function Login() {
               <div className="animate-slide-up" style={{ animationDelay: '0.05s' }}>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Phone Number</label>
                 <input type="tel" required value={form.phone || ''}
-                  onChange={(e) => handleChange('phone', e.target.value)}
+                  onChange={(e) => handleChange('phone', formatPhone(e.target.value))}
                   onBlur={() => handleBlur('phone')}
                   className={inputClass('phone')}
-                  placeholder="XXX-XXX-XXXX" />
+                  placeholder="0917 123 4567" />
                 {renderError('phone')}
               </div>
             )}

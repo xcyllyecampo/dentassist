@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import KioskLayout from './KioskLayout';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import api, { authUrl } from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { playClick, playError, playSuccess } from '../../lib/sounds';
@@ -77,6 +78,7 @@ export default function KioskRecords() {
   });
 
   const [claimedPerk, setClaimedPerk] = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState(null);
 
   const claimMutation = useMutation({
     mutationFn: (perk) => api.post('/perks/claim', { perk }).then(r => r.data),
@@ -109,15 +111,16 @@ export default function KioskRecords() {
       playError();
       toast.error(err.response?.data?.error || 'Failed to cancel appointment');
     },
+    onSuccess: () => {
+      toast.success('Appointment cancelled successfully');
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['kiosk-patient'] });
     },
   });
 
   const handleCancel = (apptId) => {
-    if (!window.confirm('Are you sure you want to cancel this appointment? The time slot will become available for others.')) return;
-    cancelMutation.mutate(apptId);
-    toast.success('Appointment cancelled successfully');
+    setConfirmCancel(apptId);
   };
 
   if (isLoading) return <KioskSkeleton />;
@@ -416,6 +419,21 @@ export default function KioskRecords() {
           );
         })()}
       </div>
+
+      {confirmCancel && (
+        <ConfirmDialog
+          open
+          danger
+          title="Cancel Appointment"
+          message="Are you sure you want to cancel this appointment? The time slot will become available for others."
+          confirmLabel="Cancel Appointment"
+          onClose={() => setConfirmCancel(null)}
+          onConfirm={() => {
+            cancelMutation.mutate(confirmCancel);
+            setConfirmCancel(null);
+          }}
+        />
+      )}
     </KioskLayout>
   );
 }

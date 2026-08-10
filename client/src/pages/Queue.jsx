@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Tooltip from '../components/Tooltip';
+import ButtonSpinner from '../components/ButtonSpinner';
 import { SkeletonCard, SkeletonLine } from '../components/Skeleton';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { getSocket } from '../lib/socket';
-import { Plus, Clock, CheckCircle, XCircle, Phone, AlertTriangle, Stethoscope, Users } from 'lucide-react';
+import { Plus, Clock, CheckCircle, XCircle, Phone, AlertTriangle, Stethoscope, Users, Megaphone } from 'lucide-react';
 import { playCallPatient } from '../lib/sounds';
 
 function QueueSkeleton() {
@@ -194,6 +195,22 @@ export default function Queue() {
           </div>
         )}
 
+        {/* Now serving banner */}
+        {inProgress.length > 0 && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-[#0F766E] to-[#0D6D65] rounded-xl text-white flex items-center gap-3 shadow-sm">
+            <div className="w-9 h-9 bg-white/15 rounded-lg flex items-center justify-center shrink-0">
+              <Megaphone size={18} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs text-white/60 font-medium uppercase tracking-wider">Now Serving</div>
+              <div className="font-bold truncate">{inProgress[0].patient?.user?.name}</div>
+            </div>
+            <div className="ml-auto flex items-center gap-1 text-xs text-white/80 shrink-0">
+              <Clock size={12} /> Position #{inProgress[0].effectivePosition ?? inProgress[0].position}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -222,18 +239,24 @@ export default function Queue() {
                             )}
                           </div>
                         <div className="text-xs text-gray-500">
-                          Est. wait: {entry.estimatedWait || '?'} min
+                          {entry.estimatedWait ? `Est. wait: ${entry.estimatedWait} min` : 'Ask front desk for wait time'}
                         </div>
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'IN_PROGRESS' })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F0FDFA] text-[#0D6D65] rounded-lg hover:bg-[#99F6E4] text-xs font-semibold uppercase tracking-wide">
-                        <Phone size={12} /> Call Patient
+                        disabled={statusMutation.isPending}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F0FDFA] text-[#0D6D65] rounded-lg hover:bg-[#99F6E4] text-xs font-semibold uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
+                        {statusMutation.isPending && statusMutation.variables?.id === entry.id ? (
+                          <><ButtonSpinner size={12} /> Calling...</>
+                        ) : (
+                          <><Phone size={12} /> Call Patient</>
+                        )}
                       </button>
                       <Tooltip content="Cancel">
-                        <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'CANCELLED' })}
-                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                        <button aria-label="Remove from queue" onClick={() => statusMutation.mutate({ id: entry.id, status: 'CANCELLED' })}
+                          disabled={statusMutation.isPending}
+                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           <XCircle size={14} />
                         </button>
                       </Tooltip>
@@ -272,14 +295,16 @@ export default function Queue() {
                       </div>
                     <div className="flex gap-2">
                       <Tooltip content="Complete">
-                        <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'COMPLETED' })}
-                          className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200">
+                        <button aria-label="Complete" onClick={() => statusMutation.mutate({ id: entry.id, status: 'COMPLETED' })}
+                          disabled={statusMutation.isPending}
+                          className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           <CheckCircle size={14} />
                         </button>
                       </Tooltip>
                       <Tooltip content="Cancel">
-                        <button onClick={() => statusMutation.mutate({ id: entry.id, status: 'CANCELLED' })}
-                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200">
+                        <button aria-label="Remove from queue" onClick={() => statusMutation.mutate({ id: entry.id, status: 'CANCELLED' })}
+                          disabled={statusMutation.isPending}
+                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed">
                           <XCircle size={14} />
                         </button>
                       </Tooltip>
@@ -303,14 +328,21 @@ export default function Queue() {
               </select>
               {selectedPatient === '' && <p className="text-xs text-red-500 -mt-1 mb-3">Please select a patient</p>}
               <label className="block text-sm font-medium text-gray-700 mb-1">Assign Dentist</label>
-              <select value={filterDentistId !== 'all' ? filterDentistId : ''} onChange={e => {}}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-4 bg-slate-50 text-gray-500 cursor-not-allowed"
-                disabled>
-                <option value="">{filterDentistId !== 'all' ? dentists.find(d => d.id === filterDentistId)?.name || 'Selected Dentist' : 'Auto-assign'}</option>
-              </select>
+              {filterDentistId !== 'all' ? (
+                <p className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg text-gray-600 mb-4">
+                  Will be assigned to: <span className="font-semibold text-slate-900">{dentists.find(d => d.id === filterDentistId)?.name || 'Selected Dentist'}</span>
+                </p>
+              ) : (
+                <p className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-lg text-gray-500 mb-4">
+                  Auto-assign <span className="text-xs text-gray-400">(change the dentist filter above to assign a specific dentist)</span>
+                </p>
+              )}
               <div className="flex justify-end gap-3">
                 <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                <button onClick={handleAdd} disabled={!selectedPatient} className={`px-4 py-2 text-white rounded-lg text-sm font-medium ${selectedPatient ? 'bg-[#0F766E] hover:bg-[#0D6D65]' : 'bg-gray-300 cursor-not-allowed'}`}>Add to Queue</button>
+                <button onClick={handleAdd} disabled={!selectedPatient || addMutation.isPending}
+                  className={`px-4 py-2 text-white rounded-lg text-sm font-medium flex items-center gap-2 ${selectedPatient && !addMutation.isPending ? 'bg-[#0F766E] hover:bg-[#0D6D65]' : 'bg-gray-300 cursor-not-allowed'}`}>
+                  {addMutation.isPending ? <><ButtonSpinner size={14} /> Adding...</> : 'Add to Queue'}
+                </button>
               </div>
             </div>
           </div>

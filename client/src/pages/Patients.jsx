@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
+import { formatPhone } from '../lib/phone';
 import { useToast } from '../context/ToastContext';
 import { SkeletonTable } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
@@ -188,7 +189,7 @@ export default function Patients() {
                   <div className="grid grid-cols-2 gap-4">
                     <Input label="Full Name" required value={form.name} onChange={v => setForm({...form, name: v})} />
                     <Input label="Email" type="email" required value={form.email} onChange={v => setForm({...form, email: v})} />
-                    <Input label="Phone" value={form.phone} onChange={v => setForm({...form, phone: v})} />
+                    <Input label="Phone" value={form.phone} onChange={v => setForm({...form, phone: formatPhone(v)})} />
                     <Input label="Date of Birth" type="date" required value={form.dob} onChange={v => setForm({...form, dob: v})} />
                     <Select label="Gender" value={form.gender} onChange={v => setForm({...form, gender: v})} options={['Male', 'Female', 'Other']} />
                     <Select label="Blood Type" value={form.bloodType} onChange={v => setForm({...form, bloodType: v})} options={['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']} />

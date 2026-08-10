@@ -4,12 +4,14 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import EmptyState from '../components/EmptyState';
 import Tooltip from '../components/Tooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
+import ButtonSpinner from '../components/ButtonSpinner';
 import { SkeletonCard, SkeletonLine } from '../components/Skeleton';
 import api, { authUrl } from '../lib/api';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { playClick } from '../lib/sounds';
-import { Plus, ChevronLeft, ChevronRight, Calendar, AlertTriangle, X, CheckCircle, Clock, Play, Ban, Trash2, Edit3, UserX, CalendarDays, LayoutList } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Calendar, AlertTriangle, X, CheckCircle, Play, Ban, Trash2, Edit3, UserX, CalendarDays, LayoutList } from 'lucide-react';
 
 const STATUS_CONFIG = {
   SCHEDULED:     { label: 'Scheduled',     color: 'bg-teal-100 text-teal-700 border-teal-200' },
@@ -74,12 +76,15 @@ export default function Appointments() {
   const canDelete = user?.role === 'ADMIN' || user?.role === 'ASSISTANT';
   const canEdit = ['ADMIN', 'ASSISTANT', 'DENTIST'].includes(user?.role);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [selected, setSelected] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState('day');
   const [form, setForm] = useState({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
+  const [formErrors, setFormErrors] = useState({});
+  const timeSlots = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
 
   const dateStr = new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
@@ -104,6 +109,23 @@ export default function Appointments() {
     queryKey: ['rooms'],
     queryFn: () => api.get('/rooms').then(r => r.data),
   });
+
+  const { data: availability } = useQuery({
+    queryKey: ['available-slots', form.date || dateStr, form.dentistId || 'all'],
+    queryFn: () => api.get('/appointments/available-slots', { params: { date: form.date || dateStr, dentistId: form.dentistId || undefined } }).then(r => r.data),
+    enabled: showCreateModal,
+    staleTime: 30000,
+  });
+  const availableTimes = availability?.availableSlots || timeSlots;
+
+  const editDateStr = editForm.date || (selected?.date?.split('T')[0]) || dateStr;
+  const { data: editAvailability } = useQuery({
+    queryKey: ['available-slots-edit', editDateStr, editForm.dentistId || 'all'],
+    queryFn: () => api.get('/appointments/available-slots', { params: { date: editDateStr, dentistId: editForm.dentistId || undefined } }).then(r => r.data),
+    enabled: editMode && !!selected,
+    staleTime: 30000,
+  });
+  const editAvailableTimes = editAvailability?.availableSlots || timeSlots;
 
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth() + 1;
@@ -215,6 +237,12 @@ export default function Appointments() {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    const errs = {};
+    if (!form.patientId) errs.patientId = 'Please select a patient';
+    if (!form.time) errs.time = 'Please select a time';
+    else if (availableTimes.length > 0 && !availableTimes.includes(form.time)) errs.time = 'This time is no longer available';
+    setFormErrors(errs);
+    if (Object.keys(errs).length > 0) return;
     const payload = { ...form, date: form.date || dateStr };
     if (!payload.dentistId) delete payload.dentistId;
     if (!payload.roomId) delete payload.roomId;
@@ -222,6 +250,7 @@ export default function Appointments() {
       onSuccess: () => {
         setShowCreateModal(false);
         setForm({ patientId: '', dentistId: '', roomId: '', date: '', time: '', duration: 30, reason: '', notes: '' });
+        setFormErrors({});
         toast.success('Appointment booked');
       },
     });
@@ -234,13 +263,7 @@ export default function Appointments() {
   };
 
   const handleDelete = (id) => {
-    if (!confirm('Delete this appointment?')) return;
-    deleteMutation.mutate(id, {
-      onSuccess: () => {
-        setSelected(null);
-        toast.success('Appointment deleted');
-      },
-    });
+    setDeleteTarget(id);
   };
 
   const handleEditSave = () => {
@@ -256,10 +279,13 @@ export default function Appointments() {
   };
 
   const openDetail = (appt) => { setSelected(appt); setEditMode(false); setEditForm({}); };
-  const prevDay = () => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d); };
-  const nextDay = () => { const d = new Date(selectedDate); d.setDate(d.getDate() + 1); setSelectedDate(d); };
 
-  const timeSlots = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'];
+  const shiftDate = (delta) => {
+    const d = new Date(selectedDate);
+    if (viewMode === 'month') d.setMonth(d.getMonth() + delta);
+    else d.setDate(d.getDate() + delta);
+    setSelectedDate(d);
+  };
 
   return (
     <Layout>
@@ -278,7 +304,7 @@ export default function Appointments() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Tooltip content="Previous">
-              <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() - 1) : d.setDate(d.getDate() - 1); setSelectedDate(d); }}
+              <button aria-label={viewMode === 'month' ? 'Previous month' : 'Previous day'} onClick={() => { playClick(); shiftDate(-1); }}
                 className="p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft size={20} /></button>
             </Tooltip>
             <h2 className="text-lg font-bold text-slate-900">
@@ -287,7 +313,7 @@ export default function Appointments() {
                 : selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </h2>
             <Tooltip content="Next">
-              <button onClick={() => { playClick(); const d = new Date(selectedDate); viewMode === 'month' ? d.setMonth(d.getMonth() + 1) : d.setDate(d.getDate() + 1); setSelectedDate(d); }}
+              <button aria-label={viewMode === 'month' ? 'Next month' : 'Next day'} onClick={() => { playClick(); shiftDate(1); }}
                 className="p-2 hover:bg-slate-100 rounded-lg"><ChevronRight size={20} /></button>
             </Tooltip>
           </div>
@@ -322,14 +348,15 @@ export default function Appointments() {
                 return (
                   <div key={i}
                     onClick={() => { if (day) { playClick(); setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day)); setViewMode('day'); }}}
-                    className={`min-h-[90px] border-b border-r border-slate-100 p-2 ${day ? 'cursor-pointer hover:bg-slate-50' : 'bg-slate-50/50'} ${isToday ? 'bg-teal-50/50' : ''}`}>
+                    className={`min-h-[100px] border-b border-r border-slate-100 p-2 ${day ? 'cursor-pointer hover:bg-slate-50' : 'bg-slate-50/50'} ${isToday ? 'bg-teal-50/50' : ''}`}>
                     {day && (
                       <>
-                        <div className={`text-xs font-bold mb-1 ${isToday ? 'text-[#0F766E] bg-teal-100 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-700'}`}>{day}</div>
-                        <div className="space-y-0.5">
+                        <div className={`text-xs font-bold mb-1.5 ${isToday ? 'text-[#0F766E] bg-teal-100 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-700'}`}>{day}</div>
+                        <div className="space-y-1">
                           {dayAppts.slice(0, 3).map(a => (
-                            <div key={a.id} onClick={e => { e.stopPropagation(); openDetail(a); }}
-                              className={`text-[9px] px-1.5 py-0.5 rounded truncate ${
+                            <div key={a.id} onClick={e => { e.stopPropagation(); openDetail(a); }} role="button" tabIndex={0}
+                              onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); openDetail(a); } }}
+                              className={`text-[10px] px-1.5 py-1 rounded truncate cursor-pointer ${
                                 a.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                                 a.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
                                 a.status === 'CANCELLED' ? 'bg-red-50 text-red-500 line-through' :
@@ -338,7 +365,7 @@ export default function Appointments() {
                               {a.time} {a.patient?.user?.name?.split(' ')[0]}
                             </div>
                           ))}
-                          {dayAppts.length > 3 && <div className="text-[9px] text-gray-400">+{dayAppts.length - 3} more</div>}
+                          {dayAppts.length > 3 && <div className="text-[10px] text-gray-400">+{dayAppts.length - 3} more</div>}
                         </div>
                       </>
                     )}
@@ -385,6 +412,21 @@ export default function Appointments() {
                     </div>
                   );
                 })}
+                {(() => {
+                  if (selectedDate.toDateString() !== new Date().toDateString()) return null;
+                  const now = new Date();
+                  const minutesSinceStart = (now.getHours() * 60 + now.getMinutes()) - 9 * 60;
+                  if (minutesSinceStart < 0 || minutesSinceStart > 16 * 60) return null;
+                  const top = (minutesSinceStart / 30) * 64;
+                  return (
+                    <div className="pointer-events-none absolute left-0 right-0 z-10" style={{ top: `${top}px` }}>
+                      <div className="relative h-0.5 bg-red-500">
+                        <div className="absolute -left-1 -top-[3px] w-2 h-2 rounded-full bg-red-500" />
+                        <span className="absolute right-2 -top-[8px] text-[9px] font-bold text-red-500 bg-white px-1.5 py-0.5 rounded shadow-sm">Now</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -396,8 +438,9 @@ export default function Appointments() {
               const cfg = STATUS_CONFIG[appt.status] || STATUS_CONFIG.SCHEDULED;
               const nextActions = NEXT_STATUS[appt.status] || [];
               return (
-                <div key={appt.id} onClick={() => openDetail(appt)}
-                  className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow">
+                <div key={appt.id} onClick={() => openDetail(appt)} role="button" tabIndex={0}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') openDetail(appt); }}
+                  className="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-[#0F766E]">
                   <div className="w-14 text-center shrink-0">
                     <div className="text-sm font-bold text-[#0F766E]">{appt.time}</div>
                     <div className="text-[10px] text-gray-500">{appt.duration}m</div>
@@ -410,13 +453,18 @@ export default function Appointments() {
                   <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
                     {nextActions.map(action => (
                       <button key={action.status} onClick={() => handleStatusUpdate(appt.id, action.status)}
-                        className={`flex items-center gap-1 text-white text-[10px] px-3 py-1.5 rounded-lg font-medium ${action.color}`}>
-                        <action.icon size={12} /> {action.label}
+                        disabled={statusMutation.isPending}
+                        className={`flex items-center gap-1 text-white text-[10px] px-3 py-1.5 rounded-lg font-medium ${action.color} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                        {statusMutation.isPending && statusMutation.variables?.id === appt.id ? (
+                          <><ButtonSpinner size={12} /> {action.label}...</>
+                        ) : (
+                          <><action.icon size={12} /> {action.label}</>
+                        )}
                       </button>
                     ))}
                     {canDelete && appt.status !== 'COMPLETED' && appt.status !== 'CANCELLED' && (
                       <Tooltip content="Delete">
-                        <button onClick={() => handleDelete(appt.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
+                        <button aria-label="Delete appointment" onClick={() => handleDelete(appt.id)} className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50">
                           <Trash2 size={14} />
                         </button>
                       </Tooltip>
@@ -442,17 +490,17 @@ export default function Appointments() {
                 <div className="flex items-center gap-2">
                   {canEdit && !editMode && (
                     <Tooltip content="Edit">
-                      <button onClick={() => { setEditMode(true); setEditForm({ date: selected.date?.split('T')[0], time: selected.time, duration: selected.duration, reason: selected.reason, notes: selected.notes || '', dentistId: selected.dentistId, roomId: selected.roomId }); }}
+                      <button aria-label="Edit appointment" onClick={() => { setEditMode(true); setEditForm({ date: selected.date?.split('T')[0], time: selected.time, duration: selected.duration, reason: selected.reason, notes: selected.notes || '', dentistId: selected.dentistId, roomId: selected.roomId }); }}
                         className="p-2 text-[#0F766E] hover:bg-[#F0FDFA] rounded-lg"><Edit3 size={16} /></button>
                     </Tooltip>
                   )}
                   {canDelete && selected.status !== 'COMPLETED' && (
                     <Tooltip content="Delete">
-                      <button onClick={() => handleDelete(selected.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
+                      <button aria-label="Delete appointment" onClick={() => handleDelete(selected.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={16} /></button>
                     </Tooltip>
                   )}
                   <Tooltip content="Close">
-                    <button onClick={() => { setSelected(null); setEditMode(false); }} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg"><X size={16} /></button>
+                    <button aria-label="Close" onClick={() => { setSelected(null); setEditMode(false); }} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg"><X size={16} /></button>
                   </Tooltip>
                 </div>
               </div>
@@ -463,7 +511,7 @@ export default function Appointments() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                        <input type="date" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})}
+                        <input type="date" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value, time: ''})}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
                       </div>
                       <div>
@@ -471,8 +519,8 @@ export default function Appointments() {
                         <select value={editForm.time || ''} onChange={e => setEditForm({...editForm, time: e.target.value})}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
                           <option value="">Select Time</option>
-                          {['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30'].map(t => (
-                            <option key={t} value={t}>{t}</option>
+                          {[...new Set([...(editForm.time ? [editForm.time] : []), ...editAvailableTimes])].map(t => (
+                            <option key={t} value={t}>{t}{editForm.time === t ? ' (current)' : ''}</option>
                           ))}
                         </select>
                       </div>
@@ -480,7 +528,7 @@ export default function Appointments() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
                         <div className="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto">
                           {dentists.map(d => (
-                            <button key={d.id} type="button" onClick={() => setEditForm({...editForm, dentistId: d.id})}
+                            <button key={d.id} type="button" onClick={() => setEditForm({...editForm, dentistId: d.id, time: ''})}
                               className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border text-sm text-left transition-all ${
                                 editForm.dentistId === d.id
                                   ? 'border-[#0F766E] bg-[#F0FDFA] ring-1 ring-[#0F766E]'
@@ -537,7 +585,10 @@ export default function Appointments() {
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
                       <button onClick={() => setEditMode(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                      <button onClick={handleEditSave} className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Save Changes</button>
+                      <button onClick={handleEditSave} disabled={editMutation.isPending}
+                        className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                        {editMutation.isPending && <ButtonSpinner size={14} />} Save Changes
+                      </button>
                     </div>
                   </>
                 ) : (
@@ -595,19 +646,24 @@ export default function Appointments() {
                       <div className="flex gap-3 pt-2 border-t border-slate-100" onClick={e => e.stopPropagation()}>
                         {NEXT_STATUS[selected.status].map(action => (
                           <button key={action.status} onClick={() => handleStatusUpdate(selected.id, action.status)}
-                            className={`flex-1 flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-lg text-sm font-medium ${action.color}`}>
-                            <action.icon size={16} /> {action.label}
+                            disabled={statusMutation.isPending}
+                            className={`flex-1 flex items-center justify-center gap-2 text-white px-4 py-2.5 rounded-lg text-sm font-medium ${action.color} disabled:opacity-50 disabled:cursor-not-allowed`}>
+                            {statusMutation.isPending && statusMutation.variables?.id === selected.id ? (
+                              <><ButtonSpinner size={16} /> {action.label}...</>
+                            ) : (
+                              <><action.icon size={16} /> {action.label}</>
+                            )}
                           </button>
                         ))}
                         {(selected.status === 'SCHEDULED' || selected.status === 'CONFIRMED') && (
-                          <button onClick={() => handleStatusUpdate(selected.id, 'NO_SHOW')}
-                            className="flex items-center justify-center gap-2 text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+                          <button onClick={() => handleStatusUpdate(selected.id, 'NO_SHOW')} disabled={statusMutation.isPending}
+                            className="flex items-center justify-center gap-2 text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                             <UserX size={16} /> No Show
                           </button>
                         )}
                         {(selected.status === 'SCHEDULED' || selected.status === 'CONFIRMED') && (
-                          <button onClick={() => handleStatusUpdate(selected.id, 'CANCELLED')}
-                            className="flex items-center justify-center gap-2 text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2.5 rounded-lg text-sm font-medium">
+                          <button onClick={() => handleStatusUpdate(selected.id, 'CANCELLED')} disabled={statusMutation.isPending}
+                            className="flex items-center justify-center gap-2 text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                             <Ban size={16} /> Cancel
                           </button>
                         )}
@@ -629,17 +685,18 @@ export default function Appointments() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
-                    <select required value={form.patientId} onChange={e => setForm({...form, patientId: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
+                    <select required value={form.patientId} onChange={e => setForm({...form, patientId: e.target.value, time: form.time})}
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none ${formErrors.patientId ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
                       <option value="">Select Patient</option>
                       {patients.map(p => <option key={p.id} value={p.id}>{p.user?.name}</option>)}
                     </select>
+                    {formErrors.patientId && <p className="text-xs text-red-500 mt-1">{formErrors.patientId}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Dentist</label>
                     <div className="grid grid-cols-1 gap-1.5 max-h-[160px] overflow-y-auto">
                       {dentists.map(d => (
-                        <button key={d.id} type="button" onClick={() => setForm({...form, dentistId: d.id})}
+                        <button key={d.id} type="button" onClick={() => setForm({...form, dentistId: d.id, time: ''})}
                           className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border text-sm text-left transition-all ${
                             form.dentistId === d.id
                               ? 'border-[#0F766E] bg-[#F0FDFA] ring-1 ring-[#0F766E]'
@@ -669,14 +726,19 @@ export default function Appointments() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                     <select required value={form.time} onChange={e => setForm({...form, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none">
+                      className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none ${formErrors.time ? 'border-red-300 bg-red-50' : 'border-slate-200'}`}>
                       <option value="">Select Time</option>
-                      {timeSlots.map(t => <option key={t} value={t}>{t}</option>)}
+                      {availableTimes.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
+                    {formErrors.time ? (
+                      <p className="text-xs text-red-500 mt-1">{formErrors.time}</p>
+                    ) : (
+                      <p className="text-xs text-gray-400 mt-1">{availableTimes.length} of {timeSlots.length} slots available{form.dentistId ? ' for this dentist' : ''}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                    <input type="date" value={form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0]} onChange={e => setForm({...form, date: e.target.value})}
+                    <input type="date" value={form.date || new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0]} onChange={e => setForm({...form, date: e.target.value, time: ''})}
                       className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0F766E] focus:outline-none" />
                   </div>
                   <div>
@@ -696,13 +758,36 @@ export default function Appointments() {
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium">Book Appointment</button>
+                  <button type="submit" disabled={createMutation.isPending}
+                    className="px-4 py-2 bg-[#0F766E] text-white rounded-lg hover:bg-[#0D6D65] text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                    {createMutation.isPending ? <><ButtonSpinner size={14} /> Booking...</> : 'Book Appointment'}
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         )}
       </div>
+
+      {deleteTarget && (
+        <ConfirmDialog
+          open
+          danger
+          title="Delete Appointment"
+          message="Are you sure you want to delete this appointment? This cannot be undone."
+          confirmLabel="Delete"
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => {
+            deleteMutation.mutate(deleteTarget, {
+              onSuccess: () => {
+                setSelected(null);
+                toast.success('Appointment deleted');
+              },
+            });
+            setDeleteTarget(null);
+          }}
+        />
+      )}
     </Layout>
   );
 }

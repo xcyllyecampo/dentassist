@@ -4,6 +4,8 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import { SkeletonLine, SkeletonCircle } from '../components/Skeleton';
 import Tooltip from '../components/Tooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
+import ButtonSpinner from '../components/ButtonSpinner';
 import api, { authUrl } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -44,6 +46,7 @@ export default function DentistSchedules() {
   const dentistContainerRef = useRef(null);
   const [sliderStyle, setSliderStyle] = useState({ top: 0, height: 0 });
   const [showForm, setShowForm] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const [form, setForm] = useState({ dentistId: '', dayOfWeek: 1, startTime: '09:00', endTime: '17:00' });
   const isAdmin = user?.role === 'ADMIN';
 
@@ -149,9 +152,8 @@ export default function DentistSchedules() {
   };
 
   const handleDelete = (schedId) => {
-    if (!confirm('Remove this schedule?')) return;
     playClick();
-    deleteMutation.mutate(schedId);
+    setConfirmDelete(schedId);
   };
 
   if (isLoading) return (
@@ -434,15 +436,27 @@ export default function DentistSchedules() {
                     </select>
                   </div>
                 </div>
-                <button onClick={handleAdd}
-                  className="w-full py-2.5 bg-[#0F766E] text-white text-sm font-semibold rounded-lg hover:bg-[#0D6D65] transition-colors flex items-center justify-center gap-2">
-                  <Plus size={14} /> Add Schedule
+                <button onClick={handleAdd} disabled={addMutation.isPending}
+                  className="w-full py-2.5 bg-[#0F766E] text-white text-sm font-semibold rounded-lg hover:bg-[#0D6D65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+                  {addMutation.isPending ? <><ButtonSpinner /> Saving...</> : <><Plus size={14} /> Add Schedule</>}
                 </button>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          open
+          danger
+          title="Remove Schedule"
+          message="Are you sure you want to remove this schedule slot?"
+          confirmLabel="Remove"
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={() => { deleteMutation.mutate(confirmDelete); setConfirmDelete(null); }}
+        />
+      )}
     </Layout>
   );
 }

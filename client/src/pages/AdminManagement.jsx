@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import Header from '../components/Header';
 import Tooltip from '../components/Tooltip';
 import { SkeletonTable } from '../components/Skeleton';
+import { formatPhone } from '../lib/phone';
 import api, { authUrl } from '../lib/api';
 import { UserPlus, Search, Edit2, Trash2, X, Camera, Users, Shield, Stethoscope, ChevronDown, Eye, EyeOff, Image, Power, Info } from 'lucide-react';
 import { playClick, playSuccess, playError } from '../lib/sounds';
@@ -523,7 +524,7 @@ function UserModal({ user, onClose, onSave }) {
           <Input label="Email" type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
 
           {/* Phone */}
-          <Input label="Phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="09171234567" />
+          <Input label="Phone" value={form.phone} onChange={e => setForm({ ...form, phone: formatPhone(e.target.value) })} placeholder="0917 123 4567" />
 
           {/* Role */}
           <div>

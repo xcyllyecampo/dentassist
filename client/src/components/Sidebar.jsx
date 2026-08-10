@@ -48,7 +48,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
               <img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-[44px] w-auto object-contain" />
             </div>
             {!isMobile && (
-              <button onClick={handleCollapse}
+              <button aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={handleCollapse}
                 className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-teal-200/60 hover:text-white absolute right-3 top-3">
                 {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </button>
@@ -57,7 +57,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
         ) : (
           <div className="relative flex items-center justify-center h-14">
             {!isMobile && (
-              <button onClick={handleCollapse}
+              <button aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={handleCollapse}
                 className="shrink-0 p-2 rounded-lg transition-colors bg-white/[0.06] hover:bg-white/15 text-teal-200/60 hover:text-white">
                 {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </button>
@@ -110,7 +110,7 @@ export default function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobile
             <div className="text-[11px] text-teal-300/40 uppercase tracking-wider font-medium">{user?.role}</div>
           </div>
         )}
-        <button
+        <button aria-label="Logout"
           onClick={() => { playClick(); logout(); }}
           className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-teal-300/40 hover:text-white hover:bg-white/[0.06] rounded-xl transition-colors"
         >

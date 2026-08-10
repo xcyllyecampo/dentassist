@@ -6,6 +6,8 @@ import Header from '../components/Header';
 import api, { authUrl } from '../lib/api';
 import { SkeletonLine, SkeletonCircle } from '../components/Skeleton';
 import Tooltip from '../components/Tooltip';
+import ConfirmDialog from '../components/ConfirmDialog';
+import ButtonSpinner from '../components/ButtonSpinner';
 import { AlertTriangle, Award, Star, TrendingUp, Gift, Check, ArrowLeft, Plus, Pencil, Trash2, X, Save, Calendar, Stethoscope, Pill, Image, Smile, Wallet, CreditCard } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
@@ -52,6 +54,8 @@ export default function PatientDetail() {
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
   const [editPrescription, setEditPrescription] = useState(null);
   const [prescriptionForm, setPrescriptionForm] = useState({ medication: '', dosage: '', frequency: 'Once daily', duration: '', notes: '', treatmentId: '' });
+
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const [selectedTooth, setSelectedTooth] = useState(null);
   const [toothNote, setToothNote] = useState('');
@@ -301,8 +305,7 @@ export default function PatientDetail() {
   };
 
   const handleDeleteTreatment = (treatmentId) => {
-    if (!confirm('Delete this treatment?')) return;
-    deleteTreatmentMutation.mutate(treatmentId);
+    setConfirmDelete({ type: 'treatment', id: treatmentId });
   };
 
   const submitPrescription = () => {
@@ -311,8 +314,7 @@ export default function PatientDetail() {
   };
 
   const handleDeletePrescription = (prescriptionId) => {
-    if (!confirm('Delete this prescription?')) return;
-    deletePrescriptionMutation.mutate(prescriptionId);
+    setConfirmDelete({ type: 'prescription', id: prescriptionId });
   };
 
   const awardBadge = (badgeId) => {
@@ -436,9 +438,11 @@ export default function PatientDetail() {
                 <div className="flex-1 min-w-0">
                   <div className="grid grid-cols-8 gap-1 mb-3">
                     {allTeeth.map(tooth => (
-                      <div key={tooth.id}
+                      <div key={tooth.id} role="button" tabIndex={0}
                         onClick={() => { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); }}
-                        className={`h-12 min-w-0 rounded-lg flex flex-col items-center justify-center font-bold cursor-pointer transition-all hover:scale-110 ${
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { setSelectedTooth(tooth); setToothNote(tooth.notes || ''); playClick(); } }}
+                        aria-label={`Tooth ${tooth.toothNumber} (${tooth.status})`}
+                        className={`h-12 min-w-0 rounded-lg flex flex-col items-center justify-center font-bold cursor-pointer transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-[#0F766E] ${
                           selectedTooth?.toothNumber === tooth.toothNumber ? 'ring-2 ring-[#0F766E] ring-offset-2 scale-110' : ''
                         } ${STATUS_COLORS[tooth.status] || 'bg-[#F0FDFA] text-[#0D6D65] border border-slate-200'}`}>
                         <span className="text-xs leading-none">#{tooth.toothNumber}</span>
@@ -463,12 +467,12 @@ export default function PatientDetail() {
                           <h4 className="font-bold text-slate-900 text-sm">Update Tooth Status</h4>
                           <p className="text-xs text-slate-400">Currently: {selectedTooth.status}</p>
                         </div>
-                        <Tooltip content="Close">
-                          <button onClick={() => { setSelectedTooth(null); setToothNote(''); }}
-                            className="ml-auto p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-                            <X size={16} />
-                          </button>
-                        </Tooltip>
+                          <Tooltip content="Close">
+                            <button aria-label="Close prescription form" onClick={() => setShowPrescriptionForm(false)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                              <X size={16} />
+                            </button>
+                          </Tooltip>
                       </div>
                       <div className="grid grid-cols-4 gap-2 mb-3">
                         {TOOTH_STATUSES.map(s => {
@@ -558,7 +562,7 @@ export default function PatientDetail() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Tooltip content="Edit">
-                          <button onClick={() => {
+                          <button aria-label="Edit treatment" onClick={() => {
                             setEditTreatment(t);
                             setTreatmentForm({ procedure: t.procedure, description: t.description || '', notes: t.notes || '', cost: t.cost || '', toothId: t.toothId || '' });
                             setShowTreatmentForm(true);
@@ -567,7 +571,7 @@ export default function PatientDetail() {
                           </button>
                         </Tooltip>
                         <Tooltip content="Delete">
-                          <button onClick={() => handleDeleteTreatment(t.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
+                          <button aria-label="Delete treatment" onClick={() => handleDeleteTreatment(t.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
                             <Trash2 size={14} />
                           </button>
                         </Tooltip>
@@ -623,9 +627,9 @@ export default function PatientDetail() {
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" rows={2} placeholder="Additional notes" />
                       </div>
                       <button onClick={submitTreatment}
-                        disabled={!treatmentForm.procedure}
+                        disabled={!treatmentForm.procedure || treatmentMutation.isPending}
                         className="w-full py-2 bg-[#0F766E] text-white text-sm font-medium rounded-lg hover:bg-[#0D6D65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
-                        <Save size={14} /> {editTreatment ? 'Update Treatment' : 'Add Treatment'}
+                        {treatmentMutation.isPending ? <><ButtonSpinner /> Saving...</> : <><Save size={14} /> {editTreatment ? 'Update Treatment' : 'Add Treatment'}</>}
                       </button>
                     </div>
                   </div>
@@ -663,7 +667,7 @@ export default function PatientDetail() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Tooltip content="Edit">
-                          <button onClick={() => {
+                          <button aria-label="Edit prescription" onClick={() => {
                             setEditPrescription(p);
                             setPrescriptionForm({ medication: p.medication, dosage: p.dosage, frequency: p.frequency, duration: p.duration, notes: p.notes || '', treatmentId: p.treatmentId || '' });
                             setShowPrescriptionForm(true);
@@ -672,7 +676,7 @@ export default function PatientDetail() {
                           </button>
                         </Tooltip>
                         <Tooltip content="Delete">
-                          <button onClick={() => handleDeletePrescription(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
+                          <button aria-label="Delete prescription" onClick={() => handleDeletePrescription(p.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-white transition-colors">
                             <Trash2 size={14} />
                           </button>
                         </Tooltip>
@@ -722,9 +726,9 @@ export default function PatientDetail() {
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E]" rows={2} placeholder="Special instructions" />
                       </div>
                       <button onClick={submitPrescription}
-                        disabled={!prescriptionForm.medication || !prescriptionForm.dosage || !prescriptionForm.duration}
+                        disabled={!prescriptionForm.medication || !prescriptionForm.dosage || !prescriptionForm.duration || prescriptionMutation.isPending}
                         className="w-full py-2 bg-[#0F766E] text-white text-sm font-medium rounded-lg hover:bg-[#0D6D65] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
-                        <Save size={14} /> {editPrescription ? 'Update Prescription' : 'Add Prescription'}
+                        {prescriptionMutation.isPending ? <><ButtonSpinner /> Saving...</> : <><Save size={14} /> {editPrescription ? 'Update Prescription' : 'Add Prescription'}</>}
                       </button>
                     </div>
                   </div>
@@ -944,6 +948,22 @@ export default function PatientDetail() {
           )}
         </div>
       </div>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          open
+          danger
+          title={confirmDelete.type === 'treatment' ? 'Delete Treatment' : 'Delete Prescription'}
+          message={`Are you sure you want to delete this ${confirmDelete.type}? This cannot be undone.`}
+          confirmLabel="Delete"
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={() => {
+            if (confirmDelete.type === 'treatment') deleteTreatmentMutation.mutate(confirmDelete.id);
+            else deletePrescriptionMutation.mutate(confirmDelete.id);
+            setConfirmDelete(null);
+          }}
+        />
+      )}
     </Layout>
   );
 }
