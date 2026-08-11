@@ -8,6 +8,7 @@ const validate = require("../middleware/validate");
 const { adminUserSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
 const { uploadFile, deleteFile, getPublicUrl } = require("../lib/storage");
+const { normalizePhone } = require("../lib/phone");
 
 const router = express.Router();
 
@@ -85,7 +86,7 @@ router.post("/", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(adm
     }
 
     const user = await prisma.user.create({
-      data: { email, password: hashed, name, role, phone, avatar: avatarUrl },
+      data: { email, password: hashed, name, role, phone: normalizePhone(phone), avatar: avatarUrl },
       select: { id: true, name: true, email: true, role: true, phone: true, avatar: true },
     });
 
@@ -119,7 +120,7 @@ router.put("/:id", auth, roleGuard("ADMIN"), upload.single("avatar"), validate(a
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (role) updateData.role = role;
-    if (phone !== undefined) updateData.phone = phone;
+    if (phone !== undefined) updateData.phone = normalizePhone(phone);
     if (password) updateData.password = await bcrypt.hash(password, 10);
     if (req.file) {
       const ext = path.extname(req.file.originalname) || ".jpg";

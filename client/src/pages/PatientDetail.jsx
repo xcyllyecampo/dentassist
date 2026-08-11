@@ -468,7 +468,7 @@ export default function PatientDetail() {
                           <p className="text-xs text-slate-400">Currently: {selectedTooth.status}</p>
                         </div>
                           <Tooltip content="Close">
-                            <button aria-label="Close prescription form" onClick={() => setShowPrescriptionForm(false)}
+                            <button aria-label="Close tooth panel" onClick={() => setSelectedTooth(null)}
                               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
                               <X size={16} />
                             </button>

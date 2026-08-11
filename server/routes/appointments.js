@@ -298,7 +298,7 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
   try {
     const prisma = req.app.get("prisma");
     const io = req.app.get("io");
-    const { status, roomId, notes, date, time, duration, reason } = req.body;
+    const { status, dentistId, roomId, notes, date, time, duration, reason } = req.body;
 
     const current = await prisma.appointment.findUnique({
       where: { id: req.params.id },
@@ -308,6 +308,7 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
 
     const updateData = {};
     if (status !== undefined) updateData.status = status;
+    if (dentistId !== undefined) updateData.dentistId = dentistId || null;
     if (roomId !== undefined) updateData.roomId = roomId || null;
     if (notes !== undefined) updateData.notes = notes;
     if (date !== undefined) updateData.date = new Date(date);
@@ -322,7 +323,7 @@ router.put("/:id", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(ap
       checkEnd.setDate(checkEnd.getDate() + 1);
       const checkTime = time || current.time;
       const checkDuration = duration || current.duration || 30;
-      const checkDentistId = current.dentistId;
+      const checkDentistId = dentistId !== undefined ? (dentistId || null) : current.dentistId;
       const checkRoomId = roomId !== undefined ? roomId : current.roomId;
 
       const timeToMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };

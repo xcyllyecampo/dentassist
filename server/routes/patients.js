@@ -6,6 +6,7 @@ const validate = require("../middleware/validate");
 const { patientSchemas } = require("../lib/schemas");
 const { notifyAllStaff } = require("../lib/notify");
 const { sendAccountCreatedEmail } = require("../lib/mailer");
+const { normalizePhone } = require("../lib/phone");
 
 const router = express.Router();
 
@@ -76,7 +77,7 @@ router.post("/", auth, roleGuard("ADMIN", "ASSISTANT", "DENTIST"), validate(pati
     const tempPassword = crypto.randomBytes(12).toString("base64url");
     const hashed = await bcrypt.hash(tempPassword, 10);
     const user = await prisma.user.create({
-      data: { email, password: hashed, name, role: "PATIENT", phone },
+      data: { email, password: hashed, name, role: "PATIENT", phone: normalizePhone(phone) },
     });
 
     const patient = await prisma.patient.create({

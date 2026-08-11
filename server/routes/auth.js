@@ -8,6 +8,7 @@ const { authSchemas } = require("../lib/schemas");
 const { strictAuthLimiter, authLimiter } = require("../middleware/rateLimit");
 const { notifyAllStaff } = require("../lib/notify");
 const { sendWelcomeEmail, sendPasswordResetEmail } = require("../lib/mailer");
+const { normalizePhone } = require("../lib/phone");
 
 const router = express.Router();
 
@@ -39,7 +40,7 @@ router.post("/register", authLimiter, validate(authSchemas.register), async (req
 
     const hashed = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, password: hashed, name, role: "PATIENT", phone },
+      data: { email, password: hashed, name, role: "PATIENT", phone: normalizePhone(phone) },
     });
 
     if (user.role === "PATIENT") {

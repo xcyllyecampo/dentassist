@@ -36,7 +36,7 @@ export default function Records() {
   const filtered = patients.filter(p =>
     p.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
     p.user?.email?.toLowerCase().includes(search.toLowerCase()) ||
-    p.user?.phone?.includes(search)
+    p.user?.phone?.replace(/\D/g, '')?.includes(search.replace(/\D/g, ''))
   );
 
   const totalBadges = Object.values(patientBadges).reduce((sum, b) => sum + b.length, 0);

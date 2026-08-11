@@ -123,7 +123,7 @@ export default function Queue() {
 
   const handleAdd = () => {
     if (!selectedPatient) return;
-    addMutation.mutate({ patientId: selectedPatient, dentistId: filterDentistId }, {
+    addMutation.mutate({ patientId: selectedPatient, dentistId: filterDentistId === 'all' ? undefined : filterDentistId }, {
       onSuccess: () => {
         setShowModal(false);
         setSelectedPatient('');

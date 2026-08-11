@@ -17,12 +17,17 @@ const entryInclude = {
   dentist: { select: { name: true, avatar: true } },
 };
 
+const TIER_ORDER = { Platinum: 3, Gold: 2, Silver: 1, Bronze: 0 };
+
+function tierRank(entry) {
+  return TIER_ORDER[computeTier(entry.patient?.loyaltyPoints?.points || 0)] || 0;
+}
+
 function rankEntries(entries) {
   const active = entries.filter((e) => e.status === "WAITING" || e.status === "IN_PROGRESS");
   const ranked = [...active].sort((a, b) => {
-    const aPlat = computeTier(a.patient?.loyaltyPoints?.points || 0) === "Platinum" ? 1 : 0;
-    const bPlat = computeTier(b.patient?.loyaltyPoints?.points || 0) === "Platinum" ? 1 : 0;
-    if (aPlat !== bPlat) return bPlat - aPlat;
+    const diff = tierRank(b) - tierRank(a);
+    if (diff !== 0) return diff;
     return (a.position || 0) - (b.position || 0);
   });
   const posMap = new Map(ranked.map((e, i) => [e.id, i + 1]));
@@ -39,17 +44,19 @@ function rankEntries(entries) {
 }
 
 async function getQueueView(prisma, where) {
-  const entries = await prisma.queueEntry.findMany({
-    where: { status: { in: ["WAITING", "IN_PROGRESS"] }, ...where },
+  const allEntries = await prisma.queueEntry.findMany({
+    where: { status: { in: ["WAITING", "IN_PROGRESS"] } },
     include: entryInclude,
     orderBy: { position: "asc" },
   });
-  return rankEntries(entries);
+  const ranked = rankEntries(allEntries);
+  if (!where || Object.keys(where).length === 0) return ranked;
+  return ranked.filter((e) => Object.entries(where).every(([key, value]) => e[key] === value));
 }
 
 async function nextPosition(prisma) {
   const lastEntry = await prisma.queueEntry.findFirst({
-    where: { status: "WAITING" },
+    where: { status: { in: ["WAITING", "IN_PROGRESS"] } },
     orderBy: { position: "desc" },
   });
   return (lastEntry?.position || 0) + 1;
@@ -89,17 +96,18 @@ router.get("/my-entry", auth, async (req, res) => {
 });
 
 async function createEntry(prisma, io, { patientId, dentistId }, req, res) {
+  const resolvedDentistId = dentistId && dentistId !== "all" ? dentistId : null;
   const position = await nextPosition(prisma);
   const waitingCount = await prisma.queueEntry.count({ where: { status: "WAITING" } });
   const estimatedWait = waitingCount * 30;
 
   const entry = await prisma.queueEntry.create({
-    data: { patientId, position, estimatedWait, dentistId: dentistId || null },
+    data: { patientId, position, estimatedWait, dentistId: resolvedDentistId },
     include: entryInclude,
   });
 
-  const view = rankEntries([entry]);
-  const enriched = view[0];
+  const view = await getQueueView(prisma, {});
+  const enriched = view.find((e) => e.id === entry.id) || rankEntries([entry])[0];
 
   io.to("queue").emit("queue-update", { updated: true });
   io.to("twin").emit("queue-update", { waitingCount: waitingCount + 1 });

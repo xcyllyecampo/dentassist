@@ -89,6 +89,7 @@ const appointmentSchemas = {
   }),
   update: z.object({
     status: appointmentStatusEnum.optional(),
+    dentistId: z.union([uuid, z.literal(''), z.null()]).optional(),
     roomId: nullableOptionalUuid,
     notes: z.string().max(2000).optional().nullable(),
     date: z.string().or(z.date()).optional(),
