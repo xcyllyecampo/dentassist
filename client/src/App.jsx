@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { NotificationProvider } from './context/NotificationContext';
 import FloatingAI from './components/FloatingAI';
+import LoadingScreen from './components/LoadingScreen';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -65,7 +66,7 @@ function AccountDeactivated() {
 
 function ProtectedRoute({ children, roles }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-slate-100"><img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-10 object-contain" /><div className="flex gap-1.5">{[...Array(4)].map((_, i) => <div key={i} className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}</div></div>;
+  if (loading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" />;
   if (user.active === false) return <AccountDeactivated />;
   if (roles && !roles.includes(user.role)) {
@@ -95,7 +96,7 @@ export default function App() {
         <NotificationProvider>
           <BrowserRouter>
           <FloatingAI />
-          <Suspense fallback={<div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-slate-50 to-slate-100"><img src="/images/DentASSISTlogo.png" alt="DentAssist" className="h-10 object-contain" /><div className="flex gap-1.5">{[...Array(4)].map((_, i) => <div key={i} className="w-2 h-2 rounded-full bg-[#0F766E] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />)}</div></div>}>
+          <Suspense fallback={<LoadingScreen />}>
           <Routes>
             {/* Public */}
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />

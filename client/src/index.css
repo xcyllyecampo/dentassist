@@ -663,3 +663,25 @@ body {
     transform: none !important;
   }
 }
+
+/* Loading screen dot wave */
+@keyframes dot-wave {
+  0%, 60%, 100% { transform: translateY(0) scale(0.8); opacity: 0.45; }
+  30% { transform: translateY(-6px) scale(1); opacity: 1; }
+}
+
+.loader-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #99F6E4;
+  animation: dot-wave 1.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-dot {
+    animation: none;
+    opacity: 0.8;
+  }
+}
