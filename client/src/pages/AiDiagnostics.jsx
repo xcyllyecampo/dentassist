@@ -823,7 +823,8 @@ function TreatmentTab({ toast }) {
       });
       setResults(res.data);
     } catch (err) {
-      toast.error('Error getting suggestions. Please try again.');
+      const details = err.response?.data?.details?.join(', ');
+      toast.error(details || err.response?.data?.error || 'Error getting suggestions. Please try again.');
     }
     setLoading(false);
   };

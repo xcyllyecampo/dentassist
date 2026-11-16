@@ -216,7 +216,7 @@ const aiSchemas = {
     })).max(50).optional(),
   }),
   treatmentSuggest: z.object({
-    symptoms: z.string().max(2000).optional(),
+    symptoms: z.array(z.string().max(100)).max(50).optional(),
     examination_findings: z.string().max(2000).optional(),
     patient_age: z.number().int().min(0).max(150).optional(),
     patient_gender: z.string().max(20).optional(),

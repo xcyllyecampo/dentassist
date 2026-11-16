@@ -585,12 +585,13 @@ router.post("/oral/screen", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT", "PA
 router.post("/treatment/suggest", auth, roleGuard("ADMIN", "DENTIST", "ASSISTANT"), validate(aiSchemas.treatmentSuggest), async (req, res) => {
   try {
     const { symptoms, examination_findings, patient_age, patient_gender, medical_history } = req.body;
+    const symptomText = Array.isArray(symptoms) ? symptoms.join(", ") : symptoms;
 
     const prompt = `${PROMPTS.treatmentSuggest}
 
 Analyze the following patient case and suggest treatment options in JSON format:
 
-Symptoms: ${symptoms || "Not specified"}
+Symptoms: ${symptomText || "Not specified"}
 Examination Findings: ${examination_findings || "Not provided"}
 Patient Age: ${patient_age || "Not specified"}
 Patient Gender: ${patient_gender || "Not specified"}
